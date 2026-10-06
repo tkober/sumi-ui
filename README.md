@@ -75,7 +75,7 @@ successfully with `ng build` from a throwaway Angular 22 app):
    git submodule add https://github.com/tkober/sumi-ui.git frontend/sumi-ui
    ```
 
-2. In the app's `tsconfig.json`, add a `paths` entry so the library's areas
+2. In the app's `frontend/tsconfig.json`, add a `paths` entry so the library's areas
    resolve as `sumi-ui/<area>`:
 
    ```jsonc
@@ -83,7 +83,7 @@ successfully with `ng build` from a throwaway Angular 22 app):
      "compilerOptions": {
        // ...
        "paths": {
-         "sumi-ui/*": ["./frontend/sumi-ui/projects/sumi-ui/src/*"],
+         "sumi-ui/*": ["./sumi-ui/projects/sumi-ui/src/*"],
        },
      },
    }
@@ -94,13 +94,13 @@ successfully with `ng build` from a throwaway Angular 22 app):
 
 3. Include the library's styles entry point from the app's global styles
    (e.g. `styles.scss`), using a Sass load path instead of a long relative
-   path. In `angular.json`, on the app's `build` target:
+   path. In `frontend/angular.json`, on the app's `build` target:
 
    ```jsonc
    "options": {
      // ...
      "stylePreprocessorOptions": {
-       "includePaths": ["frontend"]
+       "includePaths": ["."]
      }
    }
    ```
@@ -111,8 +111,8 @@ successfully with `ng build` from a throwaway Angular 22 app):
    @use 'sumi-ui/projects/sumi-ui/styles/sumi';
    ```
 
-   The load path points at the submodule's _parent_ directory
-   (`frontend/`), so the specifier `sumi-ui/projects/sumi-ui/styles/sumi`
+   Paths in `angular.json` are relative to `frontend/`, so the load path
+   `.` is the submodule's parent directory and the specifier `sumi-ui/projects/sumi-ui/styles/sumi`
    resolves to `frontend/sumi-ui/projects/sumi-ui/styles/sumi.scss`. This
    repo's own `showcase` app mirrors the same mechanism: its load path is
    `.` (the repo root) and it writes `@use 'projects/sumi-ui/styles/sumi'`,
