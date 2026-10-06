@@ -1,0 +1,11 @@
+<div class="shell">
+  <nav>
+    <span class="brand">Sumi UI Showcase</span>
+    @for (link of navLinks; track link.path) {
+      <a [routerLink]="link.path" routerLinkActive="active">{{ link.label }}</a>
+    }
+  </nav>
+  <main>
+    <router-outlet />
+  </main>
+</div>
