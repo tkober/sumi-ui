@@ -1,0 +1,9 @@
+// Global styles for the showcase app.
+//
+// This mirrors how a consuming app includes the library's styles: a load
+// path (see angular.json -> stylePreprocessorOptions.includePaths) lets us
+// `@use` the entry point by a stable specifier instead of a brittle relative
+// path. In a real app the submodule sits at `frontend/sumi-ui`, so the load
+// path is the submodule's parent directory and the specifier becomes
+// `sumi-ui/projects/sumi-ui/styles/sumi` (see README.md).
+@use 'projects/sumi-ui/styles/sumi';
