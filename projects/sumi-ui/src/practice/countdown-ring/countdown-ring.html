@@ -1,0 +1,12 @@
+<svg class="sumi-countdown-ring__svg" viewBox="0 0 44 44" aria-hidden="true">
+  <circle class="sumi-countdown-ring__track" cx="22" cy="22" [attr.r]="radius" />
+  <circle
+    class="sumi-countdown-ring__value"
+    cx="22"
+    cy="22"
+    [attr.r]="radius"
+    [attr.stroke-dasharray]="circumference"
+    [attr.stroke-dashoffset]="ringOffset()"
+  />
+  <text class="sumi-countdown-ring__text" x="22" y="22">{{ label() }}</text>
+</svg>
