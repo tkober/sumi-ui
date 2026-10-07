@@ -16,14 +16,15 @@
       }
 
       @case ('running') {
-        <div class="demo__round" sumiFocusMode>
-          <sumi-session-bar
-            [answered]="answered()"
-            [correct]="correct()"
-            [total]="cards.length"
-            (end)="endSession()"
-          />
+        <sumi-session-bar
+          *sumiShellFocusActions
+          [answered]="answered()"
+          [correct]="correct()"
+          [total]="cards.length"
+          (end)="endSession()"
+        />
 
+        <div class="demo__round" sumiFocusMode>
           @let current = card();
           <sumi-prompt-card
             [text]="current.characters"

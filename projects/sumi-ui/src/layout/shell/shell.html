@@ -31,15 +31,21 @@
     <p class="sumi-app-shell__nav-lock-hint" role="status">{{ shell.navLock() }}</p>
   }
 
+  @if (shell.focusMode()) {
+    <div class="sumi-app-shell__focus-actions">
+      @if (shell.focusActions(); as focusActionsTemplate) {
+        <ng-container [ngTemplateOutlet]="focusActionsTemplate" />
+      } @else {
+        <ng-content select="[sumiShellFocusActions]" />
+      }
+    </div>
+  }
+
   <div class="sumi-app-shell__actions">
     <ng-content select="[sumiShellActions]" />
   </div>
 
-  @if (shell.focusMode()) {
-    <div class="sumi-app-shell__focus-actions">
-      <ng-content select="[sumiShellFocusActions]" />
-    </div>
-  } @else {
+  @if (!shell.focusMode()) {
     <div class="sumi-app-shell__switcher">
       <ng-content select="[sumiShellSwitcher]" />
     </div>

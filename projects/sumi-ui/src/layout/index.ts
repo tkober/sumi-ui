@@ -11,6 +11,7 @@ export { SumiAppShell, type SumiAppShellBrand, type SumiNavItem } from './shell/
 export { SumiShell } from './shell/shell.service';
 export { SumiFocusModeDirective } from './shell/focus-mode.directive';
 export { SumiNavLockDirective } from './shell/nav-lock.directive';
+export { SumiShellFocusActionsDirective } from './shell/focus-actions.directive';
 export { SumiPage, type SumiPageWidth } from './page/page';
 export { SumiAppSwitcher } from './app-switcher/app-switcher';
 export {
@@ -26,6 +27,7 @@ import { SumiBadge } from './badge/badge';
 import { SumiAppShell } from './shell/shell';
 import { SumiFocusModeDirective } from './shell/focus-mode.directive';
 import { SumiNavLockDirective } from './shell/nav-lock.directive';
+import { SumiShellFocusActionsDirective } from './shell/focus-actions.directive';
 import { SumiPage } from './page/page';
 import { SumiAppSwitcher } from './app-switcher/app-switcher';
 
@@ -37,6 +39,7 @@ export const SUMI_LAYOUT = [
   SumiAppShell,
   SumiFocusModeDirective,
   SumiNavLockDirective,
+  SumiShellFocusActionsDirective,
   SumiPage,
   SumiAppSwitcher,
 ] as const;

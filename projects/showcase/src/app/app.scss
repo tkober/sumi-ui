@@ -17,3 +17,14 @@
     box-shadow: var(--sumi-focus-ring);
   }
 }
+
+// This picker is a showcase-only dev convenience, not a real app's
+// sumiShellActions content (typically a narrow level/Elo pill, see
+// sumi-app-shell's doc comment) — it is wide enough that keeping it
+// around on a phone-width screen would starve the focus-actions area of
+// the room sumi-session-bar needs (see issue #27's 390px check).
+@media (max-width: 480px) {
+  .accent-picker {
+    display: none;
+  }
+}

@@ -7,6 +7,7 @@ import {
   input,
   signal,
 } from '@angular/core';
+import { NgTemplateOutlet } from '@angular/common';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { SumiIcon, SumiIconName, SumiKeyboardVisibility, SumiThemeToggle } from 'sumi-ui/core';
 import { SumiBadge, type SumiBadgeTone } from '../badge/badge';
@@ -49,12 +50,18 @@ const VISIBLE_TAB_ITEMS = 4;
  *   <router-outlet />
  * </sumi-app-shell>
  * ```
+ *
+ * While `focusMode()` is on, the header's focus-actions area renders
+ * whatever a routed page registered via `*sumiShellFocusActions` (see
+ * `SumiShellFocusActionsDirective`), falling back to content projected
+ * into the `[sumiShellFocusActions]` slot above when nothing is
+ * registered.
  */
 @Component({
   selector: 'sumi-app-shell',
   templateUrl: './shell.html',
   styleUrl: './shell.scss',
-  imports: [RouterLink, RouterLinkActive, SumiIcon, SumiThemeToggle, SumiBadge],
+  imports: [RouterLink, RouterLinkActive, SumiIcon, SumiThemeToggle, SumiBadge, NgTemplateOutlet],
   host: {
     class: 'sumi-app-shell',
     '[class.sumi-app-shell--focus]': 'shell.focusMode()',
