@@ -5,6 +5,7 @@ import {
   SUMI_CONFIG,
   SUMI_DEFAULT_DASHBOARD_PORT,
   SUMI_DEFAULT_MOTIF,
+  SUMI_DEFAULT_PATTERN,
   SumiAccent,
   provideSumi,
 } from './provide-sumi';
@@ -16,21 +17,30 @@ describe('provideSumi', () => {
     document.documentElement.style.removeProperty('--sumi-accent-ink');
   });
 
-  it('provides SUMI_CONFIG with the default accent, motif and dashboard port', () => {
+  it('provides SUMI_CONFIG with the default accent, motif, pattern and dashboard port', () => {
     TestBed.configureTestingModule({ providers: [provideSumi()] });
     const config = TestBed.inject(SUMI_CONFIG);
     expect(config.accent).toBe(SUMI_ACCENT_PRESETS.ai);
     expect(config.motif).toBe(SUMI_DEFAULT_MOTIF);
+    expect(config.pattern).toBe(SUMI_DEFAULT_PATTERN);
     expect(config.dashboardPort).toBe(SUMI_DEFAULT_DASHBOARD_PORT);
   });
 
-  it('resolves an explicit preset and custom dashboardPort/motif', () => {
+  it('resolves an explicit preset and custom dashboardPort/motif/pattern', () => {
     TestBed.configureTestingModule({
-      providers: [provideSumi({ accent: 'yamabuki', motif: 'waves', dashboardPort: 9000 })],
+      providers: [
+        provideSumi({
+          accent: 'yamabuki',
+          motif: 'waves',
+          pattern: 'asanoha',
+          dashboardPort: 9000,
+        }),
+      ],
     });
     const config = TestBed.inject(SUMI_CONFIG);
     expect(config.accent).toBe(SUMI_ACCENT_PRESETS.yamabuki);
     expect(config.motif).toBe('waves');
+    expect(config.pattern).toBe('asanoha');
     expect(config.dashboardPort).toBe(9000);
   });
 

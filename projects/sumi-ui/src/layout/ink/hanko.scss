@@ -1,0 +1,39 @@
+:host {
+  display: inline-block;
+  width: var(--sumi-hanko-size, 54px);
+  height: var(--sumi-hanko-size, 54px);
+  flex: none;
+  transform: rotate(-5deg);
+  animation: sumi-hanko-stamp 260ms ease-out both;
+}
+
+.sumi-hanko__svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.sumi-hanko__text {
+  fill: light-dark(#ffffff, #151513);
+  font-family: var(--sumi-font-display);
+  font-weight: 700;
+  font-size: 20px;
+}
+
+@keyframes sumi-hanko-stamp {
+  from {
+    opacity: 0;
+    transform: scale(1.5) rotate(2deg);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1) rotate(-5deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :host {
+    animation: none;
+  }
+}

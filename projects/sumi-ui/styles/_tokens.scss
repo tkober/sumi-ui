@@ -29,6 +29,10 @@
   --sumi-retry: light-dark(#9a6a10, #e0b45a);
   --sumi-retry-soft: light-dark(#f4ead2, #3a2f17);
 
+  // Vermilion (朱), used only by the `torii` ink landscape's gate — the one
+  // motif that is not plain `--sumi-text` (see docs/concept.md#tuschemotive).
+  --sumi-vermilion: light-dark(#c0442e, #e0765c);
+
   // Accent tokens. These default to the `ai` preset so the stylesheet works
   // even before `provideSumi()` runs; `provideSumi` (and `SumiAccent`)
   // overwrite them as inline styles on `documentElement` at runtime.
@@ -93,6 +97,13 @@
   --sumi-radius-pill: 999px;
   --sumi-shadow: 0 1px 2px light-dark(rgb(16 24 40 / 6%), rgb(0 0 0 / 40%));
   --sumi-focus-ring: 0 0 0 3px color-mix(in oklab, var(--sumi-accent) 45%, transparent);
+
+  // Multiplier on every ink motif's base opacity (see
+  // docs/concept.md#tuschemotive and `sumi-landscape`/`sumi-pattern`'s
+  // `ink-opacity.scss`). `1` is the sketch's reviewed intensity; an app can
+  // set this lower to fade motifs out further, or higher to make them more
+  // present, without touching the shapes themselves.
+  --sumi-ink-strength: 1;
 }
 
 // The viewer's explicit choice wins over the system in both directions. No

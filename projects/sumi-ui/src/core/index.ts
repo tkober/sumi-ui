@@ -30,11 +30,13 @@ export {
   SUMI_CONFIG,
   SUMI_DEFAULT_DASHBOARD_PORT,
   SUMI_DEFAULT_MOTIF,
+  SUMI_DEFAULT_PATTERN,
   SumiAccent,
   provideSumi,
   type ProvideSumiOptions,
   type SumiConfig,
   type SumiMotif,
+  type SumiPattern,
 } from './provide-sumi';
 export {
   SUMI_KEYS,

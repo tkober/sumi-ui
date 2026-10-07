@@ -1,0 +1,43 @@
+:host {
+  display: block;
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--sumi-radius);
+  background: var(--sumi-surface);
+  border: 1px solid var(--sumi-line);
+}
+
+// The band fades out downward and the scene sits below it — they never
+// overlap (see docs/concept.md#tuschemotive).
+.sumi-ink-backdrop__band {
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 54px;
+  -webkit-mask-image: linear-gradient(180deg, #000, transparent);
+  mask-image: linear-gradient(180deg, #000, transparent);
+  pointer-events: none;
+}
+
+.sumi-ink-backdrop__scene {
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 120px;
+  pointer-events: none;
+}
+
+.sumi-ink-backdrop__content {
+  position: relative;
+  padding: var(--sumi-space-5);
+  display: grid;
+  gap: var(--sumi-space-1);
+}
+
+@media (max-width: 480px) {
+  .sumi-ink-backdrop__scene {
+    height: 88px;
+  }
+
+  .sumi-ink-backdrop__content {
+    padding: var(--sumi-space-4);
+  }
+}

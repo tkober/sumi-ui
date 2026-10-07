@@ -20,6 +20,24 @@ export {
   type SumiAppDirectoryEntry,
   type SumiAppDirectoryWindowLike,
 } from './app-switcher/app-directory';
+export {
+  SUMI_LANDSCAPES,
+  SUMI_PATTERNS,
+  buildPatternSvg,
+  findLandscape,
+  findPattern,
+  SumiLandscape,
+  SumiPattern,
+  SumiInkBackdrop,
+  SumiEmptyState,
+  SumiHanko,
+  type SumiGeneratedPattern,
+  type SumiHankoSize,
+  type SumiLandscapeDef,
+  type SumiLandscapeId,
+  type SumiPatternDef,
+  type SumiPatternId,
+} from './ink';
 
 import { SumiCard } from './card/card';
 import { SumiBanner } from './banner/banner';
@@ -30,6 +48,7 @@ import { SumiNavLockDirective } from './shell/nav-lock.directive';
 import { SumiShellFocusActionsDirective } from './shell/focus-actions.directive';
 import { SumiPage } from './page/page';
 import { SumiAppSwitcher } from './app-switcher/app-switcher';
+import { SumiLandscape, SumiPattern, SumiInkBackdrop, SumiEmptyState, SumiHanko } from './ink';
 
 /** Convenience array for `imports: [...SUMI_LAYOUT]` in a standalone component. */
 export const SUMI_LAYOUT = [
@@ -42,4 +61,9 @@ export const SUMI_LAYOUT = [
   SumiShellFocusActionsDirective,
   SumiPage,
   SumiAppSwitcher,
+  SumiLandscape,
+  SumiPattern,
+  SumiInkBackdrop,
+  SumiEmptyState,
+  SumiHanko,
 ] as const;

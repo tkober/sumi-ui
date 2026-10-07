@@ -1,0 +1,52 @@
+:host {
+  display: block;
+  border-radius: var(--sumi-radius);
+  border: 1px solid var(--sumi-line);
+  background: var(--sumi-surface);
+  overflow: hidden;
+  text-align: center;
+}
+
+.sumi-empty-state__art {
+  position: relative;
+  height: 108px;
+  background: var(--sumi-sunken);
+  overflow: hidden;
+}
+
+.sumi-empty-state__band {
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 36px;
+  -webkit-mask-image: linear-gradient(180deg, #000, transparent);
+  mask-image: linear-gradient(180deg, #000, transparent);
+}
+
+.sumi-empty-state__scene {
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 80px;
+}
+
+.sumi-empty-state__body {
+  padding: var(--sumi-space-4);
+  display: grid;
+  gap: var(--sumi-space-2);
+  justify-items: center;
+}
+
+.sumi-empty-state__title {
+  margin: 0;
+  font-family: var(--sumi-font-display);
+  font-size: var(--sumi-text-lg);
+}
+
+.sumi-empty-state__text {
+  margin: 0;
+  color: var(--sumi-text-2);
+  font-size: var(--sumi-text-sm);
+}
+
+.sumi-empty-state__action:empty {
+  display: none;
+}

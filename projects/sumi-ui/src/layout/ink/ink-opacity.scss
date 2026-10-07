@@ -1,0 +1,41 @@
+// Shared opacity scale for ink motifs (landscapes + patterns), all
+// multiplied by `--sumi-ink-strength` so apps can fine-tune intensity (see
+// docs/concept.md#tuschemotive). Forwarded into landscape.scss,
+// pattern.scss and hanko.scss — each component only pays for the handful
+// of rules it actually uses once Angular's build tree-shakes unused CSS
+// per stylesheet is not guaranteed, so keep this partial tiny.
+:host {
+  --sumi-ink-strength: var(--sumi-ink-strength, 1);
+}
+
+.sumi-ink-l1 {
+  opacity: calc(var(--sumi-ink-strength, 1) * 0.05);
+}
+
+.sumi-ink-l2 {
+  opacity: calc(var(--sumi-ink-strength, 1) * 0.08);
+}
+
+.sumi-ink-l3 {
+  opacity: calc(var(--sumi-ink-strength, 1) * 0.12);
+}
+
+.sumi-ink-l4 {
+  opacity: calc(var(--sumi-ink-strength, 1) * 0.17);
+}
+
+.sumi-ink-accent {
+  opacity: calc(var(--sumi-ink-strength, 1) * 0.32);
+}
+
+.sumi-ink-vermilion {
+  opacity: calc(var(--sumi-ink-strength, 1) * 0.5);
+}
+
+.sumi-ink-pattern {
+  opacity: calc(var(--sumi-ink-strength, 1) * 0.11);
+}
+
+.sumi-ink-pattern--filled {
+  opacity: calc(var(--sumi-ink-strength, 1) * 0.05);
+}

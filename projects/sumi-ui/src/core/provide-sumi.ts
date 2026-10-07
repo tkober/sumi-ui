@@ -11,8 +11,24 @@ import { isPlatformBrowser } from '@angular/common';
 import { SumiAccentColors, SumiAccentPreset, resolveAccent } from './accent';
 import { SumiTheme } from './theme';
 
-/** Ink-painting motif, see docs/concept.md#tuschemotive. A later issue renders these. */
-export type SumiMotif = 'mountains' | 'waves' | 'clouds' | 'bamboo';
+/**
+ * Ink-painting landscape (see docs/concept.md#tuschemotive), rendered by
+ * `sumi-landscape`, `sumi-ink-backdrop` and `sumi-empty-state`. `'none'`
+ * renders nothing. Kept as its own literal union (rather than importing
+ * `SumiLandscapeId` from `layout/ink/landscapes`) so `core` does not
+ * depend on `layout` — keep the two lists in sync.
+ */
+export type SumiMotif =
+  'fuji' | 'mountains' | 'temple' | 'torii' | 'waves' | 'bamboo' | 'moon' | 'none';
+
+/**
+ * Generated ink pattern (see docs/concept.md#tuschemotive), rendered by
+ * `sumi-pattern`, `sumi-ink-backdrop` and `sumi-empty-state`. `'none'`
+ * renders nothing. `ichimatsu` is explicitly not offered; see
+ * `SumiPatternId` in `layout/ink/patterns` for the same keep-in-sync note.
+ */
+export type SumiPattern =
+  'seigaiha' | 'asanoha' | 'shippo' | 'kikko' | 'sayagata' | 'yagasuri' | 'none';
 
 /** Default dashboard port, see docs/concept.md#app-umschalter. */
 export const SUMI_DEFAULT_DASHBOARD_PORT = 8087;
@@ -20,10 +36,14 @@ export const SUMI_DEFAULT_DASHBOARD_PORT = 8087;
 /** Default motif, used when `provideSumi()` is called without `motif`. */
 export const SUMI_DEFAULT_MOTIF: SumiMotif = 'mountains';
 
+/** Default pattern, used when `provideSumi()` is called without `pattern`. */
+export const SUMI_DEFAULT_PATTERN: SumiPattern = 'seigaiha';
+
 /** Resolved configuration, read by later issues (app switcher, motifs). */
 export interface SumiConfig {
   accent: SumiAccentColors;
   motif: SumiMotif;
+  pattern: SumiPattern;
   dashboardPort: number;
   switcherGroup?: string;
 }
@@ -32,6 +52,7 @@ export interface SumiConfig {
 export interface ProvideSumiOptions {
   accent?: SumiAccentPreset | SumiAccentColors;
   motif?: SumiMotif;
+  pattern?: SumiPattern;
   dashboardPort?: number;
   /**
    * Overrides the group `sumi-app-switcher` shows siblings for, for an app
@@ -92,6 +113,7 @@ export function provideSumi(options?: ProvideSumiOptions): EnvironmentProviders 
   const config: SumiConfig = {
     accent: resolveAccent(options?.accent),
     motif: options?.motif ?? SUMI_DEFAULT_MOTIF,
+    pattern: options?.pattern ?? SUMI_DEFAULT_PATTERN,
     dashboardPort: options?.dashboardPort ?? SUMI_DEFAULT_DASHBOARD_PORT,
     switcherGroup: options?.switcherGroup,
   };
