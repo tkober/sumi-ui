@@ -60,7 +60,8 @@
   // Fonts. Fallback stacks fill in before the self-hosted `@fontsource`
   // files load, and keep working in the unlikely case a font fails to
   // load at all; see docs/concept.md#schrift.
-  --sumi-font-display: 'Shippori Mincho', 'Hiragino Mincho ProN', 'Yu Mincho', serif;
+  --sumi-font-display:
+    'Murecho', 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', 'Yu Gothic', 'Noto Sans JP', sans-serif;
   --sumi-font-ui:
     'Zen Kaku Gothic New', 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', 'Yu Gothic',
     'Noto Sans JP', sans-serif;
