@@ -1,0 +1,11 @@
+:host {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: var(--sumi-space-3);
+}
+
+@media (max-width: 480px) {
+  :host {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

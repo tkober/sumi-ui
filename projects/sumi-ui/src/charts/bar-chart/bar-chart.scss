@@ -1,0 +1,48 @@
+:host {
+  display: block;
+}
+
+.sumi-bar-chart__svg {
+  display: block;
+  width: 100%;
+  /* height is set per-instance via [style.height.px] in the template, kept
+     fixed in real px regardless of width (see bar-chart.ts's observeWidth
+     usage) so axis text/bars never stretch at a wide container. */
+}
+
+.sumi-bar-chart__max {
+  font-family: var(--sumi-font-ui);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--sumi-text-xs);
+  fill: var(--sumi-muted);
+}
+
+.sumi-bar-chart__bar {
+  fill: var(--sumi-seq-3);
+}
+
+.sumi-bar-chart__bar--highlight {
+  fill: var(--sumi-accent);
+}
+
+.sumi-bar-chart__label {
+  font-family: var(--sumi-font-ui);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--sumi-text-xs);
+  fill: var(--sumi-muted);
+}
+
+.sumi-bar-chart__baseline {
+  stroke: var(--sumi-line);
+  stroke-width: 1;
+}
+
+.sumi-bar-chart__table {
+  margin-top: var(--sumi-space-2);
+}
+
+.sumi-bar-chart__table summary {
+  cursor: pointer;
+  font-size: var(--sumi-text-sm);
+  color: var(--sumi-muted);
+}

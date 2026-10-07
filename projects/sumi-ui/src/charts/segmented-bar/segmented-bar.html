@@ -1,0 +1,31 @@
+<svg
+  class="sumi-segmented-bar__svg"
+  [attr.viewBox]="'0 0 ' + measuredWidth() + ' ' + heightPx()"
+  [style.height.px]="heightPx()"
+  preserveAspectRatio="none"
+  role="img"
+  [attr.aria-label]="ariaLabel()"
+>
+  @for (bar of bars(); track bar.label) {
+    <rect
+      [attr.x]="bar.x"
+      y="0"
+      [attr.width]="bar.width"
+      [attr.height]="heightPx()"
+      [style.fill]="bar.color"
+    >
+      <title>{{ bar.label }}: {{ bar.value }} ({{ bar.percent | number: '1.0-0' }}%)</title>
+    </rect>
+  }
+</svg>
+
+@if (legend()) {
+  <sumi-legend [items]="legendItems()" />
+}
+
+@if (table()) {
+  <details class="sumi-segmented-bar__table">
+    <summary>Show as table</summary>
+    <sumi-data-table [columns]="tableColumns" [rows]="tableRows()" />
+  </details>
+}

@@ -1,0 +1,45 @@
+:host {
+  display: block;
+}
+
+.sumi-data-table__scroll {
+  overflow-x: auto;
+  border: 1px solid var(--sumi-line);
+  border-radius: var(--sumi-radius-sm);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--sumi-text-sm);
+}
+
+.sumi-data-table__caption {
+  text-align: left;
+  padding: var(--sumi-space-2) var(--sumi-space-3) 0;
+  color: var(--sumi-muted);
+  font-size: var(--sumi-text-xs);
+}
+
+th,
+td {
+  padding: var(--sumi-space-2) var(--sumi-space-3);
+  text-align: left;
+  white-space: nowrap;
+}
+
+th {
+  background: var(--sumi-sunken);
+  color: var(--sumi-muted);
+  font-weight: 600;
+  position: sticky;
+  top: 0;
+}
+
+tbody tr:not(:last-child) td {
+  border-bottom: 1px solid var(--sumi-line);
+}
+
+.sumi-data-table__cell--end {
+  text-align: right;
+}

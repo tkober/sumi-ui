@@ -1,9 +1,87 @@
 <sumi-page
   title="Charts"
-  subtitle="Statistics SVG components (stat tile, sparkline, heatmaps, ...)."
+  subtitle="Statistics SVG components: stat tile, segmented bar, sparkline, bar chart, legend, data table."
 >
-  <p>Placeholder for now.</p>
-  <p>
-    Area: <code>{{ placeholder }}</code>
-  </p>
+  <section class="demo">
+    <h2>Example data</h2>
+    <p class="demo__note">
+      Every number on this page is fixed example data generated once in <code>charts.ts</code>,
+      modelled on the shapes kanji-trainer, jp-conjugation and katakana-reading already produce —
+      not a live app.
+    </p>
+  </section>
+
+  <section class="demo">
+    <h2>KPI tiles</h2>
+    <sumi-stat-grid>
+      <sumi-stat-tile [value]="dueNow" label="reviews due" [emphasis]="true" link="/practice" />
+      <sumi-stat-tile [value]="lessonsAvailable" label="lessons available" />
+      <sumi-stat-tile [value]="elo" label="Elo" [delta]="eloDelta" />
+      <sumi-stat-tile value="87%" label="accuracy today" hint="last 7 days" />
+    </sumi-stat-grid>
+  </section>
+
+  <section class="demo">
+    <h2>SRS distribution</h2>
+    <sumi-segmented-bar
+      ariaLabel="SRS stage distribution"
+      [segments]="srsSegments"
+      [legend]="true"
+      [table]="true"
+    />
+  </section>
+
+  <section class="demo">
+    <h2>Elo over the last 30 sessions</h2>
+    <sumi-sparkline
+      ariaLabel="Elo rating over the last 30 sessions"
+      [points]="eloHistory"
+      [value]="elo"
+      [delta]="eloDelta"
+      [table]="true"
+    />
+  </section>
+
+  <section class="demo">
+    <h2>Coming up (next 24 hours)</h2>
+    <sumi-bar-chart
+      ariaLabel="Reviews arriving per hour over the next 24 hours, current hour highlighted"
+      [bars]="hourlyBars"
+      [labelEvery]="6"
+    />
+  </section>
+
+  <section class="demo">
+    <h2>7-day forecast by stage</h2>
+    <sumi-bar-chart
+      ariaLabel="7-day review forecast, stacked by SRS stage"
+      [rows]="forecastRows"
+      [series]="forecastSeries"
+      [table]="true"
+    />
+    <sumi-legend
+      [items]="[
+        { label: 'Apprentice', color: 'var(--sumi-seq-1)' },
+        { label: 'Guru', color: 'var(--sumi-seq-3)' },
+        { label: 'Master+', color: 'var(--sumi-seq-5)' },
+      ]"
+    />
+  </section>
+
+  <section class="demo">
+    <h2>Coverage per level</h2>
+    <div class="demo__coverage">
+      @for (row of coverageByLevel; track row.level) {
+        <div class="demo__coverage-row">
+          <span class="demo__coverage-label">Level {{ row.level }}</span>
+          <sumi-segmented-bar
+            [ariaLabel]="'Vocabulary coverage, level ' + row.level + ', ' + row.label"
+            [segments]="row.segments"
+            height="sm"
+          />
+          <span class="demo__coverage-count sumi-tabular">{{ row.label }}</span>
+        </div>
+      }
+    </div>
+  </section>
 </sumi-page>

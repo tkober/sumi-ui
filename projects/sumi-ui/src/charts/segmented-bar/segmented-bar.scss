@@ -1,0 +1,26 @@
+:host {
+  display: block;
+}
+
+.sumi-segmented-bar__svg {
+  display: block;
+  width: 100%;
+  border-radius: var(--sumi-radius-pill);
+  background: var(--sumi-sunken);
+  overflow: hidden;
+}
+
+.sumi-segmented-bar__table {
+  margin-top: var(--sumi-space-2);
+}
+
+.sumi-segmented-bar__table summary {
+  cursor: pointer;
+  font-size: var(--sumi-text-sm);
+  color: var(--sumi-muted);
+}
+
+sumi-legend {
+  display: block;
+  margin-top: var(--sumi-space-2);
+}

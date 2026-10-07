@@ -1,0 +1,60 @@
+<div class="sumi-sparkline__row">
+  <div class="sumi-sparkline__plot" #plot [style.height.px]="height()">
+    <svg
+      class="sumi-sparkline__svg"
+      [attr.viewBox]="geometry().viewBox"
+      preserveAspectRatio="none"
+      role="img"
+      [attr.aria-label]="ariaLabel()"
+    >
+      <line
+        class="sumi-sparkline__baseline"
+        x1="0"
+        [attr.x2]="geometry().width"
+        [attr.y1]="geometry().baselineY"
+        [attr.y2]="geometry().baselineY"
+      />
+      @if (geometry().areaPath) {
+        <path class="sumi-sparkline__area" [attr.d]="geometry().areaPath" />
+      }
+      @if (geometry().linePath) {
+        <path class="sumi-sparkline__line" [attr.d]="geometry().linePath" />
+      }
+      @if (geometry().areaPath || geometry().linePath) {
+        <circle
+          class="sumi-sparkline__dot"
+          [attr.cx]="geometry().last.x"
+          [attr.cy]="geometry().last.y"
+          r="3"
+        />
+      }
+    </svg>
+  </div>
+
+  @if (value() != null) {
+    <div class="sumi-sparkline__readout">
+      <span class="sumi-sparkline__value sumi-tabular">{{ value() }}</span>
+      @if (delta() != null) {
+        <span
+          class="sumi-sparkline__delta sumi-tabular"
+          [class.sumi-sparkline__delta--up]="deltaSign() > 0"
+          [class.sumi-sparkline__delta--down]="deltaSign() < 0"
+        >
+          @if (deltaSign() > 0) {
+            <span aria-hidden="true">▲</span>
+          } @else if (deltaSign() < 0) {
+            <span aria-hidden="true">▼</span>
+          }
+          {{ delta()! | number: '1.0-0' }}
+        </span>
+      }
+    </div>
+  }
+</div>
+
+@if (table()) {
+  <details class="sumi-sparkline__table">
+    <summary>Show as table</summary>
+    <sumi-data-table [columns]="tableColumns" [rows]="tableRows()" />
+  </details>
+}
