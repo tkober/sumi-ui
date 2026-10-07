@@ -179,8 +179,12 @@ successfully with `ng build` from a throwaway Angular 22 app):
      `[pattern]` override; both are `aria-hidden`.
    - `sumi-ink-backdrop`: wraps projected content for a dashboard header or
      a session-end screen — a pattern band fading out at the top, a
-     landscape at the bottom, content in between. The band and the
-     landscape never overlap.
+     landscape at the bottom, content in between. Nothing overlaps: with
+     `layout="below"` (default) the landscape stands under the content;
+     with `layout="aside"` (a left-aligned header) it stands in the
+     bottom-right corner on cards at least 640px wide and below the content
+     on narrower ones. The landscape keeps its 3:1 ratio and is never
+     cropped.
    - `sumi-empty-state`: the same split in a small tile, with a `title`
      input, a default content slot for the body text and a
      `[sumiEmptyAction]` slot for a button.

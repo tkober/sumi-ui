@@ -9,13 +9,15 @@ import { SumiPattern as SumiPatternComponent } from './pattern';
  * projected content in between on a plain, readable surface (see
  * docs/concept.md#tuschemotive and sumi-ui#16).
  *
- * The band and the landscape never overlap — the band's mask fades to
- * nothing well above where the landscape starts. Height adapts to the
- * projected content; on narrow viewports the landscape's `viewBox` keeps
- * it legible without ever causing horizontal scroll.
+ * The band, the content and the landscape never overlap. With
+ * `layout="below"` (the default, e.g. a centred session end) the
+ * landscape stands under the content; with `layout="aside"` (a
+ * left-aligned dashboard header) it stands in the bottom-right corner
+ * once the card is at least 640px wide, and below the content on narrower
+ * cards. The landscape always keeps its 3:1 ratio, so it is never cropped.
  *
  * ```html
- * <sumi-ink-backdrop>
+ * <sumi-ink-backdrop layout="aside">
  *   <h2>Dashboard</h2>
  *   <span class="big">42</span>
  * </sumi-ink-backdrop>
@@ -26,11 +28,16 @@ import { SumiPattern as SumiPatternComponent } from './pattern';
   templateUrl: './ink-backdrop.html',
   styleUrl: './ink-backdrop.scss',
   imports: [SumiLandscape, SumiPatternComponent],
-  host: { class: 'sumi-ink-backdrop' },
+  host: {
+    class: 'sumi-ink-backdrop',
+    '[class.sumi-ink-backdrop--aside]': "layout() === 'aside'",
+  },
 })
 export class SumiInkBackdrop {
   /** Overrides `SUMI_CONFIG`'s `motif` for this instance. */
   readonly motif = input<SumiMotif>();
   /** Overrides `SUMI_CONFIG`'s `pattern` for this instance. */
   readonly pattern = input<SumiPattern>();
+  /** Where the landscape stands relative to the content. */
+  readonly layout = input<'below' | 'aside'>('below');
 }

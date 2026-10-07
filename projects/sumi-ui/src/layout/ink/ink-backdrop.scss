@@ -2,31 +2,20 @@
   display: block;
   position: relative;
   overflow: hidden;
+  container-type: inline-size;
   border-radius: var(--sumi-radius);
   background: var(--sumi-surface);
   border: 1px solid var(--sumi-line);
 }
 
-// The band fades out downward and the scene sits below it — they never
-// overlap (see docs/concept.md#tuschemotive).
+// The band fades out downward and the scene sits below the content — they
+// never overlap each other or the content (see docs/concept.md#tuschemotive).
 .sumi-ink-backdrop__band {
   position: absolute;
   inset: 0 0 auto 0;
   height: 54px;
   -webkit-mask-image: linear-gradient(180deg, #000, transparent);
   mask-image: linear-gradient(180deg, #000, transparent);
-  pointer-events: none;
-}
-
-// Inset from the left (not full width): the landscape's viewBox is 3:1, so
-// stretching it edge-to-edge at a 120px height would crop away everything
-// but its lowest sliver on a wide card. Keeping it narrower holds its
-// aspect ratio close enough to show the whole scene, including its
-// tallest features (the pagoda's roofline, the torii's beam).
-.sumi-ink-backdrop__scene {
-  position: absolute;
-  inset: auto 0 0 40%;
-  height: 120px;
   pointer-events: none;
 }
 
@@ -37,13 +26,33 @@
   gap: var(--sumi-space-1);
 }
 
-@media (max-width: 480px) {
-  .sumi-ink-backdrop__scene {
-    inset: auto 0 0 10%;
-    height: 88px;
+// The scene keeps the landscape's own 3:1 ratio, so the viewBox is never
+// cropped (the sun or moon stays whole). Its sides fade into the surface
+// instead of ending in a hard edge.
+.sumi-ink-backdrop__scene {
+  display: block;
+  width: min(100%, 480px);
+  aspect-ratio: 3 / 1;
+  margin: calc(-1 * var(--sumi-space-4)) auto 0;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 20%, #000 80%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 20%, #000 80%, transparent);
+  pointer-events: none;
+}
+
+// Aside: on a wide card the scene stands in the bottom-right corner next
+// to left-aligned content, keeping a header short.
+@container (min-width: 640px) {
+  :host(.sumi-ink-backdrop--aside) .sumi-ink-backdrop__content {
+    padding-right: 45%;
   }
 
-  .sumi-ink-backdrop__content {
-    padding: var(--sumi-space-4);
+  :host(.sumi-ink-backdrop--aside) .sumi-ink-backdrop__scene {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 42%;
+    margin: 0;
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 25%);
+    mask-image: linear-gradient(90deg, transparent, #000 25%);
   }
 }

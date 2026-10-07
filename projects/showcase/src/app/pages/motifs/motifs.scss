@@ -24,19 +24,6 @@
   font-size: var(--sumi-text-sm);
 }
 
-.placement-demo {
-  min-height: 160px;
-}
-
-.placement-demo--end {
-  padding-bottom: var(--sumi-space-4);
-}
-
-.placement-demo--end sumi-session-summary {
-  position: relative;
-  z-index: 1;
-}
-
 .placement-demo--empty {
   max-width: 320px;
 }

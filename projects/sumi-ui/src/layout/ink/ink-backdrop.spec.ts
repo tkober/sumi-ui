@@ -41,13 +41,20 @@ describe('SumiInkBackdrop', () => {
     expect(host.querySelector('sumi-pattern')).toBeTruthy();
   });
 
-  it('places the pattern band before the landscape in the DOM, before the content', () => {
+  it('orders band, content and landscape top to bottom', () => {
     const fixture = TestBed.createComponent(HostComponent);
     fixture.detectChanges();
     const backdrop = (fixture.nativeElement as HTMLElement).querySelector('sumi-ink-backdrop')!;
     const children = Array.from(backdrop.children).map((el) => el.tagName.toLowerCase());
-    expect(children.indexOf('sumi-pattern')).toBeLessThan(children.indexOf('sumi-landscape'));
-    expect(children.indexOf('sumi-landscape')).toBeLessThan(children.findIndex((t) => t === 'div'));
+    expect(children.indexOf('sumi-pattern')).toBeLessThan(children.findIndex((t) => t === 'div'));
+    expect(children.findIndex((t) => t === 'div')).toBeLessThan(children.indexOf('sumi-landscape'));
+  });
+
+  it('only stands the landscape aside when asked to', () => {
+    const fixture = TestBed.createComponent(HostComponent);
+    fixture.detectChanges();
+    const backdrop = (fixture.nativeElement as HTMLElement).querySelector('sumi-ink-backdrop')!;
+    expect(backdrop.classList).not.toContain('sumi-ink-backdrop--aside');
   });
 
   it('passes motif/pattern inputs down to the building blocks', () => {
