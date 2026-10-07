@@ -18,7 +18,7 @@ projects/
       core/      # tokens, theme, fonts, provideSumi(), SumiHotkeys, sumi-hotkey-help
       forms/     # native-element directives and composite form controls
       practice/  # kana conversion + sumi-answer-field, sumiHoldFocus
-      charts/    # statistics SVG components: stat tile, segmented bar, sparkline, bar chart, legend, data table
+      charts/    # statistics components: stat tile, segmented bar, sparkline, bar chart, calendar/matrix heatmaps, legend, data table
       layout/    # app shell, app switcher, page, card, badge, banner
     styles/
       sumi.scss        # style entry point: tokens + base styles
@@ -607,10 +607,12 @@ successfully with `ng build` from a throwaway Angular 22 app):
 
    `sumi-ui/charts` (`SUMI_CHARTS`, see docs/concept.md#statistik-komponenten)
    is the statistics area: `sumi-stat-tile` + `sumi-stat-grid`,
-   `sumi-segmented-bar`, `sumi-sparkline`, `sumi-bar-chart`, `sumi-legend`
-   and `sumi-data-table`. The maths behind every chart — scales, ticks,
-   sparkline/area paths, segment percentages, stacked bar offsets, sparse
-   x-axis labels — lives in pure, exported, unit-tested functions in
+   `sumi-segmented-bar`, `sumi-sparkline`, `sumi-bar-chart`,
+   `sumi-calendar-heatmap`, `sumi-matrix-heatmap`, `sumi-legend`,
+   `sumi-ramp-legend` and `sumi-data-table`. The maths behind every chart —
+   scales, ticks, sparkline/area paths, segment percentages, stacked bar
+   offsets, sparse x-axis labels, the heatmaps' week grid and bucketing —
+   lives in pure, exported, unit-tested functions in
    `projects/sumi-ui/src/charts/math.ts`; the components themselves only
    render. It depends on **`d3-scale` and `d3-shape`**, both
    `peerDependencies` here exactly like `wanakana` (install them in the app:
@@ -660,11 +662,49 @@ successfully with `ng build` from a throwaway Angular 22 app):
    `sumi-bar-chart` also has a stacked mode (`rows` + `series` instead of
    `bars`, coloured from the `--sumi-seq-*` ramp by series index) for a
    forecast broken down by stage, same shape as kanji-trainer's forecast
-   page. See `projects/showcase/src/app/pages/charts/charts.ts`/`.html` for
-   all six components wired up against realistic example data (KPI tiles,
+   page.
+
+   `sumi-calendar-heatmap` and `sumi-matrix-heatmap` are the two "any
+   values in a grid" charts (day activity as weeks x weekdays; anything
+   else as rows x columns, e.g. kana confidence or a miss rate by form x
+   word type). Both draw from the same `--sumi-seq-1`…`-5` ramp plus
+   `--sumi-sunken` for "no activity"/"no data" and share a small
+   `sumi-ramp-legend` ("Less [steps] More", with an optional "no data"
+   entry) instead of `sumi-legend`'s per-category rows:
+
+   ```html
+   <sumi-calendar-heatmap ariaLabel="Reviews per day, last 26 weeks" [days]="reviewDays" table />
+
+   <sumi-matrix-heatmap
+     ariaLabel="Katakana reading confidence"
+     [rows]="['ア', 'カ', 'サ']"
+     [columns]="['a', 'i', 'u', 'e', 'o']"
+     [cells]="confidenceCells"
+     cellLang="ja"
+     [domain]="[0, 1]"
+     [format]="toPercent"
+     showValues
+     table
+   />
+   ```
+
+   `sumi-calendar-heatmap`'s cell size is computed from its measured
+   container width (clamped 10–16px) so the grid fills the width without
+   stretching its `<title>` text; a grid that does not fit `weeks` columns
+   even at the minimum size scrolls horizontally inside its own container,
+   pre-scrolled to the newest week. `sumi-matrix-heatmap` renders as a CSS
+   grid rather than an SVG — a `(row, column)` pair missing from `cells`
+   and one explicitly `value: null` both render as "no data" (a diagonal
+   hatch over `--sumi-sunken`, per docs/concept.md's "Nie nur Farbe"), and
+   its row-header column stays `position: sticky` while the grid scrolls
+   horizontally on a narrow screen.
+
+   See `projects/showcase/src/app/pages/charts/charts.ts`/`.html` for all
+   eight components wired up against realistic example data (KPI tiles,
    SRS distribution, a 30-session Elo sparkline, a 24h "coming up" chart
-   with the current hour highlighted, a stacked 7-day forecast and
-   per-level coverage bars).
+   with the current hour highlighted, a stacked 7-day forecast, a 26-week
+   review calendar, a kana confidence matrix, a conjugation miss-rate
+   matrix and per-level coverage bars).
 
 5. Install the library's font, wanakana and chart maths packages as direct
    dependencies — they are `peerDependencies` here, so this repo expects
