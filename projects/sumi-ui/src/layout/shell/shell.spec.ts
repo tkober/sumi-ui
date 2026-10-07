@@ -5,6 +5,7 @@ import { SumiAppShell, SumiNavItem } from './shell';
 import { SumiShell } from './shell.service';
 import { SumiFocusModeDirective } from './focus-mode.directive';
 import { SumiNavLockDirective } from './nav-lock.directive';
+import { SumiShellFocusActionsDirective } from './focus-actions.directive';
 
 @Component({ template: 'dummy' })
 class DummyPage {}
@@ -199,6 +200,120 @@ describe('SumiAppShell with nav lock', () => {
     );
     expect(unlockedLink.getAttribute('aria-disabled')).toBeNull();
     expect(shellFixture.nativeElement.textContent).not.toContain('A conversation is running');
+  });
+});
+
+describe('SumiAppShell with focus actions', () => {
+  @Component({
+    imports: [SumiFocusModeDirective, SumiShellFocusActionsDirective],
+    template: `@if (show()) {
+      <div sumiFocusMode>
+        <span *sumiShellFocusActions class="probe">{{ count() }}</span>
+      </div>
+    }`,
+  })
+  class FocusActionsHost {
+    show = signal(true);
+    count = signal(0);
+  }
+
+  @Component({
+    imports: [SumiFocusModeDirective, SumiShellFocusActionsDirective],
+    template: `<div sumiFocusMode>
+      <span *sumiShellFocusActions class="probe-2">second</span>
+    </div>`,
+  })
+  class SecondFocusActionsHost {}
+
+  async function createShellWithFocusHost() {
+    TestBed.configureTestingModule({
+      providers: [provideRouter([{ path: '**', component: DummyPage }])],
+    });
+    const shellFixture = TestBed.createComponent(SumiAppShell);
+    shellFixture.componentRef.setInput('brand', { glyph: '墨', name: 'Test App' });
+    shellFixture.componentRef.setInput('nav', makeNav(2));
+    shellFixture.detectChanges();
+    await shellFixture.whenStable();
+    return shellFixture;
+  }
+
+  it('renders the registered template only while in focus mode, with live bindings', async () => {
+    const shellFixture = await createShellWithFocusHost();
+    const hostFixture = TestBed.createComponent(FocusActionsHost);
+    hostFixture.detectChanges();
+    shellFixture.detectChanges();
+
+    const area = (): HTMLElement | null =>
+      shellFixture.nativeElement.querySelector('.sumi-app-shell__focus-actions');
+    expect(area()?.querySelector('.probe')?.textContent).toBe('0');
+
+    hostFixture.componentInstance.count.set(5);
+    hostFixture.detectChanges();
+    shellFixture.detectChanges();
+    expect(area()?.querySelector('.probe')?.textContent).toBe('5');
+
+    hostFixture.componentInstance.show.set(false);
+    hostFixture.detectChanges();
+    shellFixture.detectChanges();
+    expect(shellFixture.nativeElement.querySelector('.sumi-app-shell__focus-actions')).toBeNull();
+  });
+
+  it('falls back to the projected slot when nothing is registered', async () => {
+    @Component({
+      imports: [SumiAppShell, SumiFocusModeDirective],
+      template: `<sumi-app-shell [brand]="brand" [nav]="[]">
+        <div sumiShellFocusActions class="fallback">Fallback content</div>
+        <div sumiFocusMode></div>
+      </sumi-app-shell>`,
+    })
+    class FallbackHost {
+      brand = { glyph: '墨', name: 'Test App' };
+    }
+
+    TestBed.configureTestingModule({
+      providers: [provideRouter([{ path: '**', component: DummyPage }])],
+    });
+    const fixture = TestBed.createComponent(FallbackHost);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const fallback: HTMLElement | null = fixture.nativeElement.querySelector('.fallback');
+    expect(fallback?.textContent).toBe('Fallback content');
+  });
+
+  it('an older registration being destroyed after a newer one registers does not clear it', async () => {
+    const shellFixture = await createShellWithFocusHost();
+
+    const firstFixture = TestBed.createComponent(FocusActionsHost);
+    firstFixture.detectChanges();
+    await firstFixture.whenStable();
+    shellFixture.detectChanges();
+    await shellFixture.whenStable();
+    expect(
+      shellFixture.nativeElement.querySelector('.sumi-app-shell__focus-actions .probe'),
+    ).toBeTruthy();
+
+    const secondFixture = TestBed.createComponent(SecondFocusActionsHost);
+    secondFixture.detectChanges();
+    await secondFixture.whenStable();
+    shellFixture.detectChanges();
+    await shellFixture.whenStable();
+    expect(
+      shellFixture.nativeElement.querySelector('.sumi-app-shell__focus-actions .probe-2')
+        ?.textContent,
+    ).toBe('second');
+
+    // Destroying the older (first) registration must not clear the newer
+    // (second) one, even though both were registered against the same
+    // SumiShell instance.
+    firstFixture.destroy();
+    shellFixture.detectChanges();
+    await shellFixture.whenStable();
+    expect(
+      shellFixture.nativeElement.querySelector('.sumi-app-shell__focus-actions .probe-2')
+        ?.textContent,
+    ).toBe('second');
   });
 });
 

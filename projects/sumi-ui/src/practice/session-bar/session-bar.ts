@@ -3,12 +3,29 @@ import { SumiButtonDirective } from 'sumi-ui/forms';
 
 /**
  * Progress for a running session: "12 / 42", accuracy and an "End
- * session" ghost button. Meant for the shell's `[sumiShellFocusActions]`
- * slot (while `sumiFocusMode` is active) or just above the practice card.
+ * session" ghost button. Meant for the shell header's focus-actions area
+ * (while `sumiFocusMode` is active), or just above the practice card.
  *
  * `total` wins when both `total` and `remaining` are given; without
  * either, only the answered count is shown (no "/ N", no progress bar) —
  * useful for an endless/untimed queue.
+ *
+ * A routed page registers it in the shell's header with
+ * `*sumiShellFocusActions` (see `SumiShellFocusActionsDirective`,
+ * `sumi-ui/layout`), right in the page's own template:
+ *
+ * ```html
+ * <sumi-session-bar
+ *   *sumiShellFocusActions
+ *   [answered]="answered()"
+ *   [correct]="correct()"
+ *   [remaining]="remaining()"
+ *   (end)="endSession()"
+ * />
+ * ```
+ *
+ * An app that builds its shell content directly in `app.html` instead can
+ * project it into the `[sumiShellFocusActions]` fallback slot there:
  *
  * ```html
  * <sumi-app-shell ...>

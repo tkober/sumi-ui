@@ -107,8 +107,7 @@
 }
 
 .sumi-app-shell__actions,
-.sumi-app-shell__switcher,
-.sumi-app-shell__focus-actions {
+.sumi-app-shell__switcher {
   display: flex;
   align-items: center;
   gap: var(--sumi-space-2);
@@ -117,6 +116,17 @@
 
 .sumi-app-shell__switcher:empty {
   margin-left: 0;
+}
+
+// Sits between the brand and the actions/theme toggle while in focus mode,
+// taking the available middle space so its content (typically
+// sumi-session-bar) can stretch instead of being squeezed to fit.
+.sumi-app-shell__focus-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sumi-space-2);
+  flex: 1;
+  min-width: 0;
 }
 
 .sumi-app-shell__main {
