@@ -20,6 +20,7 @@ export class App {
     { label: 'Practice', link: 'practice', icon: 'practice', badge: 3 },
     { label: 'Charts', link: 'charts', icon: 'stats' },
     { label: 'Layout', link: 'layout', icon: 'home' },
+    { label: 'Motifs', link: 'motifs', icon: 'apps' },
     { label: 'About', link: 'about', icon: 'list' },
   ];
 

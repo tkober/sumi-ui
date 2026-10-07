@@ -1,0 +1,89 @@
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sumi-space-4);
+  align-items: end;
+}
+
+.controls label {
+  display: grid;
+  gap: var(--sumi-space-1);
+  font-size: var(--sumi-text-sm);
+  color: var(--sumi-muted);
+}
+
+.controls select,
+.controls input[type='range'] {
+  font: inherit;
+  color: var(--sumi-text);
+}
+
+.hint {
+  margin: 0;
+  color: var(--sumi-text-2);
+  font-size: var(--sumi-text-sm);
+}
+
+.placement-demo {
+  min-height: 160px;
+}
+
+.placement-demo--end {
+  padding-bottom: var(--sumi-space-4);
+}
+
+.placement-demo--end sumi-session-summary {
+  position: relative;
+  z-index: 1;
+}
+
+.placement-demo--empty {
+  max-width: 320px;
+}
+
+.big {
+  display: block;
+  font-size: var(--sumi-text-3xl);
+  font-weight: 700;
+  color: var(--sumi-accent);
+}
+
+.muted {
+  color: var(--sumi-muted);
+  font-size: var(--sumi-text-sm);
+}
+
+.gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: var(--sumi-space-3);
+}
+
+.tile {
+  display: grid;
+  gap: var(--sumi-space-2);
+  padding: 0;
+  border: 1px solid var(--sumi-line);
+  border-radius: var(--sumi-radius-sm);
+  background: var(--sumi-surface);
+  overflow: hidden;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+}
+
+.tile:hover {
+  border-color: var(--sumi-accent);
+}
+
+.tile-art {
+  display: block;
+  height: 80px;
+  background: var(--sumi-bg);
+}
+
+.tile-name {
+  padding: 0 var(--sumi-space-3) var(--sumi-space-3);
+  font-size: var(--sumi-text-sm);
+}
