@@ -120,11 +120,34 @@ successfully with `ng build` from a throwaway Angular 22 app):
    a `sumi-ui/` submodule folder.
 
 4. Call `provideSumi({ accent: 'ai', motif: 'mountains' })` in
-   `app.config.ts` to pick the app's accent and motif. **`provideSumi` does
-   not exist yet** — it ships in a later issue (core area, tokens/theme).
-   For now, skip this step; the library has no providers to call.
+   `app.config.ts` to pick the app's accent and motif:
 
-5. In the app's CI workflow, check out submodules and make sure a submodule
+   ```ts
+   import { ApplicationConfig } from '@angular/core';
+   import { provideSumi } from 'sumi-ui/core';
+
+   export const appConfig: ApplicationConfig = {
+     providers: [
+       // ...other providers
+       provideSumi({ accent: 'ai', motif: 'mountains' }),
+     ],
+   };
+   ```
+
+   `accent` is one of the named presets (`'ai'`, `'yamabuki'`, `'asagi'`,
+   `'fuji'`, see docs/concept.md#tokens) or custom `{ light, dark }` colour
+   values. `motif` and `dashboardPort` are optional; see
+   `provideSumi`'s JSDoc in `projects/sumi-ui/src/core/provide-sumi.ts`
+   for defaults.
+
+5. Install the library's font packages as direct dependencies — they are
+   `peerDependencies` here, so this repo expects the app to provide them:
+
+   ```bash
+   npm install @fontsource/shippori-mincho @fontsource/zen-kaku-gothic-new @fontsource/ibm-plex-mono
+   ```
+
+6. In the app's CI workflow, check out submodules and make sure a submodule
    bump still triggers the workflow:
 
    ```yaml
@@ -143,7 +166,7 @@ successfully with `ng build` from a throwaway Angular 22 app):
    repos are public, so CI can check out the submodule without an extra
    token.
 
-6. Add Dependabot updates for the submodule, so a change to `sumi-ui` opens
+7. Add Dependabot updates for the submodule, so a change to `sumi-ui` opens
    a PR in the app's repo:
 
    ```yaml
@@ -156,7 +179,7 @@ successfully with `ng build` from a throwaway Angular 22 app):
          interval: weekly
    ```
 
-7. Update the submodule to the latest commit on its default branch with:
+8. Update the submodule to the latest commit on its default branch with:
 
    ```bash
    git submodule update --remote
