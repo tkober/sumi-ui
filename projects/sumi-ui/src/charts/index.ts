@@ -20,12 +20,28 @@ export {
   sparseLabelIndices,
   rampColor,
   DEFAULT_BAR_PLOT,
+  calendarCellSize,
+  calendarBucketThresholds,
+  calendarBucket,
+  calendarMonthLabels,
+  formatCalendarCellTitle,
+  calendarGeometry,
+  matrixDomain,
+  matrixBucket,
+  matrixCellGeometry,
+  heatmapCellColor,
+  heatmapTextColor,
   type SumiPoint,
   type SparklineGeometry,
   type SegmentGeometry,
   type BarGeometry,
   type StackedBarGeometry,
   type PlotBox,
+  type SumiCalendarDay,
+  type CalendarCell,
+  type CalendarGeometry,
+  type SumiMatrixCellInput,
+  type MatrixCellGeometry,
 } from './math';
 
 export { SumiStatTile } from './stat-tile/stat-tile';
@@ -39,7 +55,10 @@ export {
   type SumiStackedRow,
 } from './bar-chart/bar-chart';
 export { SumiLegend, type SumiLegendItem } from './legend/legend';
+export { SumiRampLegend } from './ramp-legend/ramp-legend';
 export { SumiDataTable, type SumiTableColumn, type SumiTableRow } from './data-table/data-table';
+export { SumiCalendarHeatmap } from './calendar-heatmap/calendar-heatmap';
+export { SumiMatrixHeatmap } from './matrix-heatmap/matrix-heatmap';
 
 import { SumiStatTile } from './stat-tile/stat-tile';
 import { SumiStatGrid } from './stat-grid/stat-grid';
@@ -47,7 +66,10 @@ import { SumiSegmentedBar } from './segmented-bar/segmented-bar';
 import { SumiSparkline } from './sparkline/sparkline';
 import { SumiBarChart } from './bar-chart/bar-chart';
 import { SumiLegend } from './legend/legend';
+import { SumiRampLegend } from './ramp-legend/ramp-legend';
 import { SumiDataTable } from './data-table/data-table';
+import { SumiCalendarHeatmap } from './calendar-heatmap/calendar-heatmap';
+import { SumiMatrixHeatmap } from './matrix-heatmap/matrix-heatmap';
 
 /** Convenience array for `imports: [...SUMI_CHARTS]` in a standalone component. */
 export const SUMI_CHARTS = [
@@ -57,5 +79,8 @@ export const SUMI_CHARTS = [
   SumiSparkline,
   SumiBarChart,
   SumiLegend,
+  SumiRampLegend,
   SumiDataTable,
+  SumiCalendarHeatmap,
+  SumiMatrixHeatmap,
 ] as const;

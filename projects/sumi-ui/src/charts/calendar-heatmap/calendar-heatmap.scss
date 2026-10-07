@@ -1,0 +1,46 @@
+:host {
+  display: block;
+}
+
+.sumi-calendar-heatmap__scroll {
+  overflow-x: auto;
+  // The grid itself decides when to scroll (calendarCellSize falls back to
+  // the minimum cell size rather than shrinking further); this container
+  // only provides the scrollbar once that minimum no longer fits.
+  max-width: 100%;
+}
+
+.sumi-calendar-heatmap__svg {
+  display: block;
+  // width/height are set in real px via [attr.width]/[attr.height] (see
+  // calendar-heatmap.ts's observeWidth usage) — never scaled by a
+  // percentage, so cells and text always render at the computed px size,
+  // never stretched to fill extra space.
+}
+
+.sumi-calendar-heatmap__cell {
+  stroke: var(--sumi-line);
+  stroke-width: 1;
+}
+
+.sumi-calendar-heatmap__month,
+.sumi-calendar-heatmap__weekday {
+  font-family: var(--sumi-font-ui);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--sumi-text-xs);
+  fill: var(--sumi-muted);
+}
+
+.sumi-calendar-heatmap__legend {
+  margin-top: var(--sumi-space-2);
+}
+
+.sumi-calendar-heatmap__table {
+  margin-top: var(--sumi-space-2);
+}
+
+.sumi-calendar-heatmap__table summary {
+  cursor: pointer;
+  font-size: var(--sumi-text-sm);
+  color: var(--sumi-muted);
+}

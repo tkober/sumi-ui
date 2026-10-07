@@ -1,0 +1,27 @@
+:host {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sumi-space-1);
+  font-size: var(--sumi-text-xs);
+  color: var(--sumi-muted);
+}
+
+.sumi-ramp-legend__swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  flex: none;
+}
+
+.sumi-ramp-legend__swatch--no-data {
+  background: var(--sumi-sunken);
+  border: 1px solid var(--sumi-line);
+}
+
+.sumi-ramp-legend__no-data {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sumi-space-1);
+  margin-left: var(--sumi-space-3);
+}

@@ -1,0 +1,71 @@
+:host {
+  display: block;
+}
+
+.sumi-matrix-heatmap__scroll {
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.sumi-matrix-heatmap__grid {
+  display: grid;
+  gap: 2px;
+  width: max-content;
+  min-width: 100%;
+}
+
+.sumi-matrix-heatmap__corner {
+  // Sits above the sticky row-header column, so it needs to stick too,
+  // or it would scroll out from under the column headers.
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: var(--sumi-surface);
+}
+
+.sumi-matrix-heatmap__col-header,
+.sumi-matrix-heatmap__row-header {
+  display: flex;
+  align-items: center;
+  font-family: var(--sumi-font-ui);
+  font-size: var(--sumi-text-xs);
+  color: var(--sumi-muted);
+  background: var(--sumi-sunken);
+  padding: var(--sumi-space-1) var(--sumi-space-2);
+  white-space: nowrap;
+}
+
+.sumi-matrix-heatmap__col-header {
+  justify-content: center;
+}
+
+.sumi-matrix-heatmap__row-header {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  justify-content: flex-start;
+}
+
+.sumi-matrix-heatmap__cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 32px;
+  border-radius: 2px;
+  font-family: var(--sumi-font-ui);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--sumi-text-xs);
+}
+
+.sumi-matrix-heatmap__cell--no-data {
+  // Colour alone never carries the "no data" state (see "Nie nur Farbe"
+  // in docs/concept.md's Leitbild) — a diagonal hatch over the sunken
+  // fill marks it even for a viewer who cannot tell the ramp steps apart.
+  background-image: repeating-linear-gradient(
+    -45deg,
+    transparent 0,
+    transparent 3px,
+    var(--sumi-line) 3px,
+    var(--sumi-line) 4px
+  );
+}

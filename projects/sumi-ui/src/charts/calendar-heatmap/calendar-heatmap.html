@@ -1,0 +1,53 @@
+<div class="sumi-calendar-heatmap__scroll" #scroll>
+  <svg
+    class="sumi-calendar-heatmap__svg"
+    [attr.viewBox]="'0 0 ' + svgWidth() + ' ' + svgHeight()"
+    [attr.width]="svgWidth()"
+    [attr.height]="svgHeight()"
+    role="img"
+    [attr.aria-label]="ariaLabel()"
+  >
+    @for (label of geometry().monthLabels; track label.week) {
+      <text
+        class="sumi-calendar-heatmap__month"
+        [attr.x]="cellX(label.week)"
+        [attr.y]="MONTH_LABEL_HEIGHT - 4"
+      >
+        {{ label.label }}
+      </text>
+    }
+
+    @for (label of geometry().weekdayLabels; track label.row) {
+      <text
+        class="sumi-calendar-heatmap__weekday"
+        x="0"
+        [attr.y]="cellY(label.row) + geometry().cellSize * 0.75"
+      >
+        {{ label.label }}
+      </text>
+    }
+
+    @for (cell of geometry().cells; track cell.date) {
+      <rect
+        class="sumi-calendar-heatmap__cell"
+        [attr.x]="cellX(cell.week)"
+        [attr.y]="cellY(cell.weekday)"
+        [attr.width]="geometry().cellSize"
+        [attr.height]="geometry().cellSize"
+        [attr.rx]="2"
+        [style.fill]="fill(cell.bucket)"
+      >
+        <title>{{ cell.title }}</title>
+      </rect>
+    }
+  </svg>
+</div>
+
+<sumi-ramp-legend class="sumi-calendar-heatmap__legend" minLabel="Less" maxLabel="More" />
+
+@if (table()) {
+  <details class="sumi-calendar-heatmap__table">
+    <summary>Show as table</summary>
+    <sumi-data-table [columns]="tableColumns" [rows]="tableRows()" />
+  </details>
+}
