@@ -1,0 +1,14 @@
+@if (title()) {
+  <header class="sumi-page__header">
+    <div class="sumi-page__heading">
+      <h1>{{ title() }}</h1>
+      @if (subtitle()) {
+        <p class="sumi-page__subtitle">{{ subtitle() }}</p>
+      }
+    </div>
+    <div class="sumi-page__actions">
+      <ng-content select="[sumiPageActions]" />
+    </div>
+  </header>
+}
+<ng-content />
