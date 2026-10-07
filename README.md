@@ -63,6 +63,20 @@ dedicated `sumi-ui` project/target was considered but a single showcase
 target is simpler to keep in sync and is enough while the library has no
 build of its own.
 
+### Trying the app switcher against a real dashboard
+
+The showcase's Layout page includes `<sumi-app-switcher sumiShellSwitcher />`
+in its shell, same as a real app would. To see it with real data, run a
+local copy of kanazawa-dashboard's backend (see that repo's README) pointed
+at a throwaway `apps.yaml` with `host: 127.0.0.1` and an entry for the
+showcase's own origin, then tell the showcase which port that backend is
+on by appending `?dashboardPort=<port>` to the showcase's URL — the
+showcase's `app.config.ts` reads this query parameter once at startup and
+passes it to `provideSumi()`, falling back to the committed default
+(`8087`) when absent. This is a one-line, committed mechanism (not a
+hardcoded port edited in and out for testing); no source change is needed
+between sessions.
+
 ## Using Sumi UI in an app
 
 These are the exact steps verified against this repository (checked out as
@@ -140,6 +154,44 @@ successfully with `ng build` from a throwaway Angular 22 app):
    values. `motif` and `dashboardPort` are optional; see
    `provideSumi`'s JSDoc in `projects/sumi-ui/src/core/provide-sumi.ts`
    for defaults.
+
+   ### App switcher
+
+   Put `<sumi-app-switcher sumiShellSwitcher />` into `sumi-app-shell`'s
+   switcher slot to get a header button that opens a menu of the other apps
+   in this app's group:
+
+   ```html
+   <sumi-app-shell [brand]="brand" [nav]="navItems">
+     <sumi-app-switcher sumiShellSwitcher />
+     <router-outlet />
+   </sumi-app-shell>
+   ```
+
+   `sumi-app-shell` reserves the slot but never renders the switcher itself
+   — an app opts in explicitly, since not every app wants it (or is listed
+   in kanazawa-dashboard at all).
+
+   The list comes entirely from kanazawa-dashboard's `config/apps.yaml`
+   (via `GET /api/apps`, see
+   [docs/concept.md#app-umschalter](docs/concept.md#app-umschalter)): an
+   app shows up in the switcher once it has an entry there whose `group`
+   matches the current app's own entry. `accent` is optional and only
+   changes the small colour bar next to each app's name (it falls back to
+   `--sumi-line`); `icon` and `description` are optional too.
+   - `dashboardPort` (`provideSumi()`, default `8087`): the port
+     kanazawa-dashboard itself listens on, used both to fetch `/api/apps`
+     and to build the "All apps" link.
+   - `switcherGroup` (`provideSumi()`): overrides which group's apps are
+     shown. Only needed for an app that is not itself listed in
+     `apps.yaml` (so there is no entry to detect its own group from).
+
+   The switcher is read-only about its own failure: if kanazawa-dashboard
+   is unreachable (wrong network, dashboard down, CORS misconfigured) and
+   nothing was ever cached, `sumi-app-switcher` silently renders nothing —
+   no error, no placeholder. Once a fetch has succeeded, the result is
+   cached in `localStorage`, so a later failed refresh still shows the
+   last known list.
 
 5. Install the library's font packages as direct dependencies — they are
    `peerDependencies` here, so this repo expects the app to provide them:
