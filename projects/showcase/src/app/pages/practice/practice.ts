@@ -63,13 +63,6 @@ export class PracticePage {
       keys: SUMI_KEYS.escape,
       label: 'Clear the field',
       scope: 'practice',
-      // Gated on the flyout being closed rather than relying on
-      // registration order: `sumi-hotkey-help` now lives once in the
-      // shell, mounted before this page, so stack semantics alone would
-      // have *this* Escape win over the flyout's close — exactly
-      // backwards. Checking `helpOpen()` here keeps "close the flyout
-      // first" correct independent of where either one happens to mount.
-      enabled: () => !this.hotkeys.helpOpen(),
       handler: () => {
         this.value.set('');
         this.logHotkey('Esc');

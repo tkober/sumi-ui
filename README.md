@@ -295,14 +295,9 @@ successfully with `ng build` from a throwaway Angular 22 app):
    flyout's own while it is enabled, and the ground rule still keeps `?`
    from typing into the field beforehand.
 
-   If a page registers its own `Escape` too (e.g. to clear a field),
-   gate it on `!hotkeys.helpOpen()` rather than leaning on registration
-   order: the shell's `<sumi-hotkey-help />` mounts once, before every
-   page, so its `Escape` is always the *older* registration and stack
-   semantics alone would let a page's own `Escape` win even while the
-   flyout is open. Checking `helpOpen()` keeps "close the flyout first"
-   correct regardless of mount order — see the showcase's Practice page
-   for the pattern.
+   While the flyout is open, `SumiHotkeys` itself closes it on `Escape`
+   before any registration is considered, so a page's own `Escape` (e.g.
+   to clear a field) needs no extra gating.
 
 5. Install the library's font packages as direct dependencies — they are
    `peerDependencies` here, so this repo expects the app to provide them:

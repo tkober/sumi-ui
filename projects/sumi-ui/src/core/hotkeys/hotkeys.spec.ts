@@ -236,6 +236,20 @@ describe('SumiHotkeys', () => {
       hotkeys.closeHelp();
       expect(hotkeys.helpOpen()).toBe(false);
     });
+
+    it('closes the open flyout on Escape before any registered Escape runs', () => {
+      const hotkeys = create();
+      const handler = vi.fn();
+      hotkeys.register({ keys: 'Escape', label: 'Clear', scope: 'practice', handler });
+      hotkeys.toggleHelp();
+
+      dispatch(document, { key: 'Escape' });
+      expect(hotkeys.helpOpen()).toBe(false);
+      expect(handler).not.toHaveBeenCalled();
+
+      dispatch(document, { key: 'Escape' });
+      expect(handler).toHaveBeenCalledTimes(1);
+    });
   });
 });
 

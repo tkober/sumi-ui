@@ -1,6 +1,6 @@
 import { Component, computed, inject } from '@angular/core';
 import { SumiIcon } from '../icon/icon';
-import { SumiKbdDirective } from '../../forms/kbd';
+import { SumiKbdDirective } from 'sumi-ui/forms';
 import { type SumiPlatform, detectPlatform, formatKeys } from '../hotkeys/key-format';
 import { SUMI_KEYS, SumiHotkeys, type SumiHotkeyScope, injectHotkey } from '../hotkeys/hotkeys';
 
@@ -40,7 +40,7 @@ const SCOPE_ORDER: SumiHotkeyScope[] = ['page', 'practice', 'feedback'];
  * Injecting `SumiHotkeys` and calling `toggleHelp()` works from anywhere.
  *
  * This component registers `?` itself (scope `page`) to toggle and
- * `Escape` (enabled only while open) to close — both go through the same
+ * relies on `SumiHotkeys` closing it on `Escape` — both go through the same
  * `SumiHotkeys` ground rule, so `?` stays inert while a field has focus
  * unless a caller's own registration opts in with `allowInEditable` (see
  * the practice showcase page for the pattern: register `?` again with
@@ -76,14 +76,6 @@ export class SumiHotkeyHelp {
     label: 'Show hotkeys',
     scope: 'page',
     handler: () => this.hotkeys.toggleHelp(),
-  });
-
-  private readonly unregisterClose = injectHotkey({
-    keys: SUMI_KEYS.escape,
-    label: 'Close hotkeys',
-    scope: 'page',
-    enabled: () => this.hotkeys.helpOpen(),
-    handler: () => this.hotkeys.closeHelp(),
   });
 
   protected readonly groups = computed<HotkeyGroup[]>(() => {

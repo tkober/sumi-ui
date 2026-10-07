@@ -146,6 +146,22 @@ export class SumiHotkeys {
   }
 
   private readonly onKeydown = (event: KeyboardEvent): void => {
+    // An open hotkey flyout always takes Escape first, whatever registered
+    // what and when: closing the panel is the only thing Escape should do
+    // while it is up.
+    if (
+      this.helpOpenSignal() &&
+      event.key === 'Escape' &&
+      !event.isComposing &&
+      !event.altKey &&
+      !event.ctrlKey &&
+      !event.metaKey
+    ) {
+      event.preventDefault();
+      this.closeHelp();
+      return;
+    }
+
     const editable = isEditableTarget(event.target);
     const matches: SumiHotkeyRegistration[] = [];
 
