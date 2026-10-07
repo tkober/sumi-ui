@@ -21,3 +21,9 @@ sumi-banner {
   // still win the cascade over the component's scoped host style.
   margin-bottom: var(--sumi-space-3);
 }
+
+.page-width-demo {
+  margin-top: var(--sumi-space-3);
+  padding-block: var(--sumi-space-3);
+  outline: 1px dashed var(--sumi-line);
+}

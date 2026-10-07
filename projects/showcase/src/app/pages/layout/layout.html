@@ -1,42 +1,114 @@
-<section>
-  <h1>Layout</h1>
-  <p><code>sumi-card</code>, <code>sumi-banner</code> and <code>sumi-badge</code>.</p>
-</section>
+<sumi-page
+  title="Layout"
+  subtitle="sumi-card, sumi-banner, sumi-badge, sumi-app-shell and sumi-page."
+>
+  <section>
+    <h2>Card</h2>
+    <div class="row">
+      <sumi-card class="card-demo">Plain card with just body content.</sumi-card>
+      <sumi-card class="card-demo" [interactive]="true">Interactive card (hover me).</sumi-card>
+      <sumi-card class="card-demo">
+        <div sumiCardHeader><strong>Header</strong></div>
+        Body content between header and footer.
+        <div sumiCardFooter>
+          <button type="button" sumiButton variant="primary" size="sm">Action</button>
+        </div>
+      </sumi-card>
+    </div>
+  </section>
 
-<section>
-  <h2>Card</h2>
-  <div class="row">
-    <sumi-card class="card-demo">Plain card with just body content.</sumi-card>
-    <sumi-card class="card-demo" [interactive]="true">Interactive card (hover me).</sumi-card>
-    <sumi-card class="card-demo">
-      <div sumiCardHeader><strong>Header</strong></div>
-      Body content between header and footer.
-      <div sumiCardFooter>
-        <button type="button" sumiButton variant="primary" size="sm">Action</button>
-      </div>
-    </sumi-card>
-  </div>
-</section>
-
-<section>
-  <h2>Banner</h2>
-  @for (tone of bannerTones; track tone) {
-    @if (!dismissed()[tone]) {
-      <sumi-banner [tone]="tone" [dismissible]="tone === 'notice'" (dismiss)="dismiss(tone)">
-        This is a {{ tone }} banner.
-      </sumi-banner>
+  <section>
+    <h2>Banner</h2>
+    @for (tone of bannerTones; track tone) {
+      @if (!dismissed()[tone]) {
+        <sumi-banner [tone]="tone" [dismissible]="tone === 'notice'" (dismiss)="dismiss(tone)">
+          This is a {{ tone }} banner.
+        </sumi-banner>
+      }
     }
-  }
-  <button type="button" sumiButton size="sm" (click)="restoreBanners()">Restore dismissed</button>
-</section>
+    <button type="button" sumiButton size="sm" (click)="restoreBanners()">Restore dismissed</button>
+  </section>
 
-<section>
-  <h2>Badge</h2>
-  <div class="row">
-    <sumi-badge tone="neutral">Neutral</sumi-badge>
-    <sumi-badge tone="accent">Accent</sumi-badge>
-    <sumi-badge tone="correct">42 correct</sumi-badge>
-    <sumi-badge tone="wrong">7 wrong</sumi-badge>
-    <sumi-badge tone="retry">3 retry</sumi-badge>
-  </div>
-</section>
+  <section>
+    <h2>Badge</h2>
+    <div class="row">
+      <sumi-badge tone="neutral">Neutral</sumi-badge>
+      <sumi-badge tone="accent">Accent</sumi-badge>
+      <sumi-badge tone="correct">42 correct</sumi-badge>
+      <sumi-badge tone="wrong">7 wrong</sumi-badge>
+      <sumi-badge tone="retry">3 retry</sumi-badge>
+    </div>
+  </section>
+
+  <section>
+    <h2>App shell: focus mode</h2>
+    <p>
+      Turns on the real shell's focus mode (see the header above): the desktop nav and the tab bar
+      hide, and an "End session" button appears in the header's focus-actions slot.
+    </p>
+    @if (demoFocusMode()) {
+      <div sumiFocusMode>
+        <sumi-banner tone="info">
+          Focus mode is on. Use "End session" in the header, or the button below.
+        </sumi-banner>
+        <button type="button" sumiButton size="sm" (click)="endFocusModeDemo()">
+          End session (from page)
+        </button>
+      </div>
+    } @else {
+      <button
+        type="button"
+        sumiButton
+        variant="primary"
+        size="sm"
+        (click)="demoFocusMode.set(true)"
+      >
+        Turn on focus mode
+      </button>
+    }
+  </section>
+
+  <section>
+    <h2>App shell: nav lock</h2>
+    <p>
+      Disables the real shell's nav links (aria-disabled, no navigation) and shows the reason as a
+      hint in the header.
+    </p>
+    @if (demoNavLock()) {
+      <div [sumiNavLock]="demoNavLockReason"></div>
+      <button type="button" sumiButton size="sm" (click)="demoNavLock.set(false)">
+        Unlock nav
+      </button>
+    } @else {
+      <button type="button" sumiButton variant="primary" size="sm" (click)="demoNavLock.set(true)">
+        Lock nav ("{{ demoNavLockReason }}")
+      </button>
+    }
+  </section>
+
+  <section>
+    <h2>Page widths</h2>
+    <p>
+      <code>sumi-page</code>'s <code>width</code> input: narrow (~640px), default (~960px), wide
+      (~1200px).
+    </p>
+    <div class="row">
+      @for (width of pageWidths; track width) {
+        <button
+          type="button"
+          sumiButton
+          [variant]="demoPageWidth() === width ? 'primary' : 'secondary'"
+          size="sm"
+          (click)="demoPageWidth.set(width)"
+        >
+          {{ width }}
+        </button>
+      }
+    </div>
+    <sumi-page [width]="demoPageWidth()" class="page-width-demo">
+      <sumi-card
+        >This card fills a <code>sumi-page</code> of width "{{ demoPageWidth() }}".</sumi-card
+      >
+    </sumi-page>
+  </section>
+</sumi-page>

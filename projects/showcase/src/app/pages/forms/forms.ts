@@ -2,12 +2,14 @@ import { Component, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { form, FormField } from '@angular/forms/signals';
 import { SUMI_FORMS, SumiButtonVariant, SumiSegmentedOption, SumiSize } from 'sumi-ui/forms';
+import { SumiIcon } from 'sumi-ui/core';
+import { SumiPage } from 'sumi-ui/layout';
 
 @Component({
   selector: 'app-forms-page',
   templateUrl: './forms.html',
   styleUrl: './forms.scss',
-  imports: [...SUMI_FORMS, FormsModule, FormField],
+  imports: [...SUMI_FORMS, FormsModule, FormField, SumiIcon, SumiPage],
 })
 export class FormsPage {
   protected readonly variants: SumiButtonVariant[] = ['primary', 'secondary', 'ghost', 'danger'];

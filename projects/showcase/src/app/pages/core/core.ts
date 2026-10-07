@@ -1,18 +1,47 @@
 import { Component } from '@angular/core';
-import { SUMI_VERSION } from 'sumi-ui/core';
+import { SUMI_VERSION, SumiIcon, type SumiIconName } from 'sumi-ui/core';
+import { SumiPage } from 'sumi-ui/layout';
 
 interface TokenSwatch {
   label: string;
   token: string;
 }
 
+const ICON_NAMES: SumiIconName[] = [
+  'home',
+  'practice',
+  'review',
+  'lessons',
+  'stats',
+  'forecast',
+  'list',
+  'settings',
+  'chat',
+  'history',
+  'scenarios',
+  'dictionary',
+  'rules',
+  'more',
+  'close',
+  'system',
+  'sun',
+  'moon',
+  'check',
+  'cross',
+  'info',
+  'warning',
+  'keyboard',
+];
+
 @Component({
   selector: 'app-core-page',
   templateUrl: './core.html',
   styleUrl: './core.scss',
+  imports: [SumiPage, SumiIcon],
 })
 export class CorePage {
   protected readonly version = SUMI_VERSION;
+  protected readonly iconNames = ICON_NAMES;
 
   protected readonly surfaceSwatches: TokenSwatch[] = [
     { label: 'Background', token: '--sumi-bg' },
