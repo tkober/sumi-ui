@@ -1,63 +1,103 @@
 <sumi-page
   title="Practice"
-  subtitle="sumi-answer-field: kana conversion, the state machine and its hotkeys."
+  subtitle="Prompt, verdict, countdown and session building blocks around sumi-answer-field."
 >
   <section class="demo">
-    <h2>Answer field</h2>
+    <h2>A full practice round</h2>
 
-    @if (done()) {
-      <div class="demo__done">
-        <p>Round finished — {{ correct() }} / {{ answered() }} correct.</p>
-        <button sumiButton variant="primary" sumiHoldFocus (click)="restart()">Restart</button>
-      </div>
-    } @else {
-      @let current = card();
-      <div class="demo__card">
-        <div class="demo__characters" lang="ja">{{ current.characters }}</div>
-        <div class="demo__label">{{ current.label }}</div>
-      </div>
+    @switch (sessionState()) {
+      @case ('idle') {
+        <sumi-session-gate
+          title="Ready to practice?"
+          text="Four cards, a mix of readings and meanings. Two of them are timed."
+          actionLabel="Start session"
+          (start)="startSession()"
+        />
+      }
 
-      <sumi-answer-field
-        #field
-        [mode]="current.mode"
-        [verdict]="verdict()"
-        [iKnow]="true"
-        [iDontKnow]="true"
-        [(value)]="value"
-        [label]="current.label + ' for ' + current.characters"
-        placeholder="Type your answer"
-        (submitted)="onSubmitted($event)"
-        (confirmed)="onConfirmed()"
-        (edited)="onEdited()"
-        (next)="onNext()"
-        (knew)="onKnew()"
-        (gaveUp)="onGaveUp()"
-      />
+      @case ('running') {
+        <div class="demo__round" sumiFocusMode>
+          <sumi-session-bar
+            [answered]="answered()"
+            [correct]="correct()"
+            [total]="cards.length"
+            (end)="endSession()"
+          />
 
-      <div class="demo__actions">
-        <button sumiButton variant="primary" sumiHoldFocus (click)="onCheckClick()">
-          {{ checkButtonLabel() }}
-        </button>
-        <span class="demo__score">{{ correct() }} / {{ answered() }} correct</span>
-      </div>
+          @let current = card();
+          <sumi-prompt-card
+            [text]="current.characters"
+            [kind]="current.label"
+            [meta]="current.meta"
+            [tone]="current.tone"
+          >
+            @if (current.timeTargetMs) {
+              <sumi-countdown-ring [elapsedMs]="elapsedMs()" [targetMs]="current.timeTargetMs" />
+            }
+          </sumi-prompt-card>
 
-      @if (detailsOpen()) {
-        <p class="demo__hint">{{ current.hint }}</p>
+          <sumi-answer-field
+            #field
+            [mode]="current.mode"
+            [verdict]="verdict()"
+            [iKnow]="true"
+            [iDontKnow]="true"
+            [(value)]="value"
+            [label]="current.label + ' for ' + current.characters"
+            placeholder="Type your answer"
+            (submitted)="onSubmitted($event)"
+            (confirmed)="onConfirmed()"
+            (edited)="onEdited()"
+            (next)="onNext()"
+            (knew)="onKnew()"
+            (gaveUp)="onGaveUp()"
+          />
+
+          <div class="demo__actions">
+            <button sumiButton variant="primary" sumiHoldFocus (click)="onCheckClick()">
+              {{ checkButtonLabel() }}
+            </button>
+          </div>
+
+          @if (verdict(); as v) {
+            <sumi-verdict
+              class="demo__verdict"
+              [kind]="v.kind"
+              [message]="v.kind === 'wrong' ? undefined : v.message"
+              [expected]="v.kind === 'wrong' ? card().accepted[0] : undefined"
+            >
+              <div sumiVerdictDetails>{{ card().hint }}</div>
+            </sumi-verdict>
+          }
+
+          <div class="demo__log">
+            <h3>Last hotkeys / events</h3>
+            @if (log().length === 0) {
+              <p>(none yet)</p>
+            } @else {
+              <ol>
+                @for (entry of log(); track $index) {
+                  <li>{{ entry }}</li>
+                }
+              </ol>
+            }
+          </div>
+        </div>
+      }
+
+      @case ('ended') {
+        <sumi-session-gate [showAction]="false" (start)="startSession()">
+          <sumi-session-summary
+            [answered]="answered()"
+            [correct]="correct()"
+            [durationMs]="sessionDurationMs()"
+            [delta]="correct() * 4 - (answered() - correct()) * 6"
+            deltaLabel="Elo"
+            (restart)="startSession()"
+          />
+        </sumi-session-gate>
       }
     }
-
-    <div class="demo__log">
-      <h3>Last hotkeys / events</h3>
-      @if (log().length === 0) {
-        <p>(none yet)</p>
-      } @else {
-        <ol>
-          @for (entry of log(); track $index) {
-            <li>{{ entry }}</li>
-          }
-        </ol>
-      }
-    </div>
   </section>
 
   <section class="demo">
@@ -75,5 +115,36 @@
       [label]="'Demo field, ' + demoMode() + ' mode'"
       placeholder="Type something"
     />
+  </section>
+
+  <section class="demo">
+    <h2>Other building blocks</h2>
+
+    <h3>Furigana</h3>
+    <div class="demo__furigana">
+      <sumi-furigana [segments]="furiganaSample" />
+      <sumi-furigana-toggle />
+    </div>
+
+    <h3>Countdown ring states</h3>
+    <div class="demo__row">
+      @for (sample of countdownSamples; track sample.label) {
+        <div class="demo__sample">
+          <sumi-countdown-ring [elapsedMs]="sample.elapsedMs" [targetMs]="sample.targetMs" />
+          <span>{{ sample.label }}</span>
+        </div>
+      }
+    </div>
+
+    <h3>Verdict kinds</h3>
+    <div class="demo__verdict-grid">
+      @for (sample of verdictSamples; track sample.kind) {
+        <sumi-verdict [kind]="sample.kind" [message]="sample.message" [expected]="sample.expected">
+          @if (sample.withDetails) {
+            <div sumiVerdictDetails>Full derivation chain / grammar note would go here.</div>
+          }
+        </sumi-verdict>
+      }
+    </div>
   </section>
 </sumi-page>
