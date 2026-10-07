@@ -1,0 +1,45 @@
+:host {
+  display: block;
+}
+
+.sumi-bar-chart__svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.sumi-bar-chart__max {
+  font-family: var(--sumi-font-mono);
+  font-size: 10px;
+  fill: var(--sumi-muted);
+}
+
+.sumi-bar-chart__bar {
+  fill: var(--sumi-seq-3);
+}
+
+.sumi-bar-chart__bar--highlight {
+  fill: var(--sumi-accent);
+}
+
+.sumi-bar-chart__label {
+  font-family: var(--sumi-font-mono);
+  font-size: 8px;
+  fill: var(--sumi-muted);
+}
+
+.sumi-bar-chart__baseline {
+  stroke: var(--sumi-line);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.sumi-bar-chart__table {
+  margin-top: var(--sumi-space-2);
+}
+
+.sumi-bar-chart__table summary {
+  cursor: pointer;
+  font-size: var(--sumi-text-sm);
+  color: var(--sumi-muted);
+}
