@@ -1,0 +1,23 @@
+section {
+  margin-bottom: var(--sumi-space-8);
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sumi-space-4);
+  align-items: flex-start;
+  margin-bottom: var(--sumi-space-3);
+}
+
+.card-demo {
+  width: 220px;
+}
+
+sumi-banner {
+  // Not `display: block` — that would clobber the component's own
+  // `:host { display: flex }` (see banner.scss), since this plain-element
+  // selector in the showcase's stylesheet has the same specificity and can
+  // still win the cascade over the component's scoped host style.
+  margin-bottom: var(--sumi-space-3);
+}
