@@ -1,0 +1,11 @@
+<span class="sumi-ramp-legend__label">{{ minLabel() }}</span>
+@for (step of steps(); track $index) {
+  <span class="sumi-ramp-legend__swatch" [style.background]="step"></span>
+}
+<span class="sumi-ramp-legend__label">{{ maxLabel() }}</span>
+@if (noDataLabel(); as label) {
+  <span class="sumi-ramp-legend__no-data">
+    <span class="sumi-ramp-legend__swatch sumi-ramp-legend__swatch--no-data"></span>
+    <span class="sumi-ramp-legend__label">{{ label }}</span>
+  </span>
+}

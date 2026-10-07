@@ -339,3 +339,375 @@ export function sparseLabelIndices(count: number, every: number): number[] {
   }
   return indices;
 }
+
+// --- Heatmaps (sumi-calendar-heatmap, sumi-matrix-heatmap) -----------------
+//
+// Both heatmaps share one colour scale: bucket 0 (or -1, "no data") is
+// `--sumi-sunken`, buckets 1-5 are `--sumi-seq-1`…`-5`. They differ only in
+// *how* a raw value becomes a bucket (see `calendarBucket` vs `matrixBucket`
+// below) because the two inputs have different shapes: a day's activity
+// count is unbounded and usually skewed (a few big days, many quiet ones),
+// while a matrix cell is typically already a bounded, comparable value
+// (a percentage, a rating) with an explicit or inferable domain.
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+const MONTH_NAMES = [
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
+];
+const WEEKDAY_NAMES = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+/** Parses a `YYYY-MM-DD` string as a UTC midnight `Date`, so day maths never
+ *  shifts by a day depending on the viewer's timezone. */
+function parseISODate(date: string): Date {
+  return new Date(`${date}T00:00:00Z`);
+}
+
+function toISODate(date: Date): string {
+  return date.toISOString().slice(0, 10);
+}
+
+function addDays(date: Date, days: number): Date {
+  return new Date(date.getTime() + days * DAY_MS);
+}
+
+/** The Monday (European week start) of the ISO week containing `date`. */
+function mondayOf(date: Date): Date {
+  const weekday = date.getUTCDay(); // 0 = Sunday … 6 = Saturday
+  const mondayOffset = weekday === 0 ? -6 : 1 - weekday;
+  return addDays(date, mondayOffset);
+}
+
+/** One day of `sumi-calendar-heatmap`'s `days` input. */
+export interface SumiCalendarDay {
+  date: string;
+  value: number;
+}
+
+/** One rendered cell of `sumi-calendar-heatmap`'s grid. */
+export interface CalendarCell {
+  date: string;
+  value: number;
+  /** 0 = no activity (`--sumi-sunken`), 1-5 = the quantile-based ramp step. */
+  bucket: number;
+  /** Column index, 0 = oldest week. */
+  week: number;
+  /** Row index, 0 = Monday … 6 = Sunday. */
+  weekday: number;
+  title: string;
+}
+
+export interface CalendarGeometry {
+  weeks: number;
+  cellSize: number;
+  gap: number;
+  /** `cellSize + gap`, the distance between two cells' origins. */
+  step: number;
+  width: number;
+  height: number;
+  cells: CalendarCell[];
+  monthLabels: { week: number; label: string }[];
+  weekdayLabels: { row: number; label: string }[];
+}
+
+const CALENDAR_ROWS = 7;
+const CALENDAR_MIN_CELL = 10;
+const CALENDAR_MAX_CELL = 16;
+// Weekday labels at Mon/Wed/Fri only, like GitHub's contribution graph —
+// a label on every row would collide with its neighbours at the minimum
+// 10px cell size.
+const CALENDAR_WEEKDAY_LABEL_ROWS = [0, 2, 4];
+
+/**
+ * The largest cell size in `[10, 16]` (with a 2px gap up to 12px cells,
+ * 3px above) whose `weeks` columns still fit in `availableWidth`, so the
+ * grid fills the width without stretching the day cells' `<title>` text
+ * along with them. Falls back to the minimum size when even that overflows
+ * — the component scrolls the grid horizontally inside its own container
+ * in that case instead of shrinking cells further.
+ */
+export function calendarCellSize(
+  availableWidth: number,
+  weeks: number,
+): { cellSize: number; gap: number } {
+  for (let size = CALENDAR_MAX_CELL; size >= CALENDAR_MIN_CELL; size--) {
+    const gap = size <= 12 ? 2 : 3;
+    const total = weeks * size + (weeks - 1) * gap;
+    if (total <= availableWidth) {
+      return { cellSize: size, gap };
+    }
+  }
+  return { cellSize: CALENDAR_MIN_CELL, gap: 2 };
+}
+
+/**
+ * Thresholds (4 cut points, splitting the positive values into 5 buckets)
+ * computed from the *quantiles* of `positiveValues`, not an even split of
+ * `0..max`. A max-based split lets one outlier day (e.g. a catch-up binge
+ * at 10x the usual pace) push every ordinary day down into bucket 1,
+ * because the split is anchored to that single extreme; quantiles instead
+ * divide the days that actually happened into five equal-sized groups, so
+ * a typical day and a quiet day still land in different buckets regardless
+ * of how high the one outlier reaches. Mirrors jp-conjugation's
+ * `stats-math.ts` `bucket`, which goes the other way (fixed cutoffs)
+ * because a miss *rate* is already a bounded, comparable 0..1 value — an
+ * activity count is not.
+ */
+export function calendarBucketThresholds(positiveValues: readonly number[]): number[] {
+  if (positiveValues.length === 0) {
+    return [0, 0, 0, 0];
+  }
+  const sorted = [...positiveValues].sort((a, b) => a - b);
+  const quantile = (p: number) =>
+    sorted[Math.min(sorted.length - 1, Math.floor(p * (sorted.length - 1)))];
+  return [quantile(0.2), quantile(0.4), quantile(0.6), quantile(0.8)];
+}
+
+/** Buckets `value` against `calendarBucketThresholds`' cut points: 0 for no
+ *  activity, 1 (weakest) to 5 (strongest) otherwise. */
+export function calendarBucket(value: number, thresholds: readonly number[]): number {
+  if (value <= 0) {
+    return 0;
+  }
+  for (let i = 0; i < thresholds.length; i++) {
+    if (value <= thresholds[i]) {
+      return i + 1;
+    }
+  }
+  return thresholds.length + 1;
+}
+
+// A month label needs roughly this much horizontal room ("Oct") before the
+// next one starts; a column step narrower than that would overlap labels,
+// so the later one is skipped rather than drawn on top of the first.
+const CALENDAR_MONTH_LABEL_MIN_WIDTH = 24;
+
+/** Which columns get a month label on top: a label is placed in the first
+ *  week that contains the 1st of a month, but only if at least
+ *  `CALENDAR_MONTH_LABEL_MIN_WIDTH`'s worth of columns have passed since
+ *  the previous label — otherwise it is skipped rather than drawn
+ *  overlapping the one before it. */
+export function calendarMonthLabels(
+  weekStarts: readonly Date[],
+  step: number,
+): { week: number; label: string }[] {
+  const labels: { week: number; label: string }[] = [];
+  const minColumns = Math.max(1, Math.ceil(CALENDAR_MONTH_LABEL_MIN_WIDTH / step));
+  let lastLabelWeek = -Infinity;
+  weekStarts.forEach((monday, week) => {
+    for (let weekday = 0; weekday < CALENDAR_ROWS; weekday++) {
+      const day = addDays(monday, weekday);
+      if (day.getUTCDate() === 1) {
+        if (week - lastLabelWeek >= minColumns) {
+          labels.push({ week, label: MONTH_NAMES[day.getUTCMonth()] });
+          lastLabelWeek = week;
+        }
+        break;
+      }
+    }
+  });
+  return labels;
+}
+
+/** `<title>` text for one calendar cell, e.g. `"Tue 14 Oct: 42 reviews"`. */
+export function formatCalendarCellTitle(date: string, value: number, unit: string): string {
+  const parsed = parseISODate(date);
+  const weekdayIndex = (parsed.getUTCDay() + 6) % 7; // Sunday (0) -> 6, Monday (1) -> 0, …
+  const weekday = WEEKDAY_NAMES[weekdayIndex];
+  const day = parsed.getUTCDate();
+  const month = MONTH_NAMES[parsed.getUTCMonth()];
+  return `${weekday} ${day} ${month}: ${value} ${unit}`;
+}
+
+/**
+ * Builds `sumi-calendar-heatmap`'s full grid: `weeks` Monday-first columns
+ * ending in the week that contains `endDate`, with no column for a day
+ * after `endDate` (the grid never shows the future) and a 0-value cell for
+ * any day in range that `days` does not mention (a gap, e.g. a weekend with
+ * no reviews, reads as "no activity" rather than being skipped).
+ */
+export function calendarGeometry(
+  days: readonly SumiCalendarDay[],
+  weeks: number,
+  endDate: string,
+  availableWidth: number,
+  unit = 'reviews',
+): CalendarGeometry {
+  const end = parseISODate(endDate);
+  const lastMonday = mondayOf(end);
+  const firstMonday = addDays(lastMonday, -7 * (weeks - 1));
+  const byDate = new Map(days.map((d) => [d.date, d.value]));
+  const weekStarts = Array.from({ length: weeks }, (_, week) => addDays(firstMonday, week * 7));
+
+  const rawCells: { date: string; value: number; week: number; weekday: number }[] = [];
+  weekStarts.forEach((monday, week) => {
+    for (let weekday = 0; weekday < CALENDAR_ROWS; weekday++) {
+      const day = addDays(monday, weekday);
+      if (day.getTime() > end.getTime()) {
+        continue;
+      }
+      const date = toISODate(day);
+      rawCells.push({ date, value: byDate.get(date) ?? 0, week, weekday });
+    }
+  });
+
+  const thresholds = calendarBucketThresholds(
+    rawCells.map((c) => c.value).filter((value) => value > 0),
+  );
+  const cells: CalendarCell[] = rawCells.map((c) => ({
+    ...c,
+    bucket: calendarBucket(c.value, thresholds),
+    title: formatCalendarCellTitle(c.date, c.value, unit),
+  }));
+
+  const { cellSize, gap } = calendarCellSize(availableWidth, weeks);
+  const step = cellSize + gap;
+
+  return {
+    weeks,
+    cellSize,
+    gap,
+    step,
+    width: weeks * step - gap,
+    height: CALENDAR_ROWS * step - gap,
+    cells,
+    monthLabels: calendarMonthLabels(weekStarts, step),
+    weekdayLabels: CALENDAR_WEEKDAY_LABEL_ROWS.map((row) => ({ row, label: WEEKDAY_NAMES[row] })),
+  };
+}
+
+/** One cell of `sumi-matrix-heatmap`'s `cells` input; a `(row, column)` pair
+ *  missing from the array is equivalent to `value: null`. */
+export interface SumiMatrixCellInput {
+  row: string;
+  column: string;
+  value: number | null;
+}
+
+/** One rendered cell of `sumi-matrix-heatmap`'s grid. */
+export interface MatrixCellGeometry {
+  row: string;
+  column: string;
+  value: number | null;
+  /** 1 (weakest) to 5 (strongest), or -1 for "no data" (`--sumi-sunken`). */
+  bucket: number;
+  /** `format(value)`, or `null` when there is no data to show. */
+  label: string | null;
+  title: string;
+}
+
+function matrixKey(row: string, column: string): string {
+  return `${row}\u0000${column}`;
+}
+
+/** `[min, max]` across the cells that have a value; `[0, 1]` when none do
+ *  (an empty or entirely "no data" matrix), so `matrixBucket` never divides
+ *  by a `NaN` span. */
+export function matrixDomain(cells: readonly { value: number | null }[]): [number, number] {
+  const values = cells
+    .map((c) => c.value)
+    .filter((value): value is number => value !== null && !Number.isNaN(value));
+  if (values.length === 0) {
+    return [0, 1];
+  }
+  return [Math.min(...values), Math.max(...values)];
+}
+
+/**
+ * Buckets `value` into 5 steps (1 weakest, 5 strongest), spread *linearly*
+ * across `domain` rather than by quantile. A matrix cell is normally
+ * already a bounded, comparable value (a percentage, a rating) with a
+ * known or inferable domain, so an even split keeps equal differences in
+ * value reading as equal differences in colour — the property
+ * `calendarBucket`'s quantile split deliberately gives up in exchange for
+ * resisting outliers, which a bounded value has no need to resist.
+ */
+export function matrixBucket(value: number, domain: readonly [number, number]): number {
+  const [min, max] = domain;
+  if (max <= min) {
+    return 5;
+  }
+  const t = Math.min(1, Math.max(0, (value - min) / (max - min)));
+  return Math.min(5, Math.max(1, Math.ceil(t * 5)));
+}
+
+/** Builds one `MatrixCellGeometry` per `(row, column)` pair, in row-major
+ *  order. A pair missing from `cells`, or present with `value: null`, both
+ *  render as "no data" (bucket -1). */
+export function matrixCellGeometry(
+  rows: readonly string[],
+  columns: readonly string[],
+  cells: readonly SumiMatrixCellInput[],
+  domain: readonly [number, number] | undefined,
+  format: (value: number) => string,
+): MatrixCellGeometry[] {
+  const byKey = new Map(cells.map((c) => [matrixKey(c.row, c.column), c.value]));
+  const resolvedDomain = domain ?? matrixDomain(cells);
+  const out: MatrixCellGeometry[] = [];
+  for (const row of rows) {
+    for (const column of columns) {
+      const value = byKey.get(matrixKey(row, column)) ?? null;
+      if (value === null) {
+        out.push({
+          row,
+          column,
+          value: null,
+          bucket: -1,
+          label: null,
+          title: `${row} / ${column}: no data`,
+        });
+        continue;
+      }
+      const label = format(value);
+      out.push({
+        row,
+        column,
+        value,
+        bucket: matrixBucket(value, resolvedDomain),
+        label,
+        title: `${row} / ${column}: ${label}`,
+      });
+    }
+  }
+  return out;
+}
+
+const SEQ_RAMP_TOKENS = [
+  'var(--sumi-seq-1)',
+  'var(--sumi-seq-2)',
+  'var(--sumi-seq-3)',
+  'var(--sumi-seq-4)',
+  'var(--sumi-seq-5)',
+];
+
+/** The cell fill for a heatmap bucket: `--sumi-sunken` for 0 or -1 ("no
+ *  activity" / "no data" — both read the same, an empty cell), otherwise
+ *  the matching `--sumi-seq-*` step. Unlike `rampColor` (which spreads an
+ *  item's *position among N items* over the ramp), `bucket` here is
+ *  already quantised to 1-5 by `calendarBucket`/`matrixBucket`, so the
+ *  mapping is direct. */
+export function heatmapCellColor(bucket: number): string {
+  if (bucket <= 0) {
+    return 'var(--sumi-sunken)';
+  }
+  return SEQ_RAMP_TOKENS[Math.min(SEQ_RAMP_TOKENS.length, bucket) - 1];
+}
+
+/** The label colour that stays readable set on top of `heatmapCellColor`'s
+ *  fill at `bucket`: `--sumi-seq-4`/`-5` mix 84%/100% of the accent into
+ *  the surface — dark enough in both themes (see `_tokens.scss`'s
+ *  `light-dark()` accent mix) that the page's default ink fails contrast,
+ *  so steps 4 and 5 switch to `--sumi-on-accent` instead. */
+export function heatmapTextColor(bucket: number): string {
+  return bucket >= 4 ? 'var(--sumi-on-accent)' : 'var(--sumi-text)';
+}

@@ -1,12 +1,19 @@
 import { Component } from '@angular/core';
-import { SUMI_CHARTS, type SumiBar, type SumiStackedRow } from 'sumi-ui/charts';
+import {
+  SUMI_CHARTS,
+  type SumiBar,
+  type SumiCalendarDay,
+  type SumiMatrixCellInput,
+  type SumiStackedRow,
+} from 'sumi-ui/charts';
 import { SumiPage } from 'sumi-ui/layout';
 
 /**
  * Charts showcase: example data modelled on the shapes the four apps
  * already produce (kanji-trainer's dashboard tiles and "Coming up" chart,
- * jp-conjugation's Elo sparkline, katakana-reading's coverage bars) — all
- * clearly fictional, generated once below, not live data.
+ * jp-conjugation's Elo sparkline and miss-rate heatmap, katakana-reading's
+ * coverage bars and kana confidence heatmap) — all clearly fictional,
+ * generated once below, not live data.
  */
 @Component({
   selector: 'app-charts-page',
@@ -58,6 +65,112 @@ export class ChartsPage {
     ],
     label: `${row.seen}/${row.total} seen`,
   }));
+
+  // --- 26-week review calendar ---------------------------------------------
+  // Fixed so the showcase (and its screenshots) render identically every
+  // build, independent of what day it actually is.
+  protected readonly calendarEndDate = '2024-10-20';
+  protected readonly calendarDays: SumiCalendarDay[] = buildCalendarDays(this.calendarEndDate);
+
+  // --- Katakana reading confidence matrix -----------------------------------
+  protected readonly kanaRows = ['ア', 'カ', 'サ', 'タ', 'ナ', 'ハ', 'マ', 'ヤ', 'ラ', 'ワ'];
+  protected readonly kanaColumns = ['a', 'i', 'u', 'e', 'o'];
+  protected readonly kanaCells: SumiMatrixCellInput[] = buildKanaConfidence();
+  protected readonly toPercent = (value: number) => `${Math.round(value * 100)}%`;
+
+  // --- Conjugation miss-rate matrix ------------------------------------------
+  protected readonly conjugationRows = [
+    'Plain',
+    'Polite',
+    'Negative',
+    'Te-form',
+    'Potential',
+    'Passive',
+  ];
+  protected readonly conjugationColumns = ['Ichidan', 'Godan', 'Suru', 'Kuru'];
+  protected readonly conjugationCells: SumiMatrixCellInput[] = buildMissRateMatrix();
+}
+
+/** A fixed pseudo-random walk, same recipe as `buildEloHistory` above — a
+ *  seeded LCG, not `Math.random()`, so the showcase is deterministic. */
+function makeRng(seed: number): () => number {
+  let state = seed;
+  return () => {
+    state = (state * 9301 + 49297) % 233280;
+    return state / 233280;
+  };
+}
+
+function buildCalendarDays(endDate: string): SumiCalendarDay[] {
+  const rng = makeRng(11);
+  const end = new Date(`${endDate}T00:00:00Z`);
+  const days: SumiCalendarDay[] = [];
+  const totalDays = 26 * 7;
+  for (let i = 0; i < totalDays; i++) {
+    const date = new Date(end.getTime() - i * 24 * 60 * 60 * 1000);
+    const weekday = date.getUTCDay(); // 0 = Sunday
+    const isWeekend = weekday === 0 || weekday === 6;
+    const roll = rng();
+    // Weekends are quieter and sometimes a full gap day; a handful of
+    // weekdays are also deliberate gaps (a day off, a missed streak).
+    let value = 0;
+    if (isWeekend) {
+      value = roll < 0.4 ? 0 : Math.round(roll * 15);
+    } else if (roll < 0.08) {
+      value = 0;
+    } else {
+      value = Math.round(8 + roll * 40);
+    }
+    days.push({ date: date.toISOString().slice(0, 10), value });
+  }
+  return days;
+}
+
+function buildKanaConfidence(): SumiMatrixCellInput[] {
+  const rows = ['ア', 'カ', 'サ', 'タ', 'ナ', 'ハ', 'マ', 'ヤ', 'ラ', 'ワ'];
+  const columns = ['a', 'i', 'u', 'e', 'o'];
+  // ヤ has no yi/ye kana, ワ only keeps wa/wo in modern use — those slots
+  // stay null ("not practised" has no meaning for a kana that does not
+  // exist, same visual state either way).
+  const missing = new Set(['ヤ/i', 'ヤ/e', 'ワ/i', 'ワ/u', 'ワ/e']);
+  const rng = makeRng(29);
+  const cells: SumiMatrixCellInput[] = [];
+  for (const row of rows) {
+    for (const column of columns) {
+      if (missing.has(`${row}/${column}`)) {
+        cells.push({ row, column, value: null });
+        continue;
+      }
+      // Earlier rows (closer to ア) are the ones practised longest, so
+      // they read as more confident; later rows fade toward the middle
+      // of the ramp, with noise on top.
+      const rowIndex = rows.indexOf(row);
+      const base = 0.9 - rowIndex * 0.06;
+      const value = Math.max(0.1, Math.min(0.98, base + (rng() - 0.5) * 0.3));
+      cells.push({ row, column, value });
+    }
+  }
+  return cells;
+}
+
+function buildMissRateMatrix(): SumiMatrixCellInput[] {
+  const rows = ['Plain', 'Polite', 'Negative', 'Te-form', 'Potential', 'Passive'];
+  const columns = ['Ichidan', 'Godan', 'Suru', 'Kuru'];
+  // A handful of form x word-type combinations were never drilled yet.
+  const neverPractised = new Set(['Passive/Kuru', 'Potential/Kuru', 'Passive/Suru']);
+  const rng = makeRng(43);
+  const cells: SumiMatrixCellInput[] = [];
+  for (const row of rows) {
+    for (const column of columns) {
+      if (neverPractised.has(`${row}/${column}`)) {
+        cells.push({ row, column, value: null });
+        continue;
+      }
+      const value = Math.max(0, Math.min(1, rng() * 0.6));
+      cells.push({ row, column, value });
+    }
+  }
+  return cells;
 }
 
 function buildEloHistory(count: number, start: number, end: number): number[] {

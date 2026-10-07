@@ -1,0 +1,37 @@
+<div class="sumi-matrix-heatmap__scroll" role="img" [attr.aria-label]="ariaLabel()">
+  <div
+    class="sumi-matrix-heatmap__grid"
+    [style.grid-template-columns]="'auto repeat(' + columns().length + ', minmax(40px, 1fr))'"
+  >
+    <div class="sumi-matrix-heatmap__corner"></div>
+    @for (column of columns(); track column) {
+      <div class="sumi-matrix-heatmap__col-header">{{ column }}</div>
+    }
+    @for (row of rows(); track row) {
+      <div class="sumi-matrix-heatmap__row-header" [attr.lang]="cellLang()">{{ row }}</div>
+      @for (column of columns(); track column) {
+        @let cell = cellAt(row, column);
+        <div
+          class="sumi-matrix-heatmap__cell"
+          [class.sumi-matrix-heatmap__cell--no-data]="cell.bucket === -1"
+          [style.background-color]="fill(cell.bucket)"
+          [style.color]="textColor(cell.bucket)"
+          [title]="cell.title"
+        >
+          @if (showValues() && cell.label) {
+            {{ cell.label }}
+          }
+        </div>
+      }
+    }
+  </div>
+</div>
+
+<sumi-ramp-legend [minLabel]="minLabel()" [maxLabel]="maxLabel()" [noDataLabel]="noDataLabel()" />
+
+@if (table()) {
+  <details class="sumi-matrix-heatmap__table">
+    <summary>Show as table</summary>
+    <sumi-data-table [columns]="tableColumns()" [rows]="tableRows()" />
+  </details>
+}
