@@ -1,0 +1,36 @@
+section {
+  margin-bottom: var(--sumi-space-8);
+}
+
+.demo input {
+  display: block;
+  max-width: 320px;
+  margin: var(--sumi-space-3) 0;
+}
+
+.demo__feedback {
+  color: var(--sumi-text-2);
+}
+
+.demo__details {
+  padding: var(--sumi-space-3);
+  border: 1px solid var(--sumi-line);
+  border-radius: var(--sumi-radius-sm);
+  background: var(--sumi-sunken);
+  margin-bottom: var(--sumi-space-3);
+}
+
+.demo__log {
+  margin-top: var(--sumi-space-4);
+
+  h3 {
+    margin: 0 0 var(--sumi-space-2);
+    font-size: var(--sumi-text-sm);
+    color: var(--sumi-muted);
+  }
+
+  ol {
+    margin: 0;
+    padding-left: var(--sumi-space-5);
+  }
+}

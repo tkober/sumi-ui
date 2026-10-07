@@ -2,8 +2,54 @@
   title="Practice"
   subtitle="Session building blocks such as countdown rings and summary tiles."
 >
-  <p>Placeholder for now.</p>
-  <p>
-    Area: <code>{{ placeholder }}</code>
-  </p>
+  <section class="demo">
+    <h2>Hotkeys</h2>
+    <p>
+      A plain field, no kana logic (that's #11) — just enough state to exercise every hotkey rule.
+      Type into it, then press <kbd sumiKbd>Enter</kbd> to show feedback. While typing, bare
+      <kbd sumiKbd>F</kbd> and <kbd sumiKbd>?</kbd> land in the field as text; once feedback is
+      shown the field freezes and those same keys become hotkeys. <kbd sumiKbd>Esc</kbd> and
+      <kbd sumiKbd>Alt</kbd>+<kbd sumiKbd>K</kbd>
+      /
+      <kbd sumiKbd>Alt</kbd>+<kbd sumiKbd>H</kbd>
+      always work, typing or not.
+    </p>
+
+    <input
+      #field
+      id="demo-practice-field"
+      name="demo-practice-field"
+      sumiInput
+      [value]="value()"
+      (input)="onInput($event)"
+      placeholder="Type something, then press Enter"
+      aria-label="Demo practice field"
+    />
+
+    @if (feedback()) {
+      <p class="demo__feedback">Feedback shown — press Enter to go back to typing.</p>
+      @if (detailsOpen()) {
+        <div class="demo__details">Details box, toggled by F.</div>
+      }
+    }
+
+    <div class="demo__log">
+      <h3>Last hotkeys triggered</h3>
+      @if (log().length === 0) {
+        <p>(none yet)</p>
+      } @else {
+        <ol>
+          @for (entry of log(); track $index) {
+            <li>{{ entry }}</li>
+          }
+        </ol>
+      }
+    </div>
+  </section>
+
+  <section>
+    <p>
+      Area: <code>{{ placeholder }}</code>
+    </p>
+  </section>
 </sumi-page>

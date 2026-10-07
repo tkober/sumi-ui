@@ -1,0 +1,32 @@
+@if (open()) {
+  <div class="sumi-hotkey-help__panel" role="dialog" aria-label="Hotkeys">
+    @for (group of groups(); track group.scope) {
+      <section>
+        <h2>{{ group.heading }}</h2>
+        <ul>
+          @for (row of group.rows; track row.label) {
+            <li>
+              <span class="sumi-hotkey-help__keys">
+                @for (key of row.keys; track $index) {
+                  <kbd sumiKbd>{{ key }}</kbd>
+                }
+              </span>
+              <span class="sumi-hotkey-help__label">{{ row.label }}</span>
+            </li>
+          }
+        </ul>
+      </section>
+    }
+  </div>
+}
+
+<button
+  type="button"
+  class="sumi-hotkey-help__toggle"
+  aria-label="Hotkeys"
+  [attr.aria-expanded]="open()"
+  (mousedown)="$event.preventDefault()"
+  (click)="toggle()"
+>
+  <sumi-icon name="keyboard" />
+</button>
