@@ -1,5 +1,5 @@
 import { Component, DestroyRef, computed, inject, signal, viewChild } from '@angular/core';
-import { SumiFocusModeDirective, SumiPage } from 'sumi-ui/layout';
+import { SumiFocusModeDirective, SumiPage, SumiShellFocusActionsDirective } from 'sumi-ui/layout';
 import { SumiButtonDirective, SumiSegmentedControl } from 'sumi-ui/forms';
 import { SUMI_KEYS, SumiHotkeys, injectHotkey } from 'sumi-ui/core';
 import {
@@ -105,12 +105,15 @@ type SessionState = 'idle' | 'running' | 'ended';
 /**
  * Showcase for every practice building block from issue #12, composed into
  * one realistic screen: `sumi-session-gate` (idle/ended) around a
- * `sumiFocusMode` round with `sumi-session-bar`, `sumi-prompt-card`, the
- * existing `sumi-answer-field` (#11) and `sumi-verdict` with a collapsible
- * details block, plus a `sumi-countdown-ring` on cards that have a time
- * target and a `sumi-session-summary` at the end. A small "Other building
- * blocks" section below shows furigana, every countdown state and every
- * verdict kind side by side.
+ * `sumiFocusMode` round with `sumi-prompt-card`, the existing
+ * `sumi-answer-field` (#11) and `sumi-verdict` with a collapsible details
+ * block, plus a `sumi-countdown-ring` on cards that have a time target and
+ * a `sumi-session-summary` at the end. `sumi-session-bar` lives in the
+ * shell's header itself via `*sumiShellFocusActions` (#27) rather than
+ * inside this page's own markup — its answered/accuracy stay live and its
+ * "End session" button calls this page's own `endSession()`. A small
+ * "Other building blocks" section below shows furigana, every countdown
+ * state and every verdict kind side by side.
  */
 @Component({
   selector: 'app-practice-page',
@@ -121,6 +124,7 @@ type SessionState = 'idle' | 'running' | 'ended';
     SumiButtonDirective,
     SumiSegmentedControl,
     SumiFocusModeDirective,
+    SumiShellFocusActionsDirective,
     ...SUMI_PRACTICE,
   ],
 })
