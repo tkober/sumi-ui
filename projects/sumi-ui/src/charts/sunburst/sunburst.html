@@ -2,7 +2,7 @@
   <svg
     class="sumi-sunburst__svg"
     [attr.viewBox]="'0 0 ' + diameter() + ' ' + diameter()"
-    role="img"
+    role="group"
     [attr.aria-label]="ariaLabel()"
   >
     <g [attr.transform]="'translate(' + center() + ',' + center() + ')'">
@@ -24,6 +24,8 @@
             [attr.d]="arcFor(segment)"
             [style.fill]="segment.color"
             tabindex="0"
+            role="button"
+            [attr.aria-pressed]="pinnedIndex() === i"
             [attr.aria-label]="
               segment.path.join(' / ') +
               ': ' +
@@ -37,6 +39,8 @@
             (focus)="setHover(i)"
             (blur)="clearHover(i)"
             (click)="togglePin(i)"
+            (keydown.enter)="togglePin(i)"
+            (keydown.space)="$event.preventDefault(); togglePin(i)"
           >
             <title>
               {{ segment.path.join(' / ') }}: {{ segment.value }} ({{

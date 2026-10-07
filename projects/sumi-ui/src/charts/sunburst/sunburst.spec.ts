@@ -46,7 +46,7 @@ function setup() {
 describe('SumiSunburst', () => {
   it('has the required aria-label on the svg', () => {
     const fixture = setup();
-    const svg = fixture.nativeElement.querySelector('svg[role="img"]');
+    const svg = fixture.nativeElement.querySelector('svg[role="group"]');
     expect(svg.getAttribute('aria-label')).toBe('Reviews by SRS stage');
   });
 

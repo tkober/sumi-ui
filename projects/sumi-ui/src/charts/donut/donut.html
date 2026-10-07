@@ -3,7 +3,7 @@
     <svg
       class="sumi-donut__svg"
       [attr.viewBox]="'0 0 ' + diameter() + ' ' + diameter()"
-      role="img"
+      role="group"
       [attr.aria-label]="ariaLabel()"
     >
       <g [attr.transform]="'translate(' + center() + ',' + center() + ')'">
@@ -25,6 +25,7 @@
               [attr.d]="arcFor(segment.startAngle, segment.endAngle)"
               [style.fill]="segment.color"
               tabindex="0"
+              role="img"
               [attr.aria-label]="
                 segment.label +
                 ': ' +
