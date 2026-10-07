@@ -1,0 +1,113 @@
+section {
+  margin-bottom: var(--sumi-space-8);
+}
+
+.swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sumi-space-4);
+}
+
+.swatch {
+  width: 140px;
+
+  .swatch-color {
+    height: 64px;
+    border: 1px solid var(--sumi-line);
+    border-radius: var(--sumi-radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--sumi-font-ui);
+  }
+
+  .swatch-label {
+    margin-top: var(--sumi-space-1);
+    font-size: var(--sumi-text-sm);
+  }
+
+  code {
+    font-family: var(--sumi-font-mono);
+    font-size: var(--sumi-text-xs);
+    color: var(--sumi-muted);
+  }
+}
+
+.ramp {
+  display: flex;
+  gap: 2px;
+}
+
+.ramp-step {
+  flex: 1;
+  height: 48px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: var(--sumi-space-1);
+  border-radius: var(--sumi-radius-sm);
+  font-size: var(--sumi-text-xs);
+  color: var(--sumi-muted);
+}
+
+.specimen {
+  padding: var(--sumi-space-4);
+  margin-bottom: var(--sumi-space-3);
+  background: var(--sumi-surface);
+  border: 1px solid var(--sumi-line);
+  border-radius: var(--sumi-radius);
+
+  .specimen-role {
+    margin: 0 0 var(--sumi-space-2);
+    font-family: var(--sumi-font-ui);
+    font-size: var(--sumi-text-sm);
+    color: var(--sumi-muted);
+  }
+
+  .specimen-text {
+    margin: 0 0 var(--sumi-space-1);
+    font-size: var(--sumi-text-xl);
+  }
+}
+
+.type-scale {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sumi-space-5);
+  flex-wrap: wrap;
+
+  .type-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--sumi-space-1);
+
+    code {
+      font-size: var(--sumi-text-xs);
+      color: var(--sumi-muted);
+    }
+  }
+}
+
+.spacing-scale {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sumi-space-2);
+
+  .spacing-step {
+    display: flex;
+    align-items: center;
+    gap: var(--sumi-space-3);
+  }
+
+  .spacing-bar {
+    height: 16px;
+    background: var(--sumi-accent);
+    border-radius: var(--sumi-radius-sm);
+  }
+
+  code {
+    font-size: var(--sumi-text-xs);
+    color: var(--sumi-muted);
+  }
+}
