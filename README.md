@@ -193,6 +193,18 @@ successfully with `ng build` from a throwaway Angular 22 app):
    just with the library's own in-repo path instead of the submodule
    path shown here.
 
+   Because the name is fixed, `sumi-fonts.css` must not be cached as
+   immutable. The apps' nginx configs cache every `.css` for a year; add
+   an exact-match location before that rule so the file is revalidated
+   (the font files it references are hashed and stay cacheable):
+
+   ```nginx
+   location = /sumi-fonts.css {
+       add_header Cache-Control "no-cache";
+       try_files $uri =404;
+   }
+   ```
+
 7. In the app's CI workflow, check out submodules and make sure a submodule
    bump still triggers the workflow:
 
