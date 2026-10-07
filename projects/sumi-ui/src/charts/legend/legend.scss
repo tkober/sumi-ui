@@ -1,15 +1,17 @@
 :host {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--sumi-space-3);
+  column-gap: var(--sumi-space-5);
+  row-gap: var(--sumi-space-2);
   font-size: var(--sumi-text-sm);
 }
 
 .sumi-legend__item {
   display: inline-flex;
   align-items: center;
-  gap: var(--sumi-space-1);
+  gap: var(--sumi-space-2);
   color: var(--sumi-text-2);
+  white-space: nowrap;
 }
 
 .sumi-legend__swatch {
@@ -17,6 +19,7 @@
   height: 10px;
   border-radius: 2px;
   flex: none;
+  margin-right: 2px;
 }
 
 .sumi-legend__value {

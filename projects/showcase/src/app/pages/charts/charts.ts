@@ -53,7 +53,7 @@ export class ChartsPage {
   ].map((row) => ({
     level: row.level,
     segments: [
-      { label: 'Seen', value: row.seen },
+      { label: 'Seen', value: row.seen, color: 'var(--sumi-accent)' },
       { label: 'Remaining', value: row.total - row.seen, color: 'var(--sumi-sunken)' },
     ],
     label: `${row.seen}/${row.total} seen`,

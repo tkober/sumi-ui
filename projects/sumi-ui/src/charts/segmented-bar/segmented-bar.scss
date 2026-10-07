@@ -5,14 +5,9 @@
 .sumi-segmented-bar__svg {
   display: block;
   width: 100%;
-  height: 14px;
   border-radius: var(--sumi-radius-pill);
   background: var(--sumi-sunken);
   overflow: hidden;
-}
-
-.sumi-segmented-bar__svg--sm {
-  height: 8px;
 }
 
 .sumi-segmented-bar__table {
