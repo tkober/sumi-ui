@@ -4,6 +4,30 @@
     @for (link of navLinks; track link.path) {
       <a [routerLink]="link.path" routerLinkActive="active">{{ link.label }}</a>
     }
+    <div class="toolbar">
+      <div class="segmented" role="group" aria-label="Theme">
+        @for (item of themeModes; track item.mode) {
+          <button
+            type="button"
+            [class.active]="theme.mode() === item.mode"
+            (click)="theme.set(item.mode)"
+          >
+            {{ item.label }}
+          </button>
+        }
+      </div>
+      <div class="segmented" role="group" aria-label="Accent">
+        @for (item of accentPresets; track item.preset) {
+          <button
+            type="button"
+            [class.active]="selectedAccent === item.preset"
+            (click)="selectAccent(item.preset)"
+          >
+            {{ item.label }}
+          </button>
+        }
+      </div>
+    </div>
   </nav>
   <main>
     <router-outlet />

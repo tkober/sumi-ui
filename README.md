@@ -15,13 +15,14 @@ repository implements.
 projects/
   sumi-ui/
     src/
-      core/      # tokens, theme, fonts, hotkeys, provideSumi() (placeholder)
+      core/      # tokens, theme, fonts, provideSumi() (hotkeys: placeholder)
       forms/     # sumi-answer-field and related inputs (placeholder)
       practice/  # session building blocks (placeholder)
       charts/    # statistics SVG components (placeholder)
       layout/    # app shell, app switcher (placeholder)
     styles/
-      sumi.scss  # style entry point, currently almost empty
+      sumi.scss        # style entry point: tokens + base styles
+      sumi-fonts.scss  # @font-face rules, loaded separately and non-blocking
   showcase/      # Angular app with one page per area, used instead of Storybook
 ```
 
@@ -120,11 +121,91 @@ successfully with `ng build` from a throwaway Angular 22 app):
    a `sumi-ui/` submodule folder.
 
 4. Call `provideSumi({ accent: 'ai', motif: 'mountains' })` in
-   `app.config.ts` to pick the app's accent and motif. **`provideSumi` does
-   not exist yet** — it ships in a later issue (core area, tokens/theme).
-   For now, skip this step; the library has no providers to call.
+   `app.config.ts` to pick the app's accent and motif:
 
-5. In the app's CI workflow, check out submodules and make sure a submodule
+   ```ts
+   import { ApplicationConfig } from '@angular/core';
+   import { provideSumi } from 'sumi-ui/core';
+
+   export const appConfig: ApplicationConfig = {
+     providers: [
+       // ...other providers
+       provideSumi({ accent: 'ai', motif: 'mountains' }),
+     ],
+   };
+   ```
+
+   `accent` is one of the named presets (`'ai'`, `'yamabuki'`, `'asagi'`,
+   `'fuji'`, see docs/concept.md#tokens) or custom `{ light, dark }` colour
+   values. `motif` and `dashboardPort` are optional; see
+   `provideSumi`'s JSDoc in `projects/sumi-ui/src/core/provide-sumi.ts`
+   for defaults.
+
+5. Install the library's font packages as direct dependencies — they are
+   `peerDependencies` here, so this repo expects the app to provide them:
+
+   ```bash
+   npm install @fontsource/shippori-mincho @fontsource/zen-kaku-gothic-new @fontsource/ibm-plex-mono
+   ```
+
+6. Load the fonts as their own, non-blocking stylesheet. `sumi.scss` (step
+   3) only pulls in tokens and base styles; the actual `@font-face` rules
+   live in a separate `sumi-fonts.scss`, deliberately kept out of the
+   app's main stylesheet because it is almost nothing but font data (see
+   `projects/sumi-ui/styles/sumi-fonts.scss`). Every `--sumi-font-*` token
+   already lists a system fallback first, so the app renders immediately
+   either way and the fonts swap in once they arrive.
+
+   Add it as its own build output, not injected into `index.html`'s
+   `<head>` automatically, on the app's `build` target in
+   `frontend/angular.json`:
+
+   ```jsonc
+   "options": {
+     // ...
+     "styles": [
+       "src/styles.scss",
+       {
+         "input": "sumi-ui/projects/sumi-ui/styles/sumi-fonts.scss",
+         "bundleName": "sumi-fonts",
+         "inject": false,
+       },
+     ],
+   }
+   ```
+
+   Then load it from `index.html` so the browser fetches it without
+   blocking first paint, and falls back to a normal blocking stylesheet
+   when JavaScript is off:
+
+   ```html
+   <link rel="preload" as="style" href="sumi-fonts.css" />
+   <link rel="stylesheet" href="sumi-fonts.css" media="print" onload="this.media = 'all'" />
+   <noscript><link rel="stylesheet" href="sumi-fonts.css" /></noscript>
+   ```
+
+   `bundleName: 'sumi-fonts'` keeps the output file name
+   `sumi-fonts.css` fixed even with `outputHashing: 'all'` in the
+   production configuration, since Angular does not hash a style bundle
+   that has `inject: false` — the `href`s above do not need to change
+   per build. This repo's own `showcase` app uses the exact same
+   mechanism (see `angular.json` and `projects/showcase/src/index.html`),
+   just with the library's own in-repo path instead of the submodule
+   path shown here.
+
+   Because the name is fixed, `sumi-fonts.css` must not be cached as
+   immutable. The apps' nginx configs cache every `.css` for a year; add
+   an exact-match location before that rule so the file is revalidated
+   (the font files it references are hashed and stay cacheable):
+
+   ```nginx
+   location = /sumi-fonts.css {
+       add_header Cache-Control "no-cache";
+       try_files $uri =404;
+   }
+   ```
+
+7. In the app's CI workflow, check out submodules and make sure a submodule
    bump still triggers the workflow:
 
    ```yaml
@@ -143,7 +224,7 @@ successfully with `ng build` from a throwaway Angular 22 app):
    repos are public, so CI can check out the submodule without an extra
    token.
 
-6. Add Dependabot updates for the submodule, so a change to `sumi-ui` opens
+8. Add Dependabot updates for the submodule, so a change to `sumi-ui` opens
    a PR in the app's repo:
 
    ```yaml
@@ -156,7 +237,7 @@ successfully with `ng build` from a throwaway Angular 22 app):
          interval: weekly
    ```
 
-7. Update the submodule to the latest commit on its default branch with:
+9. Update the submodule to the latest commit on its default branch with:
 
    ```bash
    git submodule update --remote

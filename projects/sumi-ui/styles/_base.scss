@@ -1,0 +1,63 @@
+// Minimal, non-invasive base styles. Components (buttons, inputs, …) get
+// their own styling in a later issue — this only sets the page-level
+// defaults every app needs regardless of which components it uses.
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--sumi-bg);
+  color: var(--sumi-text);
+  font-family: var(--sumi-font-ui);
+  font-size: var(--sumi-text-md);
+  line-height: 1.5;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--sumi-font-display);
+}
+
+a {
+  color: var(--sumi-accent-ink);
+}
+
+:focus-visible {
+  outline: none;
+  box-shadow: var(--sumi-focus-ring);
+  border-radius: var(--sumi-radius-sm);
+}
+
+// Japanese text always gets the JP-aware stack, regardless of which
+// `--sumi-font-*` role it is used in, so the browser never falls back to
+// Chinese glyph variants.
+[lang='ja'],
+.sumi-jp {
+  font-family:
+    'Zen Kaku Gothic New', 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', 'Yu Gothic',
+    'Noto Sans JP', sans-serif;
+}
+
+// Numbers in columns (stats, tables) line up on a fixed width.
+.sumi-tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -1,0 +1,97 @@
+import {
+  EnvironmentProviders,
+  Injectable,
+  InjectionToken,
+  PLATFORM_ID,
+  inject,
+  makeEnvironmentProviders,
+  provideAppInitializer,
+} from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
+import { SumiAccentColors, SumiAccentPreset, resolveAccent } from './accent';
+import { SumiTheme } from './theme';
+
+/** Ink-painting motif, see docs/concept.md#tuschemotive. A later issue renders these. */
+export type SumiMotif = 'mountains' | 'waves' | 'clouds' | 'bamboo';
+
+/** Default dashboard port, see docs/concept.md#app-umschalter. */
+export const SUMI_DEFAULT_DASHBOARD_PORT = 8087;
+
+/** Default motif, used when `provideSumi()` is called without `motif`. */
+export const SUMI_DEFAULT_MOTIF: SumiMotif = 'mountains';
+
+/** Resolved configuration, read by later issues (app switcher, motifs). */
+export interface SumiConfig {
+  accent: SumiAccentColors;
+  motif: SumiMotif;
+  dashboardPort: number;
+}
+
+/** Options accepted by `provideSumi()`. */
+export interface ProvideSumiOptions {
+  accent?: SumiAccentPreset | SumiAccentColors;
+  motif?: SumiMotif;
+  dashboardPort?: number;
+}
+
+/** Injection token for the configuration `provideSumi()` resolves. */
+export const SUMI_CONFIG = new InjectionToken<SumiConfig>('SUMI_CONFIG');
+
+/**
+ * Applies an accent's three roles as `--sumi-accent`, `--sumi-on-accent`
+ * and `--sumi-accent-ink` custom properties on `documentElement`, each as
+ * `light-dark(<light>, <dark>)` so the existing theme machinery in
+ * _tokens.scss (and `SumiTheme`) keeps resolving them per theme. A no-op
+ * outside the browser (SSR, tests without a DOM).
+ */
+@Injectable({ providedIn: 'root' })
+export class SumiAccent {
+  private readonly platformId = inject(PLATFORM_ID);
+
+  set(accent: SumiAccentPreset | SumiAccentColors): void {
+    if (!isPlatformBrowser(this.platformId)) {
+      return;
+    }
+    const resolved = resolveAccent(accent);
+    const root = document.documentElement;
+    root.style.setProperty(
+      '--sumi-accent',
+      `light-dark(${resolved.light.accent}, ${resolved.dark.accent})`,
+    );
+    root.style.setProperty(
+      '--sumi-on-accent',
+      `light-dark(${resolved.light.onAccent}, ${resolved.dark.onAccent})`,
+    );
+    root.style.setProperty(
+      '--sumi-accent-ink',
+      `light-dark(${resolved.light.accentInk}, ${resolved.dark.accentInk})`,
+    );
+  }
+}
+
+/**
+ * Configures Sumi UI for an app: which accent it uses (a preset name or
+ * custom colours), which ink-painting motif, and which port the app
+ * switcher's dashboard lives on. Call it once in `app.config.ts`'s
+ * providers (see README.md).
+ *
+ * At startup it applies the resolved accent to `documentElement` and
+ * injects `SumiTheme` so the viewer's stored theme choice is restored and
+ * applied as early as Angular allows (before first paint, not after the
+ * first component renders).
+ */
+export function provideSumi(options?: ProvideSumiOptions): EnvironmentProviders {
+  const config: SumiConfig = {
+    accent: resolveAccent(options?.accent),
+    motif: options?.motif ?? SUMI_DEFAULT_MOTIF,
+    dashboardPort: options?.dashboardPort ?? SUMI_DEFAULT_DASHBOARD_PORT,
+  };
+
+  return makeEnvironmentProviders([
+    { provide: SUMI_CONFIG, useValue: config },
+    provideAppInitializer(() => {
+      inject(SumiAccent).set(config.accent);
+      inject(SumiTheme);
+    }),
+  ]);
+}

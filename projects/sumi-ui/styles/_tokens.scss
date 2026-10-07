@@ -1,0 +1,106 @@
+// Sumi UI design tokens.
+//
+// Every token is a CSS custom property, defined exactly once on `:root`
+// with `light-dark(<light>, <dark>)`. `color-scheme` controls which branch
+// resolves: `:root` leaves it as `light dark` so the OS preference decides,
+// and `:root[data-theme='light'|'dark']` (set by `SumiTheme`) pins it to the
+// viewer's explicit choice. No token is ever redefined per theme — same
+// pattern as jp-conjugation's `styles/tokens.css`.
+//
+// Needs Chrome 123, Safari 17.5 or Firefox 120+ (`light-dark()`).
+:root {
+  color-scheme: light dark;
+
+  // Surfaces and text (see docs/concept.md#tokens for the exact values).
+  --sumi-bg: light-dark(#f3f2ee, #151513);
+  --sumi-surface: light-dark(#fbfaf7, #1d1d1a);
+  --sumi-sunken: light-dark(#e9e7e1, #262622);
+  --sumi-line: light-dark(#d7d4cc, #36352f);
+  --sumi-text: light-dark(#1e1d1b, #ecebe6);
+  --sumi-text-2: light-dark(#4c4a45, #c2c0b8);
+  --sumi-muted: light-dark(#7b7870, #8f8c83);
+
+  // Feedback colours. Never the only signal (see "Nie nur Farbe" in the
+  // concept's Leitbild) — components also carry an icon and text.
+  --sumi-correct: light-dark(#2f6b3a, #8cc694);
+  --sumi-correct-soft: light-dark(#e1ecdf, #1f3322);
+  --sumi-wrong: light-dark(#b3261e, #f08a80);
+  --sumi-wrong-soft: light-dark(#f6e0dd, #3d201d);
+  --sumi-retry: light-dark(#9a6a10, #e0b45a);
+  --sumi-retry-soft: light-dark(#f4ead2, #3a2f17);
+
+  // Accent tokens. These default to the `ai` preset so the stylesheet works
+  // even before `provideSumi()` runs; `provideSumi` (and `SumiAccent`)
+  // overwrite them as inline styles on `documentElement` at runtime.
+  //
+  // - `--sumi-accent`: fills (buttons, bars).
+  // - `--sumi-on-accent`: text/icons on an accent fill.
+  // - `--sumi-accent-ink`: accent used as text, link or border directly on
+  //   `--sumi-bg`/`--sumi-surface`.
+  // - `--sumi-accent-soft`: a tinted background, derived from the accent.
+  --sumi-accent: light-dark(#2b4c7e, #8fa9d6);
+  --sumi-on-accent: light-dark(#ffffff, #151513);
+  --sumi-accent-ink: light-dark(#2b4c7e, #8fa9d6);
+  --sumi-accent-soft: color-mix(in oklab, var(--sumi-accent) 16%, var(--sumi-surface));
+
+  // Sequential ramp for charts, derived from the accent by mixing it into
+  // the surface colour in increasing shares. Because the *light* theme's
+  // accent is comparatively dark and the *dark* theme's accent is
+  // comparatively light (see the preset table), the very same mix formula
+  // makes "more" read as darker in light mode and as lighter in dark mode —
+  // exactly the reversal the concept calls for — without any per-theme
+  // override.
+  --sumi-seq-0: color-mix(in oklab, var(--sumi-accent) 12%, var(--sumi-surface));
+  --sumi-seq-1: color-mix(in oklab, var(--sumi-accent) 30%, var(--sumi-surface));
+  --sumi-seq-2: color-mix(in oklab, var(--sumi-accent) 48%, var(--sumi-surface));
+  --sumi-seq-3: color-mix(in oklab, var(--sumi-accent) 66%, var(--sumi-surface));
+  --sumi-seq-4: color-mix(in oklab, var(--sumi-accent) 84%, var(--sumi-surface));
+  --sumi-seq-5: var(--sumi-accent);
+
+  // Fonts. Fallback stacks fill in before the self-hosted `@fontsource`
+  // files load, and keep working in the unlikely case a font fails to
+  // load at all; see docs/concept.md#schrift.
+  --sumi-font-display: 'Shippori Mincho', 'Hiragino Mincho ProN', 'Yu Mincho', serif;
+  --sumi-font-ui:
+    'Zen Kaku Gothic New', 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', 'Yu Gothic',
+    'Noto Sans JP', sans-serif;
+  --sumi-font-mono:
+    'IBM Plex Mono', 'Hiragino Kaku Gothic ProN', 'Yu Gothic', 'Noto Sans JP', monospace;
+
+  // Type scale.
+  --sumi-text-xs: 0.75rem;
+  --sumi-text-sm: 0.875rem;
+  --sumi-text-md: 1rem;
+  --sumi-text-lg: 1.125rem;
+  --sumi-text-xl: 1.25rem;
+  --sumi-text-2xl: 1.5rem;
+  --sumi-text-3xl: 1.875rem;
+
+  // Spacing on a 4px grid.
+  --sumi-space-1: 4px;
+  --sumi-space-2: 8px;
+  --sumi-space-3: 12px;
+  --sumi-space-4: 16px;
+  --sumi-space-5: 20px;
+  --sumi-space-6: 24px;
+  --sumi-space-7: 28px;
+  --sumi-space-8: 32px;
+
+  // Shape, shadow, focus.
+  --sumi-radius: 10px;
+  --sumi-radius-sm: 8px;
+  --sumi-radius-pill: 999px;
+  --sumi-shadow: 0 1px 2px light-dark(rgb(16 24 40 / 6%), rgb(0 0 0 / 40%));
+  --sumi-focus-ring: 0 0 0 3px color-mix(in oklab, var(--sumi-accent) 45%, transparent);
+}
+
+// The viewer's explicit choice wins over the system in both directions. No
+// token above is redefined here — only which branch of `light-dark()` the
+// browser resolves.
+:root[data-theme='light'] {
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+}

@@ -7,22 +7,62 @@
 nav {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 1rem;
   padding: 0.75rem 1rem;
-  border-bottom: 1px solid #d7d4cc;
+  border-bottom: 1px solid var(--sumi-line);
+  background: var(--sumi-surface);
 
   .brand {
-    font-weight: 600;
+    // Shippori Mincho only ships weight 700 (see sumi-fonts.scss) — match
+    // it exactly instead of asking for a weight that isn't loaded.
+    font-weight: 700;
     margin-right: 1rem;
+    font-family: var(--sumi-font-display);
   }
 
   a {
-    color: inherit;
+    color: var(--sumi-accent-ink);
     text-decoration: none;
 
     &.active {
-      font-weight: 600;
+      // Zen Kaku Gothic New ships 400 and 700 only, see sumi-fonts.scss.
+      font-weight: 700;
       text-decoration: underline;
+    }
+  }
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--sumi-space-3);
+  margin-left: auto;
+}
+
+.segmented {
+  display: flex;
+  border: 1px solid var(--sumi-line);
+  border-radius: var(--sumi-radius-pill);
+  overflow: hidden;
+
+  button {
+    border: none;
+    background: var(--sumi-sunken);
+    color: var(--sumi-text-2);
+    padding: var(--sumi-space-1) var(--sumi-space-3);
+    font: inherit;
+    font-size: var(--sumi-text-sm);
+    cursor: pointer;
+
+    &.active {
+      background: var(--sumi-accent);
+      color: var(--sumi-on-accent);
+    }
+
+    &:focus-visible {
+      outline: none;
+      box-shadow: var(--sumi-focus-ring);
     }
   }
 }

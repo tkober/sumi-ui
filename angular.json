@@ -32,7 +32,14 @@
                 "input": "projects/showcase/public"
               }
             ],
-            "styles": ["projects/showcase/src/styles.scss"]
+            "styles": [
+              "projects/showcase/src/styles.scss",
+              {
+                "input": "projects/sumi-ui/styles/sumi-fonts.scss",
+                "bundleName": "sumi-fonts",
+                "inject": false
+              }
+            ]
           },
           "configurations": {
             "production": {

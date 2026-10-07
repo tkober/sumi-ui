@@ -1,0 +1,35 @@
+// Sumi UI fonts — a separate entry point from sumi.scss, on purpose.
+//
+// This is almost nothing but @font-face rules (self-hosted via
+// `@fontsource`, one rule per unicode-range subset per weight), which made
+// it the overwhelming majority of sumi.scss's render-blocking weight. An
+// app includes this as its own build output (not injected into the page's
+// <head> by the bundler) and loads it non-blocking from index.html, e.g.:
+//
+//   <link rel="preload" as="style" href="sumi-fonts.css">
+//   <link rel="stylesheet" href="sumi-fonts.css" media="print" onload="this.media='all'">
+//   <noscript><link rel="stylesheet" href="sumi-fonts.css"></noscript>
+//
+// See README.md for the full angular.json + index.html setup. Every
+// `--sumi-font-*` token (see _tokens.scss) already lists a system fallback
+// first in its stack and each @fontsource rule below carries
+// `font-display: swap`, so text renders immediately in the fallback font
+// and swaps once these load — this stylesheet never blocks first paint,
+// with or without the non-blocking loading above.
+//
+// Only the weights actually referenced by tokens/_base.scss are imported:
+// Shippori Mincho 700 (headings), Zen Kaku Gothic New 400 and 700 (body
+// text and emphasis), IBM Plex Mono 400 (tables, kbd, numbers). No medium
+// (500) weight ships — labels and emphasis use 400 or 700 instead, see
+// _base.scss and app.scss for where the showcase had to adjust. Japanese
+// glyph ranges are their own subsets, downloaded only when a page actually
+// renders Japanese text.
+//
+// Consuming apps install the `@fontsource/*` packages as
+// `peerDependencies` (see package.json); resolution goes through the
+// app's own `node_modules`, the same way the library's TypeScript source
+// compiles against the app's Angular install.
+@use '@fontsource/shippori-mincho/700.css' as *;
+@use '@fontsource/zen-kaku-gothic-new/400.css' as *;
+@use '@fontsource/zen-kaku-gothic-new/700.css' as *;
+@use '@fontsource/ibm-plex-mono/400.css' as *;

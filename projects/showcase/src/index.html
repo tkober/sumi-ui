@@ -6,6 +6,16 @@
     <base href="/" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="icon" type="image/x-icon" href="favicon.ico" />
+    <!--
+      Sumi UI's fonts are a separate, non-blocking stylesheet (see
+      projects/sumi-ui/styles/sumi-fonts.scss and README.md): `media="print"`
+      makes the browser fetch it without blocking render, and `onload`
+      flips it to `all` once it has loaded. `--sumi-font-*` already lists a
+      system fallback first, so text renders immediately either way.
+    -->
+    <link rel="preload" as="style" href="sumi-fonts.css" />
+    <link rel="stylesheet" href="sumi-fonts.css" media="print" onload="this.media = 'all'" />
+    <noscript><link rel="stylesheet" href="sumi-fonts.css" /></noscript>
   </head>
   <body>
     <app-root></app-root>
