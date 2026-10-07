@@ -18,7 +18,7 @@ projects/
       core/      # tokens, theme, fonts, provideSumi(), SumiHotkeys, sumi-hotkey-help
       forms/     # native-element directives and composite form controls
       practice/  # kana conversion + sumi-answer-field, sumiHoldFocus
-      charts/    # statistics SVG components (placeholder)
+      charts/    # statistics SVG components: stat tile, segmented bar, sparkline, bar chart, legend, data table
       layout/    # app shell, app switcher, page, card, badge, banner
     styles/
       sumi.scss        # style entry point: tokens + base styles
@@ -370,7 +370,7 @@ successfully with `ng build` from a throwaway Angular 22 app):
 
    `mode` is one of `'kana'`, `'katakana'`, `'romaji'`, `'latin'` (a
    meaning, no conversion) or `'free'`. `value` is a `model()` holding the
-   *converted* text; the field keeps the romaji behind it internally
+   _converted_ text; the field keeps the romaji behind it internally
    (`absorbInput`, from `sumi-ui/practice`'s `kana.ts`, also exported for
    apps that need the bare conversion functions without the component).
    `iKnow`/`iDontKnow` gate `Alt+K`/`Alt+H` (emitting `knew`/`gaveUp`) in
@@ -390,13 +390,11 @@ successfully with `ng build` from a throwaway Angular 22 app):
    duplicating the state table:
 
    ```html
-   <button sumiButton variant="primary" sumiHoldFocus (click)="field.submit()">
-     {{ ... }}
-   </button>
+   <button sumiButton variant="primary" sumiHoldFocus (click)="field.submit()">{{ ... }}</button>
    ```
 
-   **What the field deliberately does *not* register: `F` and `?`.**
-   Those belong to the practice *page*, not the field — "show item info"
+   **What the field deliberately does _not_ register: `F` and `?`.**
+   Those belong to the practice _page_, not the field — "show item info"
    and "toggle the hotkey flyout" are decisions about what a specific app
    shows after an answer, not something a generic input should own. A
    practice page registers them itself, gated on a verdict being on
@@ -491,7 +489,12 @@ successfully with `ng build` from a throwaway Angular 22 app):
 
    ```html
    <div sumiFocusMode>
-     <sumi-session-bar [answered]="answered()" [correct]="correct()" [total]="total()" (end)="endSession()" />
+     <sumi-session-bar
+       [answered]="answered()"
+       [correct]="correct()"
+       [total]="total()"
+       (end)="endSession()"
+     />
      <sumi-prompt-card ... />
      <sumi-answer-field ... />
    </div>
@@ -508,11 +511,16 @@ successfully with `ng build` from a throwaway Angular 22 app):
 
    ```html
    @if (state() === 'idle') {
-     <sumi-session-gate title="Ready to practice?" text="…" (start)="startSession()" />
+   <sumi-session-gate title="Ready to practice?" text="…" (start)="startSession()" />
    } @else if (state() === 'ended') {
-     <sumi-session-gate [showAction]="false" (start)="startSession()">
-       <sumi-session-summary [answered]="answered()" [correct]="correct()" [durationMs]="durationMs()" (restart)="startSession()" />
-     </sumi-session-gate>
+   <sumi-session-gate [showAction]="false" (start)="startSession()">
+     <sumi-session-summary
+       [answered]="answered()"
+       [correct]="correct()"
+       [durationMs]="durationMs()"
+       (restart)="startSession()"
+     />
+   </sumi-session-gate>
    }
    ```
 
@@ -533,8 +541,7 @@ successfully with `ng build` from a throwaway Angular 22 app):
    never reflows the surrounding text:
 
    ```html
-   <sumi-furigana [segments]="[{ base: '食べる', reading: 'たべる' }]" />
-   <sumi-furigana-toggle />
+   <sumi-furigana [segments]="[{ base: '食べる', reading: 'たべる' }]" /> <sumi-furigana-toggle />
    ```
 
    See `projects/showcase/src/app/pages/practice/practice.ts`/`.html` for
@@ -542,16 +549,78 @@ successfully with `ng build` from a throwaway Angular 22 app):
    focus-mode round with prompt/verdict/countdown/session-bar → summary
    inside the gate again).
 
-5. Install the library's font and wanakana packages as direct
+   ### Charts
+
+   `sumi-ui/charts` (`SUMI_CHARTS`, see docs/concept.md#statistik-komponenten)
+   is the statistics area: `sumi-stat-tile` + `sumi-stat-grid`,
+   `sumi-segmented-bar`, `sumi-sparkline`, `sumi-bar-chart`, `sumi-legend`
+   and `sumi-data-table`. The maths behind every chart — scales, ticks,
+   sparkline/area paths, segment percentages, stacked bar offsets, sparse
+   x-axis labels — lives in pure, exported, unit-tested functions in
+   `projects/sumi-ui/src/charts/math.ts`; the components themselves only
+   render. It depends on **`d3-scale` and `d3-shape`**, both
+   `peerDependencies` here exactly like `wanakana` (install them in the app:
+   `npm install d3-scale d3-shape`) — only named ESM imports
+   (`scaleLinear`, `scaleBand`, `line`, `area`, `curveMonotoneX`, …) are used
+   anywhere in `charts/math.ts`, so a consuming app's bundler tree-shakes
+   away whatever it does not call.
+
+   Every chart that is an actual SVG graphic (`sumi-segmented-bar`,
+   `sumi-sparkline`, `sumi-bar-chart`) is drawn with a `viewBox` and
+   `preserveAspectRatio` so it scales with its container, carries
+   `role="img"` plus a **required** `ariaLabel` input, and draws colour only
+   from `--sumi-*` tokens (the sequential `--sumi-seq-0`…`-5` ramp by
+   default for multi-segment charts). Each of them also takes an optional
+   `table` input that adds a `<details>` "Show as table" fallback rendering
+   the same data through `sumi-data-table` — the accessible fallback every
+   chart has, per docs/concept.md's "Nie nur Farbe" (kanji-trainer's
+   forecast page did this by hand; here it is one input):
+
+   ```html
+   <sumi-stat-grid>
+     <sumi-stat-tile value="42" label="reviews due" emphasis link="/review" />
+     <sumi-stat-tile [value]="elo" label="Elo" [delta]="eloDelta" />
+   </sumi-stat-grid>
+
+   <sumi-segmented-bar
+     ariaLabel="SRS stage distribution"
+     [segments]="[{ label: 'Apprentice', value: 86 }, { label: 'Guru', value: 142 }]"
+     legend
+     table
+   />
+
+   <sumi-sparkline
+     ariaLabel="Elo over the last 30 sessions"
+     [points]="eloHistory"
+     [value]="elo"
+     [delta]="eloDelta"
+   />
+
+   <sumi-bar-chart
+     ariaLabel="Reviews arriving per hour over the next 24 hours"
+     [bars]="hourlyBars"
+     [labelEvery]="6"
+   />
+   ```
+
+   `sumi-bar-chart` also has a stacked mode (`rows` + `series` instead of
+   `bars`, coloured from the `--sumi-seq-*` ramp by series index) for a
+   forecast broken down by stage, same shape as kanji-trainer's forecast
+   page. See `projects/showcase/src/app/pages/charts/charts.ts`/`.html` for
+   all six components wired up against realistic example data (KPI tiles,
+   SRS distribution, a 30-session Elo sparkline, a 24h "coming up" chart
+   with the current hour highlighted, a stacked 7-day forecast and
+   per-level coverage bars).
+
+5. Install the library's font, wanakana and chart maths packages as direct
    dependencies — they are `peerDependencies` here, so this repo expects
    the app to provide them:
 
    ```bash
-   npm install @fontsource/murecho @fontsource/zen-kaku-gothic-new @fontsource/ibm-plex-mono wanakana
+   npm install @fontsource/murecho @fontsource/zen-kaku-gothic-new @fontsource/ibm-plex-mono wanakana d3-scale d3-shape
    ```
 
-6. Load the fonts as their own, non-blocking stylesheet. `sumi.scss` (step
-   3) only pulls in tokens and base styles; the actual `@font-face` rules
+6. Load the fonts as their own, non-blocking stylesheet. `sumi.scss` (step 3) only pulls in tokens and base styles; the actual `@font-face` rules
    live in a separate `sumi-fonts.scss`, deliberately kept out of the
    app's main stylesheet because it is almost nothing but font data (see
    `projects/sumi-ui/styles/sumi-fonts.scss`). Every `--sumi-font-*` token
