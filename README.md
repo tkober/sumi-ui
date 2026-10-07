@@ -19,7 +19,7 @@ projects/
       forms/     # native-element directives and composite form controls
       practice/  # kana conversion + sumi-answer-field, sumiHoldFocus
       charts/    # statistics components: stat tile, segmented bar, sparkline, bar chart, calendar/matrix heatmaps, legend, data table
-      layout/    # app shell, app switcher, page, card, badge, banner
+      layout/    # app shell, app switcher, page, card, badge, banner, ink motifs (landscapes/patterns, sumi-ink-backdrop, sumi-empty-state, sumi-hanko)
     styles/
       sumi.scss        # style entry point: tokens + base styles
       sumi-fonts.scss  # @font-face rules, loaded separately and non-blocking
@@ -134,8 +134,9 @@ successfully with `ng build` from a throwaway Angular 22 app):
    since here the library already lives at the repo root instead of under
    a `sumi-ui/` submodule folder.
 
-4. Call `provideSumi({ accent: 'ai', motif: 'mountains' })` in
-   `app.config.ts` to pick the app's accent and motif:
+4. Call `provideSumi({ accent: 'ai', motif: 'mountains', pattern: 'asanoha' })`
+   in `app.config.ts` to pick the app's accent, ink landscape and ink
+   pattern:
 
    ```ts
    import { ApplicationConfig } from '@angular/core';
@@ -144,16 +145,53 @@ successfully with `ng build` from a throwaway Angular 22 app):
    export const appConfig: ApplicationConfig = {
      providers: [
        // ...other providers
-       provideSumi({ accent: 'ai', motif: 'mountains' }),
+       provideSumi({ accent: 'ai', motif: 'mountains', pattern: 'asanoha' }),
      ],
    };
    ```
 
    `accent` is one of the named presets (`'ai'`, `'yamabuki'`, `'asagi'`,
    `'fuji'`, see docs/concept.md#tokens) or custom `{ light, dark }` colour
-   values. `motif` and `dashboardPort` are optional; see
+   values. `motif`, `pattern` and `dashboardPort` are optional; see
    `provideSumi`'s JSDoc in `projects/sumi-ui/src/core/provide-sumi.ts`
    for defaults.
+
+   ### Ink motifs
+
+   See docs/concept.md#tuschemotive for the full picture (the sumi-ui#16
+   showcase page, "Motifs", is the easiest way to browse these live).
+
+   - `motif` (`SumiMotif`): one ink landscape — `'fuji'`, `'mountains'`,
+     `'temple'`, `'torii'`, `'waves'`, `'bamboo'`, `'moon'`, or `'none'`.
+     `torii` is the only landscape that uses `--sumi-vermilion`; every
+     landscape has exactly one element (a sun or moon) in `--sumi-accent`.
+   - `pattern` (`SumiPattern`): one generated ink pattern — `'seigaiha'`,
+     `'asanoha'`, `'shippo'`, `'kikko'`, `'sayagata'`, `'yagasuri'`, or
+     `'none'`. A pattern's SVG is generated once per exact tile size and
+     cached (`buildPatternSvg` in `layout/ink/patterns.ts`), not
+     regenerated on every render.
+   - `--sumi-ink-strength` (CSS custom property, default `1`): a
+     multiplier on every motif's opacity. Set it lower to fade motifs out
+     further, or higher to make them more present, e.g.
+     `<sumi-ink-backdrop style="--sumi-ink-strength: 1.4">`.
+   - `sumi-landscape` / `sumi-pattern`: the building blocks. Both read
+     `SUMI_CONFIG`'s default and accept a per-instance `[motif]` /
+     `[pattern]` override; both are `aria-hidden`.
+   - `sumi-ink-backdrop`: wraps projected content for a dashboard header or
+     a session-end screen — a pattern band fading out at the top, a
+     landscape at the bottom, content in between. Nothing overlaps: with
+     `layout="below"` (default) the landscape stands under the content;
+     with `layout="aside"` (a left-aligned header) it stands in the
+     bottom-right corner on cards at least 640px wide and below the content
+     on narrower ones. The landscape keeps its 3:1 ratio and is never
+     cropped.
+   - `sumi-empty-state`: the same split in a small tile, with a `title`
+     input, a default content slot for the body text and a
+     `[sumiEmptyAction]` slot for a button.
+   - `sumi-hanko`: a vermilion seal stamp. `characters` (one or two, e.g.
+     `"合格"`) and `label` (the accessible name) are required; `size`
+     defaults to `54` (px). Plays a brief stamp-in animation unless the
+     viewer prefers reduced motion.
 
    ### App switcher
 

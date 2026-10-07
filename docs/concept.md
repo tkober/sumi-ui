@@ -91,6 +91,11 @@ eines Presets auch eigene Werte übergeben.
 | jp-conversation-practice | `asagi` 浅葱 Blaugrün | `#1f7a80` | `#5fbcc1` | `clouds` 雲 |
 | jp-conjugation | `fuji` 藤 Glyzinie | `#6b4f96` | `#b69ae0` | `bamboo` 竹 |
 
+Die Motiv-Spalte ist vorläufig: `clouds` gibt es unter den in sumi-ui#16
+umgesetzten Landschaften (siehe [Tuschemotive](#tuschemotive)) nicht mehr.
+Die endgültige Zuordnung von Landschaft und Muster pro App folgt in
+sumi-ui#25.
+
 Die Akzente liegen bewusst weit weg von Rot und Grün. Rot und Grün bedeuten nur
 „falsch“ und „richtig“. jp-conjugation verliert damit sein bisheriges Rot.
 
@@ -213,13 +218,31 @@ Tabellen-Fallback (siehe kanji-trainer Forecast).
 
 ## Tuschemotive
 
-- Inline-SVG mit wenigen Pfaden, 5 bis 10 % Deckkraft in `--sumi-text`. Dadurch
-  funktionieren sie in Light und Dark.
-- Vier Motive: `mountains`, `waves`, `clouds`, `bamboo`.
-- Nur im Dashboard-Kopf, in Leerzuständen und am Session-Ende, nie hinter Prompt
-  oder Eingabe.
-- Hanko-Stempel (rotes, leicht gedrehtes Quadrat mit einem Zeichen) als
-  wiederkehrendes Zeichen, z. B. für „Level geschafft“.
+Umgesetzt in sumi-ui#16, `projects/sumi-ui/src/layout/ink/`.
+
+- **Landschaften** (`SumiMotif`): Inline-SVG mit wenigen Formen, gestaffelte
+  Ebenen in `--sumi-text` mit 5 bis 17 % Deckkraft. Sieben Motive: `fuji`,
+  `mountains`, `temple` (fünfstöckige Pagode), `torii` (Torii im Wasser, das
+  einzige Motiv mit `--sumi-vermilion`, oberer Balken an den Enden nach oben
+  gebogen), `waves`, `bamboo`, `moon`, dazu `none`. Genau ein Element
+  (Sonne/Mond) nimmt `--sumi-accent` auf.
+- **Muster** (`SumiPattern`): generierte SVG-Linien in `--sumi-text` mit
+  geringer Deckkraft, einmal pro Kachelgröße erzeugt und zwischengespeichert
+  (`buildPatternSvg`), nicht pro Render. Sechs Muster: `seigaiha`, `asanoha`,
+  `shippo`, `kikko` (verschränkte Y-Bänder je Sechseck, kein einfaches Raster),
+  `sayagata`, `yagasuri`, dazu `none`. Kein `ichimatsu`.
+- `--sumi-ink-strength` (Token, Standard `1`) ist ein Multiplikator auf alle
+  Deckkraftwerte, damit Apps die Intensität feinjustieren können.
+- `provideSumi({ motif, pattern })`: jede App wählt eine Landschaft und ein
+  Muster (beide optional, mit Standardwert und `none`-Option).
+- Muster und Landschaft liegen nie übereinander: das Muster läuft als Band
+  oben aus (Maske nach unten), die Landschaft steht unten. Nur im
+  Dashboard-Kopf (`sumi-ink-backdrop`), in Leerzuständen (`sumi-empty-state`)
+  und am Session-Ende, nie hinter Prompt oder Eingabe.
+- `sumi-hanko`: Zinnoberrot-Stempel mit ein bis zwei Zeichen (z. B. 合格),
+  als wiederkehrendes Zeichen, z. B. für „Level geschafft“.
+- Die Zuordnung von Landschaft/Muster pro App wird später festgelegt
+  (sumi-ui#25).
 
 ## App-Umschalter
 

@@ -1,0 +1,18 @@
+<svg class="sumi-hanko__svg" viewBox="0 0 64 64" role="img" [attr.aria-label]="label()">
+  <path
+    class="sumi-hanko__seal"
+    fill="var(--sumi-vermilion)"
+    d="M11 5 Q6 5 5 10 L4 23 Q2 28 5 32 L4 49 Q3 55 8 57 L23 59 Q28 61 33 58 L49 60 Q56 61 59 55 L60 41 Q62 35 59 31 L60 15 Q61 8 55 6 L41 4 Q35 2 31 5 L15 4Z"
+  />
+  <text
+    class="sumi-hanko__text"
+    x="32"
+    [attr.y]="characters().length > 1 ? 22 : 38"
+    lang="ja"
+    text-anchor="middle"
+  >
+    @for (char of characterList(); track $index) {
+      <tspan x="32" [attr.dy]="$index === 0 ? 0 : 22">{{ char }}</tspan>
+    }
+  </text>
+</svg>

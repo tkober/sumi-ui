@@ -1,0 +1,121 @@
+<sumi-page
+  title="Motifs"
+  subtitle="Ink landscapes and generated patterns (sumi-ui#16). Toggle the theme above to see both."
+>
+  <section>
+    <h2>Pick a motif</h2>
+    <div class="controls">
+      <label>
+        Landscape
+        <select name="motif" [ngModel]="motif()" (ngModelChange)="motif.set($event)">
+          <option value="none">None</option>
+          @for (l of landscapes; track l.id) {
+            <option [value]="l.id">{{ l.name }}</option>
+          }
+        </select>
+      </label>
+      <label>
+        Pattern
+        <select name="pattern" [ngModel]="pattern()" (ngModelChange)="pattern.set($event)">
+          <option value="none">None</option>
+          @for (p of patterns; track p.id) {
+            <option [value]="p.id">{{ p.name }}</option>
+          }
+        </select>
+      </label>
+      <label>
+        Ink strength ({{ inkStrength() }})
+        <input
+          type="range"
+          min="0.5"
+          max="2"
+          step="0.1"
+          [ngModel]="inkStrength()"
+          (ngModelChange)="inkStrength.set($event)"
+        />
+      </label>
+    </div>
+  </section>
+
+  <section [style.--sumi-ink-strength]="inkStrength()">
+    <h2>Dashboard header backdrop</h2>
+    <p class="hint">
+      Pattern band fades out at the top, landscape at the bottom, content stays readable.
+    </p>
+    <sumi-ink-backdrop
+      layout="aside"
+      [motif]="motif()"
+      [pattern]="pattern()"
+      class="placement-demo"
+    >
+      <h3>Dashboard</h3>
+      <span class="big">42</span>
+      <span class="muted">reviews due · 15 lessons in level 9</span>
+    </sumi-ink-backdrop>
+  </section>
+
+  <section [style.--sumi-ink-strength]="inkStrength()">
+    <h2>Session end, with a hanko</h2>
+    <p class="hint">
+      Same backdrop split, a session summary and a hanko seal for "level complete".
+    </p>
+    <sumi-ink-backdrop
+      [motif]="motif()"
+      [pattern]="pattern()"
+      class="placement-demo placement-demo--end"
+    >
+      <sumi-session-summary
+        [answered]="42"
+        [correct]="37"
+        [durationMs]="372000"
+        (restart)="restart()"
+      >
+        <sumi-hanko sumiSummaryArt characters="合格" label="Passed, level complete" />
+      </sumi-session-summary>
+    </sumi-ink-backdrop>
+  </section>
+
+  <section [style.--sumi-ink-strength]="inkStrength()">
+    <h2>Empty state</h2>
+    <p class="hint">The same split, scaled down to a small tile.</p>
+    <sumi-empty-state
+      [motif]="motif()"
+      [pattern]="pattern()"
+      title="No reviews due"
+      class="placement-demo placement-demo--empty"
+    >
+      The next item comes back at 14:00.
+      <button sumiEmptyAction sumiButton variant="primary" type="button">Go to lessons</button>
+    </sumi-empty-state>
+  </section>
+
+  <section>
+    <h2>All landscapes</h2>
+    <div class="gallery">
+      @for (l of landscapes; track l.id) {
+        <button type="button" class="tile" (click)="selectMotif(l.id)">
+          <span class="tile-art"><sumi-landscape [motif]="l.id" /></span>
+          <span class="tile-name"
+            >{{ l.name }} <span lang="ja" class="muted">{{ l.jp }}</span></span
+          >
+        </button>
+      }
+    </div>
+  </section>
+
+  <section>
+    <h2>All patterns</h2>
+    <div class="gallery">
+      @for (p of patterns; track p.id) {
+        <button type="button" class="tile" (click)="selectPattern(p.id)">
+          <span class="tile-art"
+            ><sumi-pattern [pattern]="p.id" [tileWidth]="240" [tileHeight]="100" [scale]="1.4"
+          /></span>
+          <span class="tile-name"
+            >{{ p.name }} <span lang="ja" class="muted">{{ p.jp }}</span></span
+          >
+        </button>
+      }
+    </div>
+  </section>
+</sumi-page>

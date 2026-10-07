@@ -1,0 +1,54 @@
+:host {
+  display: block;
+  border-radius: var(--sumi-radius);
+  border: 1px solid var(--sumi-line);
+  background: var(--sumi-surface);
+  overflow: hidden;
+  text-align: center;
+}
+
+.sumi-empty-state__art {
+  background: var(--sumi-sunken);
+  overflow: hidden;
+}
+
+.sumi-empty-state__band {
+  display: block;
+  height: 32px;
+  -webkit-mask-image: linear-gradient(180deg, #000, transparent);
+  mask-image: linear-gradient(180deg, #000, transparent);
+}
+
+// Below the band, never under it, at the landscape's own 3:1 ratio so
+// the sun or moon is never cropped.
+.sumi-empty-state__scene {
+  display: block;
+  width: min(100%, 300px);
+  aspect-ratio: 3 / 1;
+  margin: 0 auto;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 15%, #000 85%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 15%, #000 85%, transparent);
+}
+
+.sumi-empty-state__body {
+  padding: var(--sumi-space-4);
+  display: grid;
+  gap: var(--sumi-space-2);
+  justify-items: center;
+}
+
+.sumi-empty-state__title {
+  margin: 0;
+  font-family: var(--sumi-font-display);
+  font-size: var(--sumi-text-lg);
+}
+
+.sumi-empty-state__text {
+  margin: 0;
+  color: var(--sumi-text-2);
+  font-size: var(--sumi-text-sm);
+}
+
+.sumi-empty-state__action:empty {
+  display: none;
+}

@@ -1,0 +1,19 @@
+<div class="sumi-empty-state__art">
+  <sumi-pattern
+    class="sumi-empty-state__band"
+    [pattern]="pattern()"
+    [tileWidth]="220"
+    [tileHeight]="36"
+    background="var(--sumi-sunken)"
+  />
+  <sumi-landscape class="sumi-empty-state__scene" [motif]="motif()" />
+</div>
+<div class="sumi-empty-state__body">
+  <h3 class="sumi-empty-state__title">{{ title() }}</h3>
+  <p class="sumi-empty-state__text">
+    <ng-content />
+  </p>
+  <div class="sumi-empty-state__action">
+    <ng-content select="[sumiEmptyAction]" />
+  </div>
+</div>
