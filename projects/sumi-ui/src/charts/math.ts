@@ -848,17 +848,20 @@ export function polarPoint(cx: number, cy: number, radius: number, angle: number
 
 // Rough average glyph width/line height at `--sumi-text-xs` (12px), good
 // enough for a fits/doesn't-fit decision — not pixel-exact typesetting.
-const LABEL_CHAR_WIDTH = 6;
+const LABEL_CHAR_WIDTH = 7;
 const LABEL_LINE_HEIGHT = 11;
 
 /**
  * Whether a label of `label.length` characters has room on an arc
- * spanning `angleSpan` radians at `radius`, `ringThickness` wide: both the
- * arc length (at the segment's mid-radius) and the ring's radial
- * thickness need to exceed the label's estimated footprint. Segments that
- * fail this stay unlabelled on the chart itself — never cut a label short
- * or shrink it below the base font size — and still get their label/value/
- * percent in the legend and table fallback.
+ * spanning `angleSpan` radians at `radius`, `ringThickness` wide. Matches
+ * `sumi-sunburst`'s *radial* label orientation (`arcLabelRotation`: the
+ * label reads outward along the segment's radius, not along the arc) —
+ * so it is the ring's radial thickness that needs to exceed the label's
+ * estimated pixel length, and the (tangential) arc length at the
+ * segment's mid-radius that only needs to clear one line's height.
+ * Segments that fail this stay unlabelled on the chart itself — never cut
+ * a label short or shrink it below the base font size — and still get
+ * their label/value/percent in the legend and table fallback.
  */
 export function labelFitsArc(
   angleSpan: number,
@@ -870,7 +873,7 @@ export function labelFitsArc(
     return false;
   }
   const arcLength = angleSpan * radius;
-  return arcLength >= label.length * LABEL_CHAR_WIDTH && ringThickness >= LABEL_LINE_HEIGHT;
+  return ringThickness >= label.length * LABEL_CHAR_WIDTH && arcLength >= LABEL_LINE_HEIGHT;
 }
 
 /**
