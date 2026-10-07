@@ -250,9 +250,8 @@ successfully with `ng build` from a throwaway Angular 22 app):
 
    `sumi-hotkey-help` is the small round flyout button (bottom-right,
    hidden without a real pointer) listing every currently active hotkey,
-   grouped by scope. Apps add it once, wherever makes sense — inside
-   `sumi-app-shell`'s content, or directly on a page that needs to
-   override its own `?` (see below):
+   grouped by scope. Recommended placement is once, in the shell, same as
+   the showcase's own `app.html`:
 
    ```html
    <sumi-app-shell [brand]="brand" [nav]="navItems">
@@ -262,19 +261,48 @@ successfully with `ng build` from a throwaway Angular 22 app):
    ```
 
    `sumi-app-shell` does not render it automatically — not every app wants
-   it, and some only want it on certain pages.
+   it — but it is still an app-wide component: `sumi-app-shell` sits above
+   `<router-outlet />`, so a single instance there is reachable from every
+   route without each page needing its own.
 
-   The flyout registers its own `?` (to toggle) and `Escape` (to close,
-   enabled only while open). A page with an editable field that wants `?`
-   to open the flyout only after feedback is shown (exactly like the
-   showcase's Practice page, see
-   `projects/showcase/src/app/pages/practice/practice.ts`) gets a
-   view-child reference to its own `<sumi-hotkey-help #help />` and calls
-   `help().toggle()` from a second `?` registration with
-   `allowInEditable: true` and `enabled: () => this.feedback()` — stack
-   semantics make this page-level registration win over the flyout's own
-   while it is enabled, and the ground rule still keeps `?` from typing
-   into the field beforehand.
+   Open/closed state lives on `SumiHotkeys` itself (`helpOpen`,
+   `toggleHelp()`, `closeHelp()`), not on the component, precisely so a
+   page living inside the router outlet — with no way to reach the
+   shell's `<sumi-hotkey-help />` through a view child — can still drive
+   it. The flyout registers its own `?` (to toggle) and `Escape` (to
+   close, enabled only while open). A page with an editable field that
+   wants `?` to open the flyout only after feedback is shown (exactly
+   like the showcase's Practice page, see
+   `projects/showcase/src/app/pages/practice/practice.ts`) injects
+   `SumiHotkeys` and registers its own `?`:
+
+   ```ts
+   private readonly hotkeys = inject(SumiHotkeys);
+
+   constructor() {
+     injectHotkey({
+       keys: SUMI_KEYS.help,
+       label: 'Toggle this menu (after answering)',
+       scope: 'feedback',
+       allowInEditable: true,
+       enabled: () => this.feedback(),
+       handler: () => this.hotkeys.toggleHelp(),
+     });
+   }
+   ```
+
+   Stack semantics make this page-level registration win over the
+   flyout's own while it is enabled, and the ground rule still keeps `?`
+   from typing into the field beforehand.
+
+   If a page registers its own `Escape` too (e.g. to clear a field),
+   gate it on `!hotkeys.helpOpen()` rather than leaning on registration
+   order: the shell's `<sumi-hotkey-help />` mounts once, before every
+   page, so its `Escape` is always the *older* registration and stack
+   semantics alone would let a page's own `Escape` win even while the
+   flyout is open. Checking `helpOpen()` keeps "close the flyout first"
+   correct regardless of mount order — see the showcase's Practice page
+   for the pattern.
 
 5. Install the library's font packages as direct dependencies — they are
    `peerDependencies` here, so this repo expects the app to provide them:
