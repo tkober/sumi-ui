@@ -33,6 +33,7 @@ describe('SumiIcon', () => {
       'moon',
       'check',
       'cross',
+      'retry',
       'info',
       'warning',
       'keyboard',
