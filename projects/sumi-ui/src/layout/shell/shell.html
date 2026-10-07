@@ -1,0 +1,121 @@
+<a class="sumi-app-shell__skip-link" [attr.href]="'#' + mainId">Skip to content</a>
+
+<header class="sumi-app-shell__header">
+  <a class="sumi-app-shell__brand" routerLink="/">
+    <span class="sumi-app-shell__brand-glyph" lang="ja">{{ brand().glyph }}</span>
+    <span class="sumi-app-shell__brand-name">{{ brand().name }}</span>
+  </a>
+
+  @if (!shell.focusMode()) {
+    <nav class="sumi-app-shell__nav" aria-label="Main">
+      @for (item of nav(); track item.link) {
+        <a
+          class="sumi-app-shell__nav-link"
+          [routerLink]="shell.navLock() ? null : item.link"
+          routerLinkActive="sumi-app-shell__nav-link--active"
+          [routerLinkActiveOptions]="{ exact: item.exact ?? false }"
+          [attr.aria-disabled]="shell.navLock() ? 'true' : null"
+          [attr.tabindex]="shell.navLock() ? -1 : null"
+        >
+          <sumi-icon [name]="item.icon" />
+          <span>{{ item.label }}</span>
+          @if (item.badge) {
+            <sumi-badge [tone]="item.badgeTone ?? 'accent'">{{ item.badge }}</sumi-badge>
+          }
+        </a>
+      }
+    </nav>
+  }
+
+  @if (shell.navLock()) {
+    <p class="sumi-app-shell__nav-lock-hint" role="status">{{ shell.navLock() }}</p>
+  }
+
+  <div class="sumi-app-shell__actions">
+    <ng-content select="[sumiShellActions]" />
+  </div>
+
+  @if (shell.focusMode()) {
+    <div class="sumi-app-shell__focus-actions">
+      <ng-content select="[sumiShellFocusActions]" />
+    </div>
+  } @else {
+    <div class="sumi-app-shell__switcher">
+      <ng-content select="[sumiShellSwitcher]" />
+    </div>
+  }
+
+  <sumi-theme-toggle />
+</header>
+
+@if (!shell.focusMode() && !keyboard.isOpen()) {
+  <nav class="sumi-app-shell__tabbar" aria-label="Main">
+    @for (item of tabItems(); track item.link) {
+      <a
+        class="sumi-app-shell__tab"
+        [routerLink]="shell.navLock() ? null : item.link"
+        routerLinkActive="sumi-app-shell__tab--active"
+        [routerLinkActiveOptions]="{ exact: item.exact ?? false }"
+        [attr.aria-disabled]="shell.navLock() ? 'true' : null"
+        [attr.tabindex]="shell.navLock() ? -1 : null"
+      >
+        <sumi-icon [name]="item.icon" />
+        <span>{{ item.label }}</span>
+        @if (item.badge) {
+          <sumi-badge class="sumi-app-shell__tab-badge" [tone]="item.badgeTone ?? 'accent'">
+            {{ item.badge }}
+          </sumi-badge>
+        }
+      </a>
+    }
+    @if (hasOverflow()) {
+      <button
+        #moreTrigger
+        type="button"
+        class="sumi-app-shell__tab sumi-app-shell__tab--more"
+        aria-haspopup="true"
+        [attr.aria-expanded]="moreOpen()"
+        (click)="openMore()"
+      >
+        <sumi-icon name="more" />
+        <span>More</span>
+      </button>
+    }
+  </nav>
+}
+
+@if (moreOpen()) {
+  <div class="sumi-app-shell__more-backdrop" (click)="closeMore()"></div>
+  <div
+    #moreSheet
+    class="sumi-app-shell__more-sheet"
+    role="menu"
+    aria-label="More navigation"
+    (keydown.escape)="closeMore()"
+  >
+    @for (item of overflowItems(); track item.link) {
+      <a
+        class="sumi-app-shell__more-item"
+        role="menuitem"
+        [routerLink]="shell.navLock() ? null : item.link"
+        routerLinkActive="sumi-app-shell__more-item--active"
+        [attr.aria-disabled]="shell.navLock() ? 'true' : null"
+        (click)="closeMore()"
+      >
+        <sumi-icon [name]="item.icon" />
+        <span>{{ item.label }}</span>
+        @if (item.badge) {
+          <sumi-badge [tone]="item.badgeTone ?? 'accent'">{{ item.badge }}</sumi-badge>
+        }
+      </a>
+    }
+  </div>
+}
+
+<main
+  class="sumi-app-shell__main"
+  [id]="mainId"
+  [class.sumi-app-shell__main--no-tabbar]="shell.focusMode()"
+>
+  <ng-content />
+</main>

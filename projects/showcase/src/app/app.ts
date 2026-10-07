@@ -1,29 +1,28 @@
 import { Component, inject } from '@angular/core';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
-import { SumiAccent, SumiAccentPreset, SumiTheme, SumiThemeMode } from 'sumi-ui/core';
+import { RouterOutlet } from '@angular/router';
+import { SumiAccent, SumiAccentPreset } from 'sumi-ui/core';
+import { SumiAppShellBrand, SumiNavItem, SumiShell, SUMI_LAYOUT } from 'sumi-ui/layout';
+import { SumiButtonDirective } from 'sumi-ui/forms';
 
 @Component({
-  imports: [RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [RouterOutlet, ...SUMI_LAYOUT, SumiButtonDirective],
   selector: 'app-root',
   styleUrl: './app.scss',
   templateUrl: './app.html',
 })
 export class App {
-  protected readonly theme = inject(SumiTheme);
   private readonly accent = inject(SumiAccent);
+  protected readonly shell = inject(SumiShell);
 
-  protected readonly navLinks = [
-    { path: 'core', label: 'Core' },
-    { path: 'forms', label: 'Forms' },
-    { path: 'practice', label: 'Practice' },
-    { path: 'charts', label: 'Charts' },
-    { path: 'layout', label: 'Layout' },
-  ];
+  protected readonly brand: SumiAppShellBrand = { glyph: '墨', name: 'Sumi UI Showcase' };
 
-  protected readonly themeModes: { mode: SumiThemeMode; label: string }[] = [
-    { mode: 'system', label: 'System' },
-    { mode: 'light', label: 'Light' },
-    { mode: 'dark', label: 'Dark' },
+  protected readonly navItems: SumiNavItem[] = [
+    { label: 'Core', link: 'core', icon: 'info' },
+    { label: 'Forms', link: 'forms', icon: 'keyboard' },
+    { label: 'Practice', link: 'practice', icon: 'practice', badge: 3 },
+    { label: 'Charts', link: 'charts', icon: 'stats' },
+    { label: 'Layout', link: 'layout', icon: 'home' },
+    { label: 'About', link: 'about', icon: 'list' },
   ];
 
   protected readonly accentPresets: { preset: SumiAccentPreset; label: string }[] = [

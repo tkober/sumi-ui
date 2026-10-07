@@ -1,35 +1,23 @@
-<div class="shell">
-  <nav>
-    <span class="brand">Sumi UI Showcase</span>
-    @for (link of navLinks; track link.path) {
-      <a [routerLink]="link.path" routerLinkActive="active">{{ link.label }}</a>
+<sumi-app-shell [brand]="brand" [nav]="navItems">
+  <div sumiShellActions>
+    <select
+      class="accent-picker"
+      name="accent"
+      aria-label="Accent"
+      [value]="selectedAccent"
+      (change)="selectAccent($any($event.target).value)"
+    >
+      @for (item of accentPresets; track item.preset) {
+        <option [value]="item.preset">{{ item.label }}</option>
+      }
+    </select>
+  </div>
+  <div sumiShellFocusActions>
+    @if (shell.focusMode()) {
+      <button type="button" sumiButton size="sm" (click)="shell.leaveFocusMode()">
+        End session
+      </button>
     }
-    <div class="toolbar">
-      <div class="segmented" role="group" aria-label="Theme">
-        @for (item of themeModes; track item.mode) {
-          <button
-            type="button"
-            [class.active]="theme.mode() === item.mode"
-            (click)="theme.set(item.mode)"
-          >
-            {{ item.label }}
-          </button>
-        }
-      </div>
-      <div class="segmented" role="group" aria-label="Accent">
-        @for (item of accentPresets; track item.preset) {
-          <button
-            type="button"
-            [class.active]="selectedAccent === item.preset"
-            (click)="selectAccent(item.preset)"
-          >
-            {{ item.label }}
-          </button>
-        }
-      </div>
-    </div>
-  </nav>
-  <main>
-    <router-outlet />
-  </main>
-</div>
+  </div>
+  <router-outlet />
+</sumi-app-shell>

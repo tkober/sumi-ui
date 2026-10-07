@@ -1,0 +1,28 @@
+:host {
+  display: inline-flex;
+}
+
+.sumi-theme-toggle__button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  min-width: 44px;
+  min-height: 44px;
+  border: 1px solid var(--sumi-line);
+  border-radius: var(--sumi-radius-sm);
+  background: var(--sumi-surface);
+  color: var(--sumi-text-2);
+  font-size: var(--sumi-text-lg);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--sumi-sunken);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--sumi-focus-ring);
+  }
+}

@@ -111,3 +111,29 @@ section {
     color: var(--sumi-muted);
   }
 }
+
+.icon-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: var(--sumi-space-3);
+}
+
+.icon-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sumi-space-1);
+  padding: var(--sumi-space-3);
+  border: 1px solid var(--sumi-line);
+  border-radius: var(--sumi-radius-sm);
+  background: var(--sumi-surface);
+
+  sumi-icon {
+    font-size: var(--sumi-text-2xl);
+  }
+
+  code {
+    font-size: var(--sumi-text-xs);
+    color: var(--sumi-muted);
+  }
+}

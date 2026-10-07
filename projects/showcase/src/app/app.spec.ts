@@ -38,7 +38,7 @@ describe('App', () => {
     const location = TestBed.inject(Location);
     fixture.detectChanges();
 
-    for (const path of ['core', 'forms', 'practice', 'charts', 'layout']) {
+    for (const path of ['core', 'forms', 'practice', 'charts', 'layout', 'about']) {
       await router.navigate([path]);
       await fixture.whenStable();
       expect(location.path()).toBe(`/${path}`);

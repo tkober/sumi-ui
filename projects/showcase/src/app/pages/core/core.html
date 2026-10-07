@@ -1,116 +1,127 @@
-<section>
-  <h1>Core</h1>
-  <p>Tokens, theme, fonts and <code>provideSumi()</code>.</p>
+<sumi-page title="Core" subtitle="Tokens, theme, fonts, icons and provideSumi().">
   <p>
     Library version: <code>{{ version }}</code>
   </p>
-</section>
 
-<section>
-  <h2>Surfaces</h2>
-  <div class="swatches">
-    @for (swatch of surfaceSwatches; track swatch.token) {
-      <div class="swatch">
-        <div class="swatch-color" [style.background]="'var(' + swatch.token + ')'"></div>
-        <div class="swatch-label">{{ swatch.label }}</div>
-        <code>{{ swatch.token }}</code>
-      </div>
-    }
-  </div>
-</section>
-
-<section>
-  <h2>Text</h2>
-  <div class="swatches">
-    @for (swatch of textSwatches; track swatch.token) {
-      <div class="swatch">
-        <div
-          class="swatch-color"
-          [style.background]="'var(' + swatch.token + ')'"
-          [style.color]="'var(--sumi-surface)'"
-        >
-          Aa
+  <section>
+    <h2>Surfaces</h2>
+    <div class="swatches">
+      @for (swatch of surfaceSwatches; track swatch.token) {
+        <div class="swatch">
+          <div class="swatch-color" [style.background]="'var(' + swatch.token + ')'"></div>
+          <div class="swatch-label">{{ swatch.label }}</div>
+          <code>{{ swatch.token }}</code>
         </div>
-        <div class="swatch-label">{{ swatch.label }}</div>
-        <code>{{ swatch.token }}</code>
-      </div>
-    }
-  </div>
-</section>
+      }
+    </div>
+  </section>
 
-<section>
-  <h2>Feedback</h2>
-  <div class="swatches">
-    @for (swatch of feedbackSwatches; track swatch.token) {
-      <div class="swatch">
-        <div class="swatch-color" [style.background]="'var(' + swatch.token + ')'"></div>
-        <div class="swatch-label">{{ swatch.label }}</div>
-        <code>{{ swatch.token }}</code>
-      </div>
-    }
-  </div>
-</section>
+  <section>
+    <h2>Text</h2>
+    <div class="swatches">
+      @for (swatch of textSwatches; track swatch.token) {
+        <div class="swatch">
+          <div
+            class="swatch-color"
+            [style.background]="'var(' + swatch.token + ')'"
+            [style.color]="'var(--sumi-surface)'"
+          >
+            Aa
+          </div>
+          <div class="swatch-label">{{ swatch.label }}</div>
+          <code>{{ swatch.token }}</code>
+        </div>
+      }
+    </div>
+  </section>
 
-<section>
-  <h2>Accent</h2>
-  <div class="swatches">
-    @for (swatch of accentSwatches; track swatch.token) {
-      <div class="swatch">
-        <div class="swatch-color" [style.background]="'var(' + swatch.token + ')'"></div>
-        <div class="swatch-label">{{ swatch.label }}</div>
-        <code>{{ swatch.token }}</code>
-      </div>
-    }
-  </div>
+  <section>
+    <h2>Feedback</h2>
+    <div class="swatches">
+      @for (swatch of feedbackSwatches; track swatch.token) {
+        <div class="swatch">
+          <div class="swatch-color" [style.background]="'var(' + swatch.token + ')'"></div>
+          <div class="swatch-label">{{ swatch.label }}</div>
+          <code>{{ swatch.token }}</code>
+        </div>
+      }
+    </div>
+  </section>
 
-  <h3>Sequential ramp</h3>
-  <div class="ramp">
-    @for (step of seqSteps; track step.token) {
-      <div class="ramp-step" [style.background]="'var(' + step.token + ')'">
-        <span>{{ step.label }}</span>
-      </div>
-    }
-  </div>
-</section>
+  <section>
+    <h2>Accent</h2>
+    <div class="swatches">
+      @for (swatch of accentSwatches; track swatch.token) {
+        <div class="swatch">
+          <div class="swatch-color" [style.background]="'var(' + swatch.token + ')'"></div>
+          <div class="swatch-label">{{ swatch.label }}</div>
+          <code>{{ swatch.token }}</code>
+        </div>
+      }
+    </div>
 
-<section>
-  <h2>Fonts</h2>
-  <div class="specimen" [style.font-family]="'var(--sumi-font-display)'">
-    <p class="specimen-role">Display — Shippori Mincho</p>
-    <p class="specimen-text" lang="ja">今日の復習</p>
-    <p class="specimen-text">Sumi UI</p>
-  </div>
-  <div class="specimen" [style.font-family]="'var(--sumi-font-ui)'">
-    <p class="specimen-role">UI — Zen Kaku Gothic New</p>
-    <p class="specimen-text" lang="ja">食べる たべる</p>
-    <p class="specimen-text">Correct, wrong, retry</p>
-  </div>
-  <div class="specimen" [style.font-family]="'var(--sumi-font-mono)'">
-    <p class="specimen-role">Mono — IBM Plex Mono</p>
-    <p class="specimen-text sumi-tabular">87 % · 1 204</p>
-  </div>
-</section>
+    <h3>Sequential ramp</h3>
+    <div class="ramp">
+      @for (step of seqSteps; track step.token) {
+        <div class="ramp-step" [style.background]="'var(' + step.token + ')'">
+          <span>{{ step.label }}</span>
+        </div>
+      }
+    </div>
+  </section>
 
-<section>
-  <h2>Type scale</h2>
-  <div class="type-scale">
-    @for (step of typeScale; track step.token) {
-      <div class="type-step">
-        <span [style.font-size]="'var(' + step.token + ')'">Aa</span>
-        <code>{{ step.token }}</code>
-      </div>
-    }
-  </div>
-</section>
+  <section>
+    <h2>Fonts</h2>
+    <div class="specimen" [style.font-family]="'var(--sumi-font-display)'">
+      <p class="specimen-role">Display — Shippori Mincho</p>
+      <p class="specimen-text" lang="ja">今日の復習</p>
+      <p class="specimen-text">Sumi UI</p>
+    </div>
+    <div class="specimen" [style.font-family]="'var(--sumi-font-ui)'">
+      <p class="specimen-role">UI — Zen Kaku Gothic New</p>
+      <p class="specimen-text" lang="ja">食べる たべる</p>
+      <p class="specimen-text">Correct, wrong, retry</p>
+    </div>
+    <div class="specimen" [style.font-family]="'var(--sumi-font-mono)'">
+      <p class="specimen-role">Mono — IBM Plex Mono</p>
+      <p class="specimen-text sumi-tabular">87 % · 1 204</p>
+    </div>
+  </section>
 
-<section>
-  <h2>Spacing scale</h2>
-  <div class="spacing-scale">
-    @for (step of spacingScale; track step.token) {
-      <div class="spacing-step">
-        <div class="spacing-bar" [style.width]="'var(' + step.token + ')'"></div>
-        <code>{{ step.token }}</code>
-      </div>
-    }
-  </div>
-</section>
+  <section>
+    <h2>Type scale</h2>
+    <div class="type-scale">
+      @for (step of typeScale; track step.token) {
+        <div class="type-step">
+          <span [style.font-size]="'var(' + step.token + ')'">Aa</span>
+          <code>{{ step.token }}</code>
+        </div>
+      }
+    </div>
+  </section>
+
+  <section>
+    <h2>Spacing scale</h2>
+    <div class="spacing-scale">
+      @for (step of spacingScale; track step.token) {
+        <div class="spacing-step">
+          <div class="spacing-bar" [style.width]="'var(' + step.token + ')'"></div>
+          <code>{{ step.token }}</code>
+        </div>
+      }
+    </div>
+  </section>
+
+  <section>
+    <h2>Icons</h2>
+    <p>Hand-drawn inline-SVG icons, 1.6 stroke, sized by <code>font-size</code>.</p>
+    <div class="icon-grid">
+      @for (name of iconNames; track name) {
+        <div class="icon-cell">
+          <sumi-icon [name]="name" />
+          <code>{{ name }}</code>
+        </div>
+      }
+    </div>
+  </section>
+</sumi-page>

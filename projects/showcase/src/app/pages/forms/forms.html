@@ -1,126 +1,125 @@
-<section>
-  <h1>Forms</h1>
-  <p>Native-element directives and composite form controls (see docs/concept.md).</p>
-</section>
-
-<section>
-  <h2>Button</h2>
-  <p>Every variant &times; size, with an icon, disabled, and as a link.</p>
-  <div class="row">
-    @for (variant of variants; track variant) {
-      @for (size of sizes; track size) {
-        <button type="button" sumiButton [variant]="variant" [size]="size">
-          {{ variant }} {{ size }}
-        </button>
+<sumi-page title="Forms" subtitle="Native-element directives and composite form controls.">
+  <section>
+    <h2>Button</h2>
+    <p>Every variant &times; size, with an icon, disabled, and as a link.</p>
+    <div class="row">
+      @for (variant of variants; track variant) {
+        @for (size of sizes; track size) {
+          <button type="button" sumiButton [variant]="variant" [size]="size">
+            {{ variant }} {{ size }}
+          </button>
+        }
       }
-    }
-  </div>
-  <div class="row">
-    <button type="button" sumiButton variant="primary">
-      <svg sumiIcon viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M4 10l4 4 8-8" stroke-linecap="round" stroke-linejoin="round" />
-      </svg>
-      with icon
-    </button>
-    <button type="button" sumiButton variant="secondary" disabled>disabled</button>
-    <a sumiButton variant="ghost" href="javascript:void(0)" aria-disabled="true">disabled link</a>
-    <a sumiButton variant="secondary" href="javascript:void(0)">as a link</a>
-  </div>
-</section>
+    </div>
+    <div class="row">
+      <button type="button" sumiButton variant="primary">
+        <sumi-icon name="check" />
+        with icon
+      </button>
+      <button type="button" sumiButton variant="secondary" disabled>disabled</button>
+      <a sumiButton variant="ghost" href="javascript:void(0)" aria-disabled="true">disabled link</a>
+      <a sumiButton variant="secondary" href="javascript:void(0)">as a link</a>
+    </div>
+  </section>
 
-<section>
-  <h2>Input, select, textarea</h2>
-  <div class="row">
-    <input id="demo-input-placeholder" sumiInput placeholder="Placeholder" />
-    <input id="demo-input-disabled" sumiInput value="Disabled" disabled />
-    <input id="demo-input-invalid" sumiInput value="Invalid" aria-invalid="true" />
-  </div>
-  <div class="row">
-    <select id="demo-select" sumiSelect>
-      <option>Kana</option>
-      <option>Romaji</option>
-      <option>Latin</option>
-    </select>
-    <select id="demo-select-disabled" sumiSelect disabled>
-      <option>Disabled</option>
-    </select>
-  </div>
-  <div class="row">
-    <textarea id="demo-textarea" sumiTextarea placeholder="Placeholder"></textarea>
-    <textarea id="demo-textarea-disabled" sumiTextarea disabled>Disabled</textarea>
-  </div>
-</section>
+  <section>
+    <h2>Input, select, textarea</h2>
+    <div class="row">
+      <input id="demo-input-placeholder" sumiInput placeholder="Placeholder" />
+      <input id="demo-input-disabled" sumiInput value="Disabled" disabled />
+      <input id="demo-input-invalid" sumiInput value="Invalid" aria-invalid="true" />
+    </div>
+    <div class="row">
+      <select id="demo-select" sumiSelect>
+        <option>Kana</option>
+        <option>Romaji</option>
+        <option>Latin</option>
+      </select>
+      <select id="demo-select-disabled" sumiSelect disabled>
+        <option>Disabled</option>
+      </select>
+    </div>
+    <div class="row">
+      <textarea id="demo-textarea" sumiTextarea placeholder="Placeholder"></textarea>
+      <textarea id="demo-textarea-disabled" sumiTextarea disabled>Disabled</textarea>
+    </div>
+  </section>
 
-<section>
-  <h2>Submit on Enter</h2>
-  <p>Enter submits and clears the newline; Shift+Enter inserts one.</p>
-  <textarea
-    id="demo-submit-on-enter"
-    sumiTextarea
-    sumiSubmitOnEnter
-    placeholder="Type and press Enter"
-    (sumiSubmitOnEnter)="onSubmitOnEnter($event)"
-  ></textarea>
-  <p>
-    Last submitted: <code>{{ lastSubmitted || '(nothing yet)' }}</code>
-  </p>
-</section>
+  <section>
+    <h2>Submit on Enter</h2>
+    <p>Enter submits and clears the newline; Shift+Enter inserts one.</p>
+    <textarea
+      id="demo-submit-on-enter"
+      sumiTextarea
+      sumiSubmitOnEnter
+      placeholder="Type and press Enter"
+      (sumiSubmitOnEnter)="onSubmitOnEnter($event)"
+    ></textarea>
+    <p>
+      Last submitted: <code>{{ lastSubmitted || '(nothing yet)' }}</code>
+    </p>
+  </section>
 
-<section>
-  <h2>Slider</h2>
-  <input
-    id="demo-slider"
-    type="range"
-    sumiSlider
-    min="0"
-    max="100"
-    [value]="sliderValue()"
-    (input)="sliderValue.set(+$event.target.value)"
-  />
-  <p>
-    Value: <code class="sumi-tabular">{{ sliderValue() }}</code>
-  </p>
-</section>
+  <section>
+    <h2>Slider</h2>
+    <input
+      id="demo-slider"
+      type="range"
+      sumiSlider
+      min="0"
+      max="100"
+      [value]="sliderValue()"
+      (input)="sliderValue.set(+$event.target.value)"
+    />
+    <p>
+      Value: <code class="sumi-tabular">{{ sliderValue() }}</code>
+    </p>
+  </section>
 
-<section>
-  <h2>Kbd</h2>
-  <p>
-    Press <kbd sumiKbd>Enter</kbd> to continue, or <kbd sumiKbd>Alt</kbd> + <kbd sumiKbd>K</kbd> for
-    "I know this".
-  </p>
-</section>
+  <section>
+    <h2>Kbd</h2>
+    <p>
+      Press <kbd sumiKbd>Enter</kbd> to continue, or <kbd sumiKbd>Alt</kbd> +
+      <kbd sumiKbd>K</kbd> for "I know this".
+    </p>
+  </section>
 
-<section>
-  <h2>Segmented control</h2>
-  <p>Bound via signal forms (<code>[formField]</code>) and via <code>[(ngModel)]</code>.</p>
-  <div class="row">
-    <sumi-segmented-control [options]="rangeOptions" [formField]="signalForm.mode" />
-    <span
-      >signal forms value: <code>{{ signalModel().mode }}</code></span
-    >
-  </div>
-  <div class="row">
-    <sumi-segmented-control [options]="rangeOptions" [(ngModel)]="ngModelMode" name="ngModelMode" />
-    <span
-      >ngModel value: <code>{{ ngModelMode }}</code></span
-    >
-  </div>
-</section>
+  <section>
+    <h2>Segmented control</h2>
+    <p>Bound via signal forms (<code>[formField]</code>) and via <code>[(ngModel)]</code>.</p>
+    <div class="row">
+      <sumi-segmented-control [options]="rangeOptions" [formField]="signalForm.mode" />
+      <span
+        >signal forms value: <code>{{ signalModel().mode }}</code></span
+      >
+    </div>
+    <div class="row">
+      <sumi-segmented-control
+        [options]="rangeOptions"
+        [(ngModel)]="ngModelMode"
+        name="ngModelMode"
+      />
+      <span
+        >ngModel value: <code>{{ ngModelMode }}</code></span
+      >
+    </div>
+  </section>
 
-<section>
-  <h2>Toggle</h2>
-  <div class="row">
-    <sumi-toggle [formField]="signalForm.darkMode">Dark mode (signal forms)</sumi-toggle>
-    <span
-      >value: <code>{{ signalModel().darkMode }}</code></span
-    >
-  </div>
-  <div class="row">
-    <sumi-toggle [(ngModel)]="ngModelDarkMode" name="ngModelDarkMode"
-      >Dark mode (ngModel)</sumi-toggle
-    >
-    <span
-      >value: <code>{{ ngModelDarkMode }}</code></span
-    >
-  </div>
-</section>
+  <section>
+    <h2>Toggle</h2>
+    <div class="row">
+      <sumi-toggle [formField]="signalForm.darkMode">Dark mode (signal forms)</sumi-toggle>
+      <span
+        >value: <code>{{ signalModel().darkMode }}</code></span
+      >
+    </div>
+    <div class="row">
+      <sumi-toggle [(ngModel)]="ngModelDarkMode" name="ngModelDarkMode"
+        >Dark mode (ngModel)</sumi-toggle
+      >
+      <span
+        >value: <code>{{ ngModelDarkMode }}</code></span
+      >
+    </div>
+  </section>
+</sumi-page>
