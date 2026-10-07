@@ -2,7 +2,19 @@
   display: block;
 }
 
+.sumi-calendar-heatmap__frame {
+  display: flex;
+}
+
+// The weekday labels sit outside the scroll container so they stay put
+// while a narrow screen scrolls the weeks.
+.sumi-calendar-heatmap__weekdays {
+  flex: none;
+  display: block;
+}
+
 .sumi-calendar-heatmap__scroll {
+  min-width: 0;
   overflow-x: auto;
   // The grid itself decides when to scroll (calendarCellSize falls back to
   // the minimum cell size rather than shrinking further); this container

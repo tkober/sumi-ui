@@ -69,3 +69,20 @@
     var(--sumi-line) 4px
   );
 }
+
+// Learning content (kana, kanji) in the row headers reads at prompt size,
+// not at the size of an axis label.
+.sumi-matrix-heatmap__row-header[lang] {
+  font-size: var(--sumi-text-md);
+  color: var(--sumi-ink);
+}
+
+.sumi-matrix-heatmap__table {
+  margin-top: var(--sumi-space-2);
+}
+
+.sumi-matrix-heatmap__table summary {
+  cursor: pointer;
+  font-size: var(--sumi-text-sm);
+  color: var(--sumi-muted);
+}

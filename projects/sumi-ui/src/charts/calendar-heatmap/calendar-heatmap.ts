@@ -19,7 +19,7 @@ const FALLBACK_WIDTH = 480;
 /** Reserved, un-scaled space for the weekday column and the month-label
  *  row, in real px — see `observeWidth`: nothing in this component scales
  *  with its container, only how many weeks fit does. */
-const WEEKDAY_LABEL_WIDTH = 20;
+const WEEKDAY_LABEL_WIDTH = 32;
 const MONTH_LABEL_HEIGHT = 14;
 
 /**
@@ -97,13 +97,14 @@ export class SumiCalendarHeatmap {
     ),
   );
 
-  protected readonly svgWidth = computed(() => WEEKDAY_LABEL_WIDTH + this.geometry().width);
+  protected readonly svgWidth = computed(() => this.geometry().width);
   protected readonly svgHeight = computed(() => MONTH_LABEL_HEIGHT + this.geometry().height);
   /** Exposed for the template, which cannot reference a module-level const. */
   protected readonly MONTH_LABEL_HEIGHT = MONTH_LABEL_HEIGHT;
+  protected readonly WEEKDAY_LABEL_WIDTH = WEEKDAY_LABEL_WIDTH;
 
   protected cellX(week: number): number {
-    return WEEKDAY_LABEL_WIDTH + week * this.geometry().step;
+    return week * this.geometry().step;
   }
 
   protected cellY(weekday: number): number {
