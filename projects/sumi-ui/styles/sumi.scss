@@ -3,10 +3,14 @@
 // An app consuming the library includes this once, e.g.:
 //   @use 'sumi-ui/projects/sumi-ui/styles/sumi';
 //
-// That single `@use` gives the app everything: the `--sumi-*` design
-// tokens and theme rules (_tokens.scss), the self-hosted fonts
-// (_fonts.scss) and the minimal base styles (_base.scss) described in
+// That gives the app the `--sumi-*` design tokens and theme rules
+// (_tokens.scss) and the minimal base styles (_base.scss) described in
 // docs/concept.md.
+//
+// The actual font files are deliberately NOT included here — see
+// sumi-fonts.scss, loaded separately and non-blocking, in the same
+// directory. `--sumi-font-*` (see _tokens.scss) lists a system fallback
+// first in every stack, so this stylesheet alone is already usable; the
+// fonts are a progressive enhancement, not a dependency of first paint.
 @use 'tokens';
-@use 'fonts';
 @use 'base';
