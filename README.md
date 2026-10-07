@@ -15,7 +15,7 @@ repository implements.
 projects/
   sumi-ui/
     src/
-      core/      # tokens, theme, fonts, provideSumi() (hotkeys: placeholder)
+      core/      # tokens, theme, fonts, provideSumi(), SumiHotkeys, sumi-hotkey-help
       forms/     # sumi-answer-field and related inputs (placeholder)
       practice/  # session building blocks (placeholder)
       charts/    # statistics SVG components (placeholder)
@@ -192,6 +192,89 @@ successfully with `ng build` from a throwaway Angular 22 app):
    no error, no placeholder. Once a fetch has succeeded, the result is
    cached in `localStorage`, so a later failed refresh still shows the
    last known list.
+
+   ### Hotkeys
+
+   `SumiHotkeys` (`sumi-ui/core`) is a single `keydown` listener shared by
+   the whole app. Register a hotkey from a component constructor or field
+   initializer with `injectHotkey()` — it unregisters itself via
+   `DestroyRef` when the component is destroyed:
+
+   ```ts
+   import { SUMI_KEYS, injectHotkey } from 'sumi-ui/core';
+
+   injectHotkey({
+     keys: SUMI_KEYS.iKnow, // 'Alt+K'
+     label: 'I know this',
+     scope: 'practice',
+     handler: () => this.markKnown(),
+   });
+   ```
+
+   `keys` is a string like `'Enter'`, `'Escape'`, `'Alt+K'` or
+   `'Shift+Enter'`. A combo with Alt/Ctrl/Meta is matched by `event.code`
+   (so macOS turning `Option+K` into `event.key === '˚'` does not break
+   it); a bare key (including `?`) is matched by `event.key`,
+   case-insensitively, and never while Ctrl/Alt/Meta is held.
+
+   **Ground rule** (see docs/concept.md#hotkeys): while the event target is
+   an editable element (input, textarea, select, contenteditable), only
+   Alt/Ctrl/Meta combos, `Escape`, and registrations with
+   `allowInEditable: true` fire — everything else is left alone so typing
+   is never hijacked. An answer field that wants `Enter` to submit
+   registers it with both `target` (so `Enter` on some other focused
+   element, e.g. a button, is not swallowed) and `allowInEditable: true`
+   (so it fires despite the field being editable):
+
+   ```ts
+   injectHotkey({
+     keys: SUMI_KEYS.submit, // 'Enter'
+     label: 'Submit',
+     scope: 'practice',
+     target: () => this.answerField()?.nativeElement,
+     allowInEditable: true,
+     handler: () => this.submit(),
+   });
+   ```
+
+   Bare keys that only make sense once typing is done (`F`, `?`) pair
+   `allowInEditable: true` with `enabled: () => this.feedback()`, so they
+   are inert while the field is still being typed into and only start
+   firing once the answer is shown. `enabled()` is read on every keydown,
+   so it can close over a signal directly. If two enabled registrations
+   match the same keys, the one registered most recently wins (stack
+   semantics), and a `console.warn` is logged in dev mode so the collision
+   is not silent. `SUMI_KEYS` holds the reserved combinations from
+   docs/concept.md#hotkeys (`submit`, `newline`, `escape`, `iKnow`,
+   `iDontKnow`, `mute`, `details`, `help`) as constants.
+
+   `sumi-hotkey-help` is the small round flyout button (bottom-right,
+   hidden without a real pointer) listing every currently active hotkey,
+   grouped by scope. Apps add it once, wherever makes sense — inside
+   `sumi-app-shell`'s content, or directly on a page that needs to
+   override its own `?` (see below):
+
+   ```html
+   <sumi-app-shell [brand]="brand" [nav]="navItems">
+     <router-outlet />
+     <sumi-hotkey-help />
+   </sumi-app-shell>
+   ```
+
+   `sumi-app-shell` does not render it automatically — not every app wants
+   it, and some only want it on certain pages.
+
+   The flyout registers its own `?` (to toggle) and `Escape` (to close,
+   enabled only while open). A page with an editable field that wants `?`
+   to open the flyout only after feedback is shown (exactly like the
+   showcase's Practice page, see
+   `projects/showcase/src/app/pages/practice/practice.ts`) gets a
+   view-child reference to its own `<sumi-hotkey-help #help />` and calls
+   `help().toggle()` from a second `?` registration with
+   `allowInEditable: true` and `enabled: () => this.feedback()` — stack
+   semantics make this page-level registration win over the flyout's own
+   while it is enabled, and the ground rule still keeps `?` from typing
+   into the field beforehand.
 
 5. Install the library's font packages as direct dependencies — they are
    `peerDependencies` here, so this repo expects the app to provide them:
