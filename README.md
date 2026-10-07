@@ -15,13 +15,14 @@ repository implements.
 projects/
   sumi-ui/
     src/
-      core/      # tokens, theme, fonts, hotkeys, provideSumi() (placeholder)
+      core/      # tokens, theme, fonts, provideSumi() (hotkeys: placeholder)
       forms/     # sumi-answer-field and related inputs (placeholder)
       practice/  # session building blocks (placeholder)
       charts/    # statistics SVG components (placeholder)
       layout/    # app shell, app switcher (placeholder)
     styles/
-      sumi.scss  # style entry point, currently almost empty
+      sumi.scss        # style entry point: tokens + base styles
+      sumi-fonts.scss  # @font-face rules, loaded separately and non-blocking
   showcase/      # Angular app with one page per area, used instead of Storybook
 ```
 
@@ -147,7 +148,52 @@ successfully with `ng build` from a throwaway Angular 22 app):
    npm install @fontsource/shippori-mincho @fontsource/zen-kaku-gothic-new @fontsource/ibm-plex-mono
    ```
 
-6. In the app's CI workflow, check out submodules and make sure a submodule
+6. Load the fonts as their own, non-blocking stylesheet. `sumi.scss` (step
+   3) only pulls in tokens and base styles; the actual `@font-face` rules
+   live in a separate `sumi-fonts.scss`, deliberately kept out of the
+   app's main stylesheet because it is almost nothing but font data (see
+   `projects/sumi-ui/styles/sumi-fonts.scss`). Every `--sumi-font-*` token
+   already lists a system fallback first, so the app renders immediately
+   either way and the fonts swap in once they arrive.
+
+   Add it as its own build output, not injected into `index.html`'s
+   `<head>` automatically, on the app's `build` target in
+   `frontend/angular.json`:
+
+   ```jsonc
+   "options": {
+     // ...
+     "styles": [
+       "src/styles.scss",
+       {
+         "input": "sumi-ui/projects/sumi-ui/styles/sumi-fonts.scss",
+         "bundleName": "sumi-fonts",
+         "inject": false,
+       },
+     ],
+   }
+   ```
+
+   Then load it from `index.html` so the browser fetches it without
+   blocking first paint, and falls back to a normal blocking stylesheet
+   when JavaScript is off:
+
+   ```html
+   <link rel="preload" as="style" href="sumi-fonts.css" />
+   <link rel="stylesheet" href="sumi-fonts.css" media="print" onload="this.media = 'all'" />
+   <noscript><link rel="stylesheet" href="sumi-fonts.css" /></noscript>
+   ```
+
+   `bundleName: 'sumi-fonts'` keeps the output file name
+   `sumi-fonts.css` fixed even with `outputHashing: 'all'` in the
+   production configuration, since Angular does not hash a style bundle
+   that has `inject: false` — the `href`s above do not need to change
+   per build. This repo's own `showcase` app uses the exact same
+   mechanism (see `angular.json` and `projects/showcase/src/index.html`),
+   just with the library's own in-repo path instead of the submodule
+   path shown here.
+
+7. In the app's CI workflow, check out submodules and make sure a submodule
    bump still triggers the workflow:
 
    ```yaml
@@ -166,7 +212,7 @@ successfully with `ng build` from a throwaway Angular 22 app):
    repos are public, so CI can check out the submodule without an extra
    token.
 
-7. Add Dependabot updates for the submodule, so a change to `sumi-ui` opens
+8. Add Dependabot updates for the submodule, so a change to `sumi-ui` opens
    a PR in the app's repo:
 
    ```yaml
@@ -179,7 +225,7 @@ successfully with `ng build` from a throwaway Angular 22 app):
          interval: weekly
    ```
 
-8. Update the submodule to the latest commit on its default branch with:
+9. Update the submodule to the latest commit on its default branch with:
 
    ```bash
    git submodule update --remote
