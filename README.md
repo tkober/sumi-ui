@@ -424,6 +424,124 @@ successfully with `ng build` from a throwaway Angular 22 app):
    whenever `verdict` changes (or the component first appears); a public
    `focus()` method covers the rest.
 
+   ### Practice building blocks
+
+   `sumi-ui/practice` also exports the building blocks around the answer
+   field — a prompt, feedback, timing and session scaffolding — see the
+   issue's design notes and docs/concept.md's "Layout und Mobil". They are
+   all in `SUMI_PRACTICE` alongside `SumiAnswerField`, so
+   `imports: [...SUMI_PRACTICE]` is still enough to use any of them.
+
+   **`sumi-prompt-card`** — the big prompt, sized by glyph count exactly
+   like kanji-trainer's `.characters` (`--glyphs`, container-query units),
+   always in `--sumi-font-ui` (never the display font — prompts are
+   learning material, see docs/concept.md#schrift) and `lang="ja"`.
+   `kind` is a small chip ("Reading"), `meta` a muted line
+   (`['Kanji', 'Level 9', 'Guru']`), `tone` a CSS colour used only as a
+   subtle top border and chip tint (never the whole card — domain
+   colouring, e.g. kanji-trainer's radical/kanji/vocabulary colours). The
+   content slot is for anything beyond the text itself (a conjugation
+   instruction, an image). It shrinks automatically while the on-screen
+   keyboard is open (`SumiKeyboardVisibility`, see docs/concept.md#layout-und-mobil).
+
+   ```html
+   <sumi-prompt-card text="食べる" kind="Reading" [meta]="['Vocabulary', 'N5']">
+     <sumi-countdown-ring [elapsedMs]="elapsedMs()" [targetMs]="6000" />
+   </sumi-prompt-card>
+   ```
+
+   **`sumi-verdict`** (class `SumiVerdictCard` — `SumiVerdict` was already
+   `sumi-answer-field`'s result-input type, see above) is the richer
+   feedback block: colour, icon, title (defaulting per `kind` — "Correct",
+   "Wrong", "Doesn't count", "Sure?"), a message and an optional `expected`
+   answer (`lang="ja"`), plus a collapsible details slot:
+
+   ```html
+   <sumi-verdict kind="wrong" [expected]="'食べる'" message="Close, but …">
+     <div sumiVerdictDetails>Full derivation chain, grammar note, etc.</div>
+   </sumi-verdict>
+   ```
+
+   **`sumi-answer-field`'s own `message` input is for the short one-line
+   feedback under the field; reach for `sumi-verdict` when there is more
+   to say** (an expected answer worth its own line, or a details block) —
+   they are not meant to duplicate the same text, see the showcase's
+   Practice page for a worked example. `F` toggles the details (scope
+   `feedback`, `allowInEditable: true`, so it works while the answer field
+   still has focus — see docs/concept.md#hotkeys), registered by
+   `sumi-verdict` itself, but only once there is projected details content
+   and only for a settled `correct`/`wrong` verdict (a `held`/`retry` card
+   is still mid-answer).
+
+   **`sumi-countdown-ring`** — a pure-SVG ring (ported from jp-conjugation's
+   `countdown-ring` and katakana-reading's inline ring), `elapsedMs`/
+   `targetMs` in, remaining seconds (one decimal) out. Neutral while on
+   time, `--sumi-retry` once ≤25% is left, `--sumi-wrong` past the target
+   (counting back up as `+x.x`) — the accent colour is deliberately never
+   used for time pressure. `role="timer"` with a descriptive
+   `aria-label`. A non-positive `targetMs` means "no limit": a full,
+   neutral ring with no label.
+
+   **`sumi-session-bar`** — "12 / 42", accuracy and an "End session" ghost
+   button for a running session. `total` wins over `remaining` when both
+   are given (`answered + remaining` otherwise); without either, only the
+   answered count shows. Place it in the shell's
+   `[sumiShellFocusActions]` slot, or — as the showcase does — just above
+   the practice card inside the `sumiFocusMode` screen itself:
+
+   ```html
+   <div sumiFocusMode>
+     <sumi-session-bar [answered]="answered()" [correct]="correct()" [total]="total()" (end)="endSession()" />
+     <sumi-prompt-card ... />
+     <sumi-answer-field ... />
+   </div>
+   ```
+
+   **`sumi-session-gate`** is the start/end screen container: `title`
+   (optional — omit it when projected content, e.g. `sumi-session-summary`,
+   already supplies its own heading), `text`, `actionLabel` and a `start`
+   output. `Enter` is wired to `start` (scope `page`, deliberately **not**
+   `allowInEditable` — a gate screen has no field to protect typing in).
+   `showAction` hides the gate's own button (`Enter` still works) for the
+   ended state, where `sumi-session-summary`'s own "Practice again" button
+   is the one actually shown:
+
+   ```html
+   @if (state() === 'idle') {
+     <sumi-session-gate title="Ready to practice?" text="…" (start)="startSession()" />
+   } @else if (state() === 'ended') {
+     <sumi-session-gate [showAction]="false" (start)="startSession()">
+       <sumi-session-summary [answered]="answered()" [correct]="correct()" [durationMs]="durationMs()" (restart)="startSession()" />
+     </sumi-session-gate>
+   }
+   ```
+
+   **`sumi-session-summary`** — answered/correct (with rounded accuracy),
+   duration as `m:ss`, an optional signed `delta` (e.g. an Elo change,
+   coloured `--sumi-correct`/`--sumi-wrong` by sign) with a `deltaLabel`,
+   extra tiles via the default content slot, and a `[sumiSummaryArt]` slot
+   reserved for a hanko/backdrop illustration (left empty until the
+   Tuschemotive follow-up, issue #16). Its own `restart` output drives the
+   "Practice again" button.
+
+   **`sumi-furigana`** renders `{ base: string; reading?: string }[]`
+   segments as ruby annotations (ported from jp-conversation-practice's
+   `furigana-text`), toggled by `SumiFurigana` (`visible` signal,
+   persisted in `localStorage`, try/catch-guarded) and
+   `sumi-furigana-toggle` (a labelled `sumi-toggle`). Hiding the readings
+   keeps `rt` in place (`visibility: hidden`), not removed, so toggling
+   never reflows the surrounding text:
+
+   ```html
+   <sumi-furigana [segments]="[{ base: '食べる', reading: 'たべる' }]" />
+   <sumi-furigana-toggle />
+   ```
+
+   See `projects/showcase/src/app/pages/practice/practice.ts`/`.html` for
+   all of these composed into one realistic practice screen (gate →
+   focus-mode round with prompt/verdict/countdown/session-bar → summary
+   inside the gate again).
+
 5. Install the library's font and wanakana packages as direct
    dependencies — they are `peerDependencies` here, so this repo expects
    the app to provide them:
