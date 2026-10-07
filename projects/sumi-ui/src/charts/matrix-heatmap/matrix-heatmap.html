@@ -14,7 +14,7 @@
         <div
           class="sumi-matrix-heatmap__cell"
           [class.sumi-matrix-heatmap__cell--no-data]="cell.bucket === -1"
-          [style.background]="fill(cell.bucket)"
+          [style.background-color]="fill(cell.bucket)"
           [style.color]="textColor(cell.bucket)"
           [title]="cell.title"
         >
