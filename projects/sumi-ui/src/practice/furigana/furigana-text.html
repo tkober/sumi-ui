@@ -1,0 +1,10 @@
+@for (segment of segments(); track $index) {
+  @if (segment.reading) {
+    <ruby
+      >{{ segment.base
+      }}<rt [class.sumi-furigana__rt--hidden]="!visible()">{{ segment.reading }}</rt></ruby
+    >
+  } @else {
+    <span>{{ segment.base }}</span>
+  }
+}

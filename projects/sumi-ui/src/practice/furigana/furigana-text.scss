@@ -1,0 +1,20 @@
+:host {
+  display: inline;
+}
+
+ruby {
+  ruby-align: center;
+}
+
+rt {
+  font-size: 0.52em;
+  font-weight: 400;
+  color: var(--sumi-muted);
+  // Copying should yield the sentence, not sentence-with-readings.
+  user-select: none;
+}
+
+// Hidden but still laid out — toggling furigana must not reflow the text.
+.sumi-furigana__rt--hidden {
+  visibility: hidden;
+}
