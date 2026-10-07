@@ -1,0 +1,31 @@
+@if (link(); as href) {
+  <a class="sumi-stat-tile__inner" [routerLink]="href">
+    <ng-container *ngTemplateOutlet="body" />
+  </a>
+} @else {
+  <div class="sumi-stat-tile__inner">
+    <ng-container *ngTemplateOutlet="body" />
+  </div>
+}
+
+<ng-template #body>
+  <span class="sumi-stat-tile__value sumi-tabular">{{ value() }}</span>
+  <span class="sumi-stat-tile__label">{{ label() }}</span>
+  @if (hint()) {
+    <span class="sumi-stat-tile__hint">{{ hint() }}</span>
+  }
+  @if (delta() != null) {
+    <span
+      class="sumi-stat-tile__delta sumi-tabular"
+      [class.sumi-stat-tile__delta--up]="deltaSign() > 0"
+      [class.sumi-stat-tile__delta--down]="deltaSign() < 0"
+    >
+      @if (deltaSign() > 0) {
+        <span aria-hidden="true">▲</span>
+      } @else if (deltaSign() < 0) {
+        <span aria-hidden="true">▼</span>
+      }
+      {{ deltaAbs() }}
+    </span>
+  }
+</ng-template>
