@@ -86,10 +86,10 @@
     pointer-events: none;
   }
 
-  // Icon slot: a leading/trailing `svg` or `[sumiIcon]` is sized and spaced
-  // by the gap above; this only fixes its box so icons of different source
-  // sizes line up.
-  :is(svg, [sumiIcon]) {
+  // Icon slot: a leading/trailing `svg`, `[sumiIcon]` or `sumi-icon` is
+  // sized and spaced by the gap above; this only fixes its box so icons of
+  // different source sizes line up.
+  :is(svg, [sumiIcon], sumi-icon) {
     width: 1.1em;
     height: 1.1em;
     flex: none;
