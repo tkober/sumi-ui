@@ -20,6 +20,58 @@ section {
   margin-bottom: var(--sumi-space-3);
 }
 
+.demo__card {
+  text-align: center;
+  margin-bottom: var(--sumi-space-4);
+}
+
+.demo__characters {
+  font-family: var(--sumi-font-display);
+  font-size: clamp(2.5rem, 10vw, 4rem);
+  line-height: 1.1;
+}
+
+.demo__label {
+  color: var(--sumi-muted);
+  font-size: var(--sumi-text-sm);
+}
+
+sumi-answer-field {
+  max-width: 320px;
+  margin: 0 auto;
+}
+
+.demo__actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sumi-space-3);
+  margin-top: var(--sumi-space-4);
+}
+
+.demo__score {
+  color: var(--sumi-muted);
+  font-size: var(--sumi-text-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+.demo__hint {
+  text-align: center;
+  color: var(--sumi-text-2);
+  font-size: var(--sumi-text-sm);
+}
+
+.demo__done {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sumi-space-3);
+}
+
+sumi-segmented-control {
+  margin: var(--sumi-space-3) 0;
+}
+
 .demo__log {
   margin-top: var(--sumi-space-4);
 

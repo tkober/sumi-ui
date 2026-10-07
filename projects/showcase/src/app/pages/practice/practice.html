@@ -1,40 +1,53 @@
 <sumi-page
   title="Practice"
-  subtitle="Session building blocks such as countdown rings and summary tiles."
+  subtitle="sumi-answer-field: kana conversion, the state machine and its hotkeys."
 >
   <section class="demo">
-    <h2>Hotkeys</h2>
-    <p>
-      A plain field, no kana logic (that's #11) — just enough state to exercise every hotkey rule.
-      Type into it, then press <kbd sumiKbd>Enter</kbd> to show feedback. While typing, bare
-      <kbd sumiKbd>F</kbd> and <kbd sumiKbd>?</kbd> land in the field as text; once feedback is
-      shown the field freezes and those same keys become hotkeys. <kbd sumiKbd>Esc</kbd> and
-      <kbd sumiKbd>Alt</kbd>+<kbd sumiKbd>K</kbd>
-      /
-      <kbd sumiKbd>Alt</kbd>+<kbd sumiKbd>H</kbd>
-      always work, typing or not.
-    </p>
+    <h2>Answer field</h2>
 
-    <input
-      #field
-      id="demo-practice-field"
-      name="demo-practice-field"
-      sumiInput
-      [value]="value()"
-      (input)="onInput($event)"
-      placeholder="Type something, then press Enter"
-      aria-label="Demo practice field"
-    />
+    @if (done()) {
+      <div class="demo__done">
+        <p>Round finished — {{ correct() }} / {{ answered() }} correct.</p>
+        <button sumiButton variant="primary" sumiHoldFocus (click)="restart()">Restart</button>
+      </div>
+    } @else {
+      @let current = card();
+      <div class="demo__card">
+        <div class="demo__characters" lang="ja">{{ current.characters }}</div>
+        <div class="demo__label">{{ current.label }}</div>
+      </div>
 
-    @if (feedback()) {
-      <p class="demo__feedback">Feedback shown — press Enter to go back to typing.</p>
+      <sumi-answer-field
+        #field
+        [mode]="current.mode"
+        [verdict]="verdict()"
+        [iKnow]="true"
+        [iDontKnow]="true"
+        [(value)]="value"
+        [label]="current.label + ' for ' + current.characters"
+        placeholder="Type your answer"
+        (submitted)="onSubmitted($event)"
+        (confirmed)="onConfirmed()"
+        (edited)="onEdited()"
+        (next)="onNext()"
+        (knew)="onKnew()"
+        (gaveUp)="onGaveUp()"
+      />
+
+      <div class="demo__actions">
+        <button sumiButton variant="primary" sumiHoldFocus (click)="onCheckClick()">
+          {{ checkButtonLabel() }}
+        </button>
+        <span class="demo__score">{{ correct() }} / {{ answered() }} correct</span>
+      </div>
+
       @if (detailsOpen()) {
-        <div class="demo__details">Details box, toggled by F.</div>
+        <p class="demo__hint">{{ current.hint }}</p>
       }
     }
 
     <div class="demo__log">
-      <h3>Last hotkeys triggered</h3>
+      <h3>Last hotkeys / events</h3>
       @if (log().length === 0) {
         <p>(none yet)</p>
       } @else {
@@ -47,9 +60,20 @@
     </div>
   </section>
 
-  <section>
+  <section class="demo">
+    <h2>Other modes</h2>
     <p>
-      Area: <code>{{ placeholder }}</code>
+      The grading round above only uses <code>kana</code> and <code>latin</code>. Everything else
+      the field supports, outside any grading flow:
     </p>
+
+    <sumi-segmented-control [options]="modeOptions" [(value)]="demoMode" />
+
+    <sumi-answer-field
+      [mode]="demoMode()"
+      [(value)]="demoValue"
+      [label]="'Demo field, ' + demoMode() + ' mode'"
+      placeholder="Type something"
+    />
   </section>
 </sumi-page>
