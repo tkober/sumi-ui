@@ -1,0 +1,32 @@
+@if (label() && !labelledBy()) {
+  <label class="sumi-answer-field__label" [for]="inputId">{{ label() }}</label>
+}
+
+<div class="sumi-answer-field__row">
+  <input
+    #field
+    [id]="inputId"
+    type="text"
+    class="sumi-answer-field__input"
+    [attr.lang]="isJapanese() ? 'ja' : null"
+    autocomplete="off"
+    autocorrect="off"
+    autocapitalize="off"
+    spellcheck="false"
+    [attr.enterkeyhint]="enterKeyHint()"
+    [attr.aria-labelledby]="labelledBy() ?? null"
+    [attr.aria-invalid]="status() === 'wrong' ? 'true' : null"
+    [attr.aria-describedby]="messageId"
+    [placeholder]="placeholder() ?? null"
+    [value]="value()"
+    [disabled]="disabled()"
+    (input)="onInput($event)"
+  />
+  @if (icon(); as name) {
+    <sumi-icon class="sumi-answer-field__icon" [name]="name" />
+  }
+</div>
+
+<p [id]="messageId" class="sumi-answer-field__message" role="status" aria-live="polite">
+  {{ message() }}
+</p>
