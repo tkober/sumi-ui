@@ -3,8 +3,10 @@ import {
   SUMI_CHARTS,
   type SumiBar,
   type SumiCalendarDay,
+  type SumiDonutSegment,
   type SumiMatrixCellInput,
   type SumiStackedRow,
+  type SumiSunburstNode,
 } from 'sumi-ui/charts';
 import { SumiPage } from 'sumi-ui/layout';
 
@@ -89,6 +91,42 @@ export class ChartsPage {
   ];
   protected readonly conjugationColumns = ['Ichidan', 'Godan', 'Suru', 'Kuru'];
   protected readonly conjugationCells: SumiMatrixCellInput[] = buildMissRateMatrix();
+
+  // --- Katakana reading outcomes, a donut with the total in the centre ----
+  protected readonly readingOutcomes: SumiDonutSegment[] = [
+    { label: 'Correct', value: 184 },
+    { label: 'Close', value: 41 },
+    { label: 'Wrong', value: 19 },
+  ];
+
+  // --- Reviews by SRS stage and sub-stage, a sunburst -----------------------
+  // Modelled on kanji-trainer's SRS ladder: Apprentice and Guru split into
+  // sub-stages, Master/Enlightened/Burned do not — demonstrating a
+  // sunburst whose top-level rings mix single-leaf and multi-child nodes.
+  protected readonly reviewsBySrsStage: SumiSunburstNode = {
+    label: 'Reviews',
+    children: [
+      {
+        label: 'Apprentice',
+        children: [
+          { label: 'Apprentice I', value: 18 },
+          { label: 'Apprentice II', value: 14 },
+          { label: 'Apprentice III', value: 9 },
+          { label: 'Apprentice IV', value: 6 },
+        ],
+      },
+      {
+        label: 'Guru',
+        children: [
+          { label: 'Guru I', value: 32 },
+          { label: 'Guru II', value: 21 },
+        ],
+      },
+      { label: 'Master', value: 24 },
+      { label: 'Enlightened', value: 11 },
+      { label: 'Burned', value: 52 },
+    ],
+  };
 }
 
 /** A fixed pseudo-random walk, same recipe as `buildEloHistory` above — a
