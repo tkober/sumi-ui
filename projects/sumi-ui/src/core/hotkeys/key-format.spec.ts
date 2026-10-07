@@ -1,14 +1,16 @@
 import { formatKeys } from './key-format';
 
 describe('formatKeys', () => {
-  it('shows Option/Command glyphs on macOS', () => {
+  it('shows Option/Command/Control glyphs on macOS', () => {
     expect(formatKeys('Alt+K', 'mac')).toEqual(['⌥', 'K']);
     expect(formatKeys('Meta+K', 'mac')).toEqual(['⌘', 'K']);
+    expect(formatKeys('Ctrl+K', 'mac')).toEqual(['⌃', 'K']);
   });
 
-  it('shows Alt/Ctrl words elsewhere', () => {
+  it('shows Alt/Ctrl/Meta words elsewhere, keeping Ctrl and Meta distinct', () => {
     expect(formatKeys('Alt+K', 'other')).toEqual(['Alt', 'K']);
-    expect(formatKeys('Meta+K', 'other')).toEqual(['Ctrl', 'K']);
+    expect(formatKeys('Ctrl+K', 'other')).toEqual(['Ctrl', 'K']);
+    expect(formatKeys('Meta+K', 'other')).toEqual(['Meta', 'K']);
   });
 
   it('shortens Escape to Esc on both platforms', () => {

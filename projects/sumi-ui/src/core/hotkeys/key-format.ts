@@ -40,10 +40,10 @@ function formatPart(part: string, platform: SumiPlatform): string {
     return platform === 'mac' ? '⌥' : 'Alt';
   }
   if (lower === 'meta') {
-    return platform === 'mac' ? '⌘' : 'Ctrl';
+    return platform === 'mac' ? '⌘' : 'Meta';
   }
   if (lower === 'ctrl') {
-    return 'Ctrl';
+    return platform === 'mac' ? '⌃' : 'Ctrl';
   }
   if (lower === 'shift') {
     return 'Shift';
@@ -59,7 +59,9 @@ function formatPart(part: string, platform: SumiPlatform): string {
 /**
  * Splits a `keys` string such as `'Alt+K'` or `'Shift+Enter'` into the key
  * caps `sumi-hotkey-help` renders, one per `+`-separated part, e.g.
- * `['⌥', 'K']` on macOS or `['Alt', 'K']` elsewhere.
+ * `['⌥', 'K']` on macOS or `['Alt', 'K']` elsewhere. `Meta` and `Ctrl` are
+ * kept distinct everywhere (`⌘`/`⌃` on macOS, `'Meta'`/`'Ctrl'` elsewhere)
+ * since they are different modifier keys.
  */
 export function formatKeys(keys: string, platform: SumiPlatform = detectPlatform()): string[] {
   return keys
