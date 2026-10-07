@@ -1,6 +1,6 @@
 <sumi-page
   title="Charts"
-  subtitle="Statistics SVG components: stat tile, segmented bar, sparkline, bar chart, legend, data table."
+  subtitle="Statistics components: stat tile, segmented bar, sparkline, bar chart, calendar and matrix heatmaps, legend, data table."
 >
   <section class="demo">
     <h2>Example data</h2>
@@ -65,6 +65,48 @@
         { label: 'Guru', color: 'var(--sumi-seq-3)' },
         { label: 'Master+', color: 'var(--sumi-seq-5)' },
       ]"
+    />
+  </section>
+
+  <section class="demo">
+    <h2>26-week review calendar</h2>
+    <sumi-calendar-heatmap
+      ariaLabel="Reviews per day over the last 26 weeks"
+      [days]="calendarDays"
+      [weeks]="26"
+      [endDate]="calendarEndDate"
+      unit="reviews"
+      [table]="true"
+    />
+  </section>
+
+  <section class="demo">
+    <h2>Katakana reading confidence</h2>
+    <sumi-matrix-heatmap
+      ariaLabel="Katakana reading confidence, by row and vowel"
+      [rows]="kanaRows"
+      [columns]="kanaColumns"
+      [cells]="kanaCells"
+      [domain]="[0, 1]"
+      [format]="toPercent"
+      cellLang="ja"
+      [showValues]="true"
+      [table]="true"
+      noDataLabel="No such kana"
+    />
+  </section>
+
+  <section class="demo">
+    <h2>Conjugation miss rate</h2>
+    <sumi-matrix-heatmap
+      ariaLabel="Conjugation miss rate, by form and word type"
+      [rows]="conjugationRows"
+      [columns]="conjugationColumns"
+      [cells]="conjugationCells"
+      [domain]="[0, 1]"
+      [format]="toPercent"
+      [table]="true"
+      noDataLabel="Not practised yet"
     />
   </section>
 
