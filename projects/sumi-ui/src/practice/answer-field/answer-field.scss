@@ -44,34 +44,48 @@
     color: var(--sumi-muted);
   }
 
-  &:focus-visible {
-    outline: none;
-    border-color: var(--sumi-accent);
-    box-shadow: var(--sumi-focus-ring);
-  }
-
   &:disabled {
     opacity: 0.6;
     cursor: not-allowed;
   }
 }
 
-// `typing`: the default accent-coloured focus ring above is enough on its
-// own; no extra border tint while nothing has been judged yet.
+// `typing`: the accent-coloured focus ring is the only thing marking the
+// field while nothing has been judged yet. Scoped to `:host(--typing)`
+// (rather than a bare `:focus-visible` on the input) so it never outranks
+// the state colours below once a verdict/incomplete is up.
+//
+// Every state rule below targets `:host(.sumi-answer-field--x) .selector`,
+// never `.sumi-answer-field--x .selector` — the modifier classes are bound
+// on the *host* element itself (see the component's `host` bindings), which
+// Angular's emulated encapsulation marks with `_nghost-*`, not the
+// `_ngcontent-*` attribute a plain descendant selector compiles to. Without
+// `:host(...)` these selectors compile to attribute selectors that can never
+// match their own host, so every one of them would silently do nothing.
+:host(.sumi-answer-field--typing) .sumi-answer-field__input:focus-visible {
+  outline: none;
+  border-color: var(--sumi-accent);
+  box-shadow: var(--sumi-focus-ring);
+}
 
-.sumi-answer-field--incomplete .sumi-answer-field__input,
-.sumi-answer-field--held .sumi-answer-field__input,
-.sumi-answer-field--retry .sumi-answer-field__input {
+.sumi-answer-field__input:focus-visible {
+  outline: none;
+  box-shadow: var(--sumi-focus-ring);
+}
+
+:host(.sumi-answer-field--incomplete) .sumi-answer-field__input,
+:host(.sumi-answer-field--held) .sumi-answer-field__input,
+:host(.sumi-answer-field--retry) .sumi-answer-field__input {
   border-color: var(--sumi-retry);
   background: var(--sumi-retry-soft);
 }
 
-.sumi-answer-field--correct .sumi-answer-field__input {
+:host(.sumi-answer-field--correct) .sumi-answer-field__input {
   border-color: var(--sumi-correct);
   background: var(--sumi-correct-soft);
 }
 
-.sumi-answer-field--wrong .sumi-answer-field__input {
+:host(.sumi-answer-field--wrong) .sumi-answer-field__input {
   border-color: var(--sumi-wrong);
   background: var(--sumi-wrong-soft);
 }
@@ -83,20 +97,17 @@
   font-size: 1.25rem;
 }
 
-.sumi-answer-field--incomplete .sumi-answer-field__icon,
-.sumi-answer-field--held .sumi-answer-field__icon {
+:host(.sumi-answer-field--incomplete) .sumi-answer-field__icon,
+:host(.sumi-answer-field--held) .sumi-answer-field__icon,
+:host(.sumi-answer-field--retry) .sumi-answer-field__icon {
   color: var(--sumi-retry);
 }
 
-.sumi-answer-field--retry .sumi-answer-field__icon {
-  color: var(--sumi-retry);
-}
-
-.sumi-answer-field--correct .sumi-answer-field__icon {
+:host(.sumi-answer-field--correct) .sumi-answer-field__icon {
   color: var(--sumi-correct);
 }
 
-.sumi-answer-field--wrong .sumi-answer-field__icon {
+:host(.sumi-answer-field--wrong) .sumi-answer-field__icon {
   color: var(--sumi-wrong);
 }
 
@@ -108,23 +119,23 @@
   text-align: center;
 }
 
-.sumi-answer-field--wrong .sumi-answer-field__message {
+:host(.sumi-answer-field--wrong) .sumi-answer-field__message {
   color: var(--sumi-wrong);
 }
 
-.sumi-answer-field--held .sumi-answer-field__message,
-.sumi-answer-field--incomplete .sumi-answer-field__message,
-.sumi-answer-field--retry .sumi-answer-field__message {
+:host(.sumi-answer-field--held) .sumi-answer-field__message,
+:host(.sumi-answer-field--incomplete) .sumi-answer-field__message,
+:host(.sumi-answer-field--retry) .sumi-answer-field__message {
   color: var(--sumi-retry);
 }
 
-.sumi-answer-field--correct .sumi-answer-field__message {
+:host(.sumi-answer-field--correct) .sumi-answer-field__message {
   color: var(--sumi-correct);
 }
 
 // Felt as well as read, on `wrong` and `incomplete` — see the field's
 // `triggerShake()`. Neutralised under `prefers-reduced-motion` globally.
-.sumi-answer-field--shake .sumi-answer-field__input {
+:host(.sumi-answer-field--shake) .sumi-answer-field__input {
   animation: sumi-answer-field-shake 400ms ease;
 }
 
