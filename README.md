@@ -193,6 +193,47 @@ successfully with `ng build` from a throwaway Angular 22 app):
    cached in `localStorage`, so a later failed refresh still shows the
    last known list.
 
+   ### Focus-mode header actions
+
+   `sumi-app-shell`'s header reserves a `[sumiShellFocusActions]` slot for
+   "End session" and a running session's progress while `sumiFocusMode` is
+   active (see docs/concept.md#layout-und-mobil). That slot is filled in
+   `app.html`, outside `<router-outlet />` — which a routed practice page
+   cannot reach directly, since its own state (answered count, accuracy)
+   lives on the page, not in `app.html`.
+
+   `*sumiShellFocusActions` (`sumi-ui/layout`) solves this the same way
+   `*ngIf` does: a structural directive a page applies to content in its
+   own template, which then actually renders inside the shell's header.
+   Add it to `sumi-session-bar` (or anything else) right where the page
+   already builds its session UI:
+
+   ```html
+   <sumi-session-bar
+     *sumiShellFocusActions
+     [answered]="answered()"
+     [correct]="correct()"
+     [total]="total()"
+     (end)="endSession()"
+   />
+   ```
+
+   Because `sumi-app-shell` renders the registered template with
+   `ngTemplateOutlet`, it runs in the declaring page's own injector and
+   view context — exactly as `ngTemplateOutlet` always does — so the
+   bindings above keep reading that page's own signals live, no extra
+   wiring needed. The directive registers its `TemplateRef` with
+   `SumiShell` on init and unregisters on destroy; if a page is destroyed
+   after a newer one has already registered (e.g. during a route
+   transition's overlap), that unregister is a no-op, so the newer
+   registration is never clobbered. Last registration wins.
+
+   Content projected into the shell's `[sumiShellFocusActions]` slot in
+   `app.html` (plain, non-structural `sumiShellFocusActions`, as
+   `sumi-session-bar`'s own doc comment shows) stays as the fallback,
+   rendered only while focus mode is on and nothing has registered a
+   template.
+
    ### Hotkeys
 
    `SumiHotkeys` (`sumi-ui/core`) is a single `keydown` listener shared by
@@ -483,9 +524,22 @@ successfully with `ng build` from a throwaway Angular 22 app):
    **`sumi-session-bar`** — "12 / 42", accuracy and an "End session" ghost
    button for a running session. `total` wins over `remaining` when both
    are given (`answered + remaining` otherwise); without either, only the
-   answered count shows. Place it in the shell's
-   `[sumiShellFocusActions]` slot, or — as the showcase does — just above
-   the practice card inside the `sumiFocusMode` screen itself:
+   answered count shows. The showcase's Practice page registers it in the
+   shell's header via `*sumiShellFocusActions` (see "Focus-mode header
+   actions" below):
+
+   ```html
+   <sumi-session-bar
+     *sumiShellFocusActions
+     [answered]="answered()"
+     [correct]="correct()"
+     [total]="total()"
+     (end)="endSession()"
+   />
+   ```
+
+   It can just as well sit above the practice card inside the
+   `sumiFocusMode` screen itself instead:
 
    ```html
    <div sumiFocusMode>
