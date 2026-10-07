@@ -1,0 +1,14 @@
+@for (item of items(); track item.label) {
+  <span class="sumi-legend__item">
+    <span class="sumi-legend__swatch" [style.background]="item.color"></span>
+    <span class="sumi-legend__label">{{ item.label }}</span>
+    @if (item.value != null) {
+      <span class="sumi-legend__value sumi-tabular">
+        {{ item.value }}
+        @if (item.percent != null) {
+          ({{ item.percent | number: '1.0-0' }}%)
+        }
+      </span>
+    }
+  </span>
+}

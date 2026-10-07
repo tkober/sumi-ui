@@ -1,0 +1,24 @@
+:host {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sumi-space-3);
+  font-size: var(--sumi-text-sm);
+}
+
+.sumi-legend__item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sumi-space-1);
+  color: var(--sumi-text-2);
+}
+
+.sumi-legend__swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  flex: none;
+}
+
+.sumi-legend__value {
+  color: var(--sumi-muted);
+}

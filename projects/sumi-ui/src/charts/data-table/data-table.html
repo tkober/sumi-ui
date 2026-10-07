@@ -1,0 +1,29 @@
+<div class="sumi-data-table__scroll">
+  <table>
+    @if (caption()) {
+      <caption class="sumi-data-table__caption">
+        {{
+          caption()
+        }}
+      </caption>
+    }
+    <thead>
+      <tr>
+        @for (column of columns(); track column.key) {
+          <th [class.sumi-data-table__cell--end]="column.align === 'end'">{{ column.label }}</th>
+        }
+      </tr>
+    </thead>
+    <tbody>
+      @for (row of rows(); track $index) {
+        <tr>
+          @for (column of columns(); track column.key) {
+            <td class="sumi-tabular" [class.sumi-data-table__cell--end]="column.align === 'end'">
+              {{ row[column.key] }}
+            </td>
+          }
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>
