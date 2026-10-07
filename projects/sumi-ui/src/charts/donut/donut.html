@@ -1,0 +1,64 @@
+<div class="sumi-donut__body">
+  <div class="sumi-donut__ring-wrap" [style.width.px]="diameter()" [style.height.px]="diameter()">
+    <svg
+      class="sumi-donut__svg"
+      [attr.viewBox]="'0 0 ' + diameter() + ' ' + diameter()"
+      role="group"
+      [attr.aria-label]="ariaLabel()"
+    >
+      <g [attr.transform]="'translate(' + center() + ',' + center() + ')'">
+        @if (resolved().length === 0) {
+          <circle
+            class="sumi-donut__empty"
+            [attr.r]="(innerRadius() + outerRadius()) / 2"
+            fill="none"
+            [style.stroke]="'var(--sumi-sunken)'"
+            [attr.stroke-width]="outerRadius() - innerRadius()"
+          >
+            <title>No data</title>
+          </circle>
+        } @else {
+          @for (segment of resolved(); track segment.label; let i = $index) {
+            <path
+              class="sumi-donut__segment"
+              [class.sumi-donut__segment--active]="activeIndex() === i"
+              [attr.d]="arcFor(segment.startAngle, segment.endAngle)"
+              [style.fill]="segment.color"
+              tabindex="0"
+              role="img"
+              [attr.aria-label]="
+                segment.label +
+                ': ' +
+                segment.value +
+                ' (' +
+                (segment.percent | number: '1.0-0') +
+                '%)'
+              "
+              (pointerenter)="setActive(i)"
+              (pointerleave)="clearActive(i)"
+              (focus)="setActive(i)"
+              (blur)="clearActive(i)"
+            >
+              <title>{{ segment.label }}: {{ segment.value }} ({{ segment.percent }}%)</title>
+            </path>
+          }
+        }
+      </g>
+    </svg>
+    <div class="sumi-donut__center">
+      <span class="sumi-donut__center-value sumi-tabular">{{ centerValueDisplay() }}</span>
+      <span class="sumi-donut__center-label">{{ centerLabelDisplay() }}</span>
+    </div>
+  </div>
+
+  @if (legend()) {
+    <sumi-legend class="sumi-donut__legend" [items]="legendItems()" />
+  }
+</div>
+
+@if (table()) {
+  <details class="sumi-donut__table">
+    <summary>Show as table</summary>
+    <sumi-data-table [columns]="tableColumns" [rows]="tableRows()" />
+  </details>
+}

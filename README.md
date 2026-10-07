@@ -608,23 +608,25 @@ successfully with `ng build` from a throwaway Angular 22 app):
    `sumi-ui/charts` (`SUMI_CHARTS`, see docs/concept.md#statistik-komponenten)
    is the statistics area: `sumi-stat-tile` + `sumi-stat-grid`,
    `sumi-segmented-bar`, `sumi-sparkline`, `sumi-bar-chart`,
-   `sumi-calendar-heatmap`, `sumi-matrix-heatmap`, `sumi-legend`,
-   `sumi-ramp-legend` and `sumi-data-table`. The maths behind every chart —
-   scales, ticks, sparkline/area paths, segment percentages, stacked bar
-   offsets, sparse x-axis labels, the heatmaps' week grid and bucketing —
-   lives in pure, exported, unit-tested functions in
+   `sumi-calendar-heatmap`, `sumi-matrix-heatmap`, `sumi-donut`,
+   `sumi-sunburst`, `sumi-legend`, `sumi-ramp-legend` and `sumi-data-table`.
+   The maths behind every chart — scales, ticks, sparkline/area paths,
+   segment percentages, stacked bar offsets, sparse x-axis labels, the
+   heatmaps' week grid and bucketing, donut/sunburst angle geometry — lives
+   in pure, exported, unit-tested functions in
    `projects/sumi-ui/src/charts/math.ts`; the components themselves only
-   render. It depends on **`d3-scale` and `d3-shape`**, both
-   `peerDependencies` here exactly like `wanakana` (install them in the app:
-   `npm install d3-scale d3-shape`) — only named ESM imports
-   (`scaleLinear`, `scaleBand`, `line`, `area`, `curveMonotoneX`, …) are used
-   anywhere in `charts/math.ts`, so a consuming app's bundler tree-shakes
-   away whatever it does not call.
+   render. It depends on **`d3-scale`, `d3-shape` and `d3-hierarchy`**, all
+   three `peerDependencies` here exactly like `wanakana` (install them in
+   the app: `npm install d3-scale d3-shape d3-hierarchy`) — only named ESM
+   imports (`scaleLinear`, `scaleBand`, `line`, `area`, `curveMonotoneX`,
+   `pie`, `arc`, `hierarchy`, `partition`, …) are used anywhere in
+   `charts/math.ts`, so a consuming app's bundler tree-shakes away whatever
+   it does not call.
 
-   Every chart that is an actual SVG graphic (`sumi-segmented-bar`,
-   `sumi-sparkline`, `sumi-bar-chart`) is drawn with a `viewBox` and
-   `preserveAspectRatio` so it scales with its container, carries
-   `role="img"` plus a **required** `ariaLabel` input, and draws colour only
+   Every chart is sized in real pixels from its measured width (text and
+   bars never scale with the container), carries a **required**
+   `ariaLabel` input (`role="img"`; `role="group"` on `sumi-donut` and
+   `sumi-sunburst`, whose segments are focusable), and draws colour only
    from `--sumi-*` tokens (the sequential `--sumi-seq-0`…`-5` ramp by
    default for multi-segment charts). Each of them also takes an optional
    `table` input that adds a `<details>` "Show as table" fallback rendering
@@ -699,19 +701,71 @@ successfully with `ng build` from a throwaway Angular 22 app):
    its row-header column stays `position: sticky` while the grid scrolls
    horizontally on a narrow screen.
 
+   `sumi-donut` and `sumi-sunburst` are the "parts of a whole" charts —
+   `sumi-segmented-bar`'s angular siblings for when the whole itself (a
+   centre value) matters as much as the parts, or the parts nest two or
+   three levels deep. Both size themselves from the measured container
+   width, capped (~220px for the donut, ~320px for the sunburst) so
+   neither grows large enough to dominate the page, and every segment is
+   `tabindex="0"` — hovering, focusing or (sunburst only) tapping/clicking
+   a segment swaps the centre text to that segment's own label, value and
+   percentage instead of the default total:
+
+   ```html
+   <sumi-donut
+     ariaLabel="Katakana reading outcomes, last 244 answers"
+     [segments]="[{ label: 'Correct', value: 184 }, { label: 'Close', value: 41 }, { label: 'Wrong', value: 19 }]"
+     unit="answers"
+     table
+   />
+
+   <sumi-sunburst
+     ariaLabel="Reviews by SRS stage and sub-stage"
+     [root]="{
+       label: 'Reviews',
+       children: [
+         { label: 'Apprentice', children: [{ label: 'Apprentice I', value: 18 }, { label: 'Apprentice II', value: 14 }] },
+         { label: 'Guru', children: [{ label: 'Guru I', value: 32 }, { label: 'Guru II', value: 21 }] },
+         { label: 'Burned', value: 52 },
+       ],
+     }"
+     unit="reviews"
+     table
+   />
+   ```
+
+   `sumi-donut`'s percentages always sum to exactly 100 (the "largest
+   remainder" rounding in `largestRemainderPercentages`, not naive
+   per-segment `Math.round`), a single segment renders as a full ring, and
+   its `legend` (on by default) sits beside the ring once the measured
+   width allows both, or below it otherwise. `sumi-sunburst`'s `root` is a
+   tree (`{ label, value?, children? }`): a node's value is always the sum
+   of its own leaves, so a value left on a branch node that also has
+   `children` is never double-counted; a top-level node can mix
+   multi-child branches (Apprentice/Guru above) with single, childless
+   leaves (Burned above) in the same ring. The inner ring is coloured from
+   the sequential ramp (or its own `color`); deeper rings tint that
+   ancestor's colour toward `--sumi-surface` (`sunburstTint`) rather than
+   using unrelated colours. A segment gets an on-arc label only once
+   `labelFitsArc` says the wedge is wide/thick enough for it — every
+   segment still has its label/value/percentage in the `table` fallback
+   regardless (a flattened `Path`/`Value`/`%` row per segment, e.g.
+   `"Apprentice › Apprentice I"`).
+
    See `projects/showcase/src/app/pages/charts/charts.ts`/`.html` for all
-   eight components wired up against realistic example data (KPI tiles,
-   SRS distribution, a 30-session Elo sparkline, a 24h "coming up" chart
-   with the current hour highlighted, a stacked 7-day forecast, a 26-week
+   ten components wired up against realistic example data (KPI tiles, SRS
+   distribution, a 30-session Elo sparkline, a 24h "coming up" chart with
+   the current hour highlighted, a stacked 7-day forecast, a 26-week
    review calendar, a kana confidence matrix, a conjugation miss-rate
-   matrix and per-level coverage bars).
+   matrix, a katakana-reading outcome donut, a reviews-by-SRS-stage
+   sunburst and per-level coverage bars).
 
 5. Install the library's font, wanakana and chart maths packages as direct
    dependencies — they are `peerDependencies` here, so this repo expects
    the app to provide them:
 
    ```bash
-   npm install @fontsource/murecho @fontsource/zen-kaku-gothic-new @fontsource/ibm-plex-mono wanakana d3-scale d3-shape
+   npm install @fontsource/murecho @fontsource/zen-kaku-gothic-new @fontsource/ibm-plex-mono wanakana d3-scale d3-shape d3-hierarchy
    ```
 
 6. Load the fonts as their own, non-blocking stylesheet. `sumi.scss` (step 3) only pulls in tokens and base styles; the actual `@font-face` rules

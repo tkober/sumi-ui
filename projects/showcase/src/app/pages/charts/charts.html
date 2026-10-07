@@ -1,6 +1,6 @@
 <sumi-page
   title="Charts"
-  subtitle="Statistics components: stat tile, segmented bar, sparkline, bar chart, calendar and matrix heatmaps, legend, data table."
+  subtitle="Statistics components: stat tile, segmented bar, sparkline, bar chart, calendar and matrix heatmaps, donut, sunburst, legend, data table."
 >
   <section class="demo">
     <h2>Example data</h2>
@@ -107,6 +107,26 @@
       [format]="toPercent"
       [table]="true"
       noDataLabel="Not practised yet"
+    />
+  </section>
+
+  <section class="demo">
+    <h2>Katakana reading outcomes</h2>
+    <sumi-donut
+      ariaLabel="Katakana reading outcomes, last 244 answers"
+      [segments]="readingOutcomes"
+      unit="answers"
+      [table]="true"
+    />
+  </section>
+
+  <section class="demo">
+    <h2>Reviews by SRS stage</h2>
+    <sumi-sunburst
+      ariaLabel="Reviews by SRS stage and sub-stage"
+      [root]="reviewsBySrsStage"
+      unit="reviews"
+      [table]="true"
     />
   </section>
 

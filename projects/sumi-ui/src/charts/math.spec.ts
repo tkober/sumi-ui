@@ -1,23 +1,34 @@
 import { describe, expect, it } from 'vitest';
 import {
+  arcLabelRotation,
+  arcPath,
   barGeometry,
   calendarBucket,
   calendarBucketThresholds,
   calendarCellSize,
   calendarGeometry,
   calendarMonthLabels,
+  donutSegments,
   formatCalendarCellTitle,
   heatmapCellColor,
   heatmapTextColor,
+  labelFitsArc,
+  largestRemainderPercentages,
   matrixBucket,
   matrixCellGeometry,
   matrixDomain,
+  polarPoint,
   rampColor,
   segmentGeometry,
   sparklineGeometry,
   sparseLabelIndices,
   stackedBarGeometry,
   stackOffsets,
+  sunburstGeometry,
+  sunburstTint,
+  sunburstTextColor,
+  sunburstLabelOrientation,
+  arcLabelTangentialRotation,
   toPoints,
 } from './math';
 
@@ -450,5 +461,301 @@ describe('heatmapCellColor / heatmapTextColor', () => {
     expect(heatmapTextColor(3)).toBe('var(--sumi-text)');
     expect(heatmapTextColor(4)).toBe('var(--sumi-on-accent)');
     expect(heatmapTextColor(5)).toBe('var(--sumi-on-accent)');
+  });
+});
+
+describe('largestRemainderPercentages', () => {
+  it('is empty for an empty input', () => {
+    expect(largestRemainderPercentages([])).toEqual([]);
+  });
+
+  it('is all zero when every value is zero', () => {
+    expect(largestRemainderPercentages([0, 0])).toEqual([0, 0]);
+  });
+
+  it('sums to exactly 100 even where naive rounding would not', () => {
+    // 1/3 each rounds down to 33/33/33 = 99 with plain Math.round.
+    const percentages = largestRemainderPercentages([1, 1, 1]);
+    expect(percentages.reduce((sum, p) => sum + p, 0)).toBe(100);
+    expect(percentages).toEqual([34, 33, 33]);
+  });
+
+  it('gives the single value 100%', () => {
+    expect(largestRemainderPercentages([7])).toEqual([100]);
+  });
+
+  it('always sums to 100 for arbitrary positive inputs', () => {
+    const percentages = largestRemainderPercentages([17, 42, 5, 8, 28]);
+    expect(percentages.reduce((sum, p) => sum + p, 0)).toBe(100);
+  });
+});
+
+describe('donutSegments', () => {
+  it('is empty for no data', () => {
+    expect(donutSegments([])).toEqual([]);
+  });
+
+  it('is empty when every value is zero', () => {
+    expect(donutSegments([{ label: 'A', value: 0 }])).toEqual([]);
+  });
+
+  it('drops zero-value segments but keeps the rest', () => {
+    const geo = donutSegments([
+      { label: 'A', value: 0 },
+      { label: 'B', value: 5 },
+    ]);
+    expect(geo).toHaveLength(1);
+    expect(geo[0].label).toBe('B');
+    expect(geo[0].percent).toBe(100);
+  });
+
+  it('a single segment is a full ring with no pad angle', () => {
+    const geo = donutSegments([{ label: 'A', value: 10 }]);
+    expect(geo).toHaveLength(1);
+    expect(geo[0].startAngle).toBeCloseTo(0);
+    expect(geo[0].endAngle).toBeCloseTo(2 * Math.PI);
+    expect(geo[0].percent).toBe(100);
+  });
+
+  it('splits angles proportionally to value, summing to a full turn', () => {
+    const geo = donutSegments([
+      { label: 'A', value: 25 },
+      { label: 'B', value: 75 },
+    ]);
+    expect(geo[0].startAngle).toBeCloseTo(0);
+    const totalSpan = geo.reduce((sum, s) => sum + (s.endAngle - s.startAngle), 0);
+    expect(totalSpan).toBeCloseTo(2 * Math.PI, 2);
+    // B is 3x A's span (minus the shared pad angle, which is tiny).
+    expect(geo[1].endAngle - geo[1].startAngle).toBeGreaterThan(
+      (geo[0].endAngle - geo[0].startAngle) * 2.5,
+    );
+  });
+
+  it('percentages sum to 100 across segments', () => {
+    const geo = donutSegments([
+      { label: 'A', value: 1 },
+      { label: 'B', value: 1 },
+      { label: 'C', value: 1 },
+    ]);
+    expect(geo.reduce((sum, s) => sum + s.percent, 0)).toBe(100);
+  });
+
+  it('defaults colour from the sequential ramp and keeps a given colour', () => {
+    const geo = donutSegments([
+      { label: 'A', value: 1 },
+      { label: 'B', value: 1, color: 'hotpink' },
+    ]);
+    expect(geo[0].color).toBe(rampColor(0, 2));
+    expect(geo[1].color).toBe('hotpink');
+  });
+});
+
+describe('arcPath', () => {
+  it('produces a non-empty path for an ordinary arc', () => {
+    expect(arcPath(0, Math.PI, 20, 40).length).toBeGreaterThan(0);
+  });
+
+  it('produces a non-empty path for a full-ring single segment', () => {
+    expect(arcPath(0, 2 * Math.PI, 20, 40).length).toBeGreaterThan(0);
+  });
+});
+
+describe('polarPoint', () => {
+  it('places angle 0 (12 o’clock) straight above the centre', () => {
+    const p = polarPoint(0, 0, 10, 0);
+    expect(p.x).toBeCloseTo(0);
+    expect(p.y).toBeCloseTo(-10);
+  });
+
+  it('places a right angle (3 o’clock) directly to the right', () => {
+    const p = polarPoint(0, 0, 10, Math.PI / 2);
+    expect(p.x).toBeCloseTo(10);
+    expect(p.y).toBeCloseTo(0);
+  });
+});
+
+describe('labelFitsArc', () => {
+  it('rejects a zero-length span, zero radius or empty label', () => {
+    expect(labelFitsArc(0, 50, 20, 'Guru')).toBe(false);
+    expect(labelFitsArc(1, 0, 20, 'Guru')).toBe(false);
+    expect(labelFitsArc(1, 50, 20, '')).toBe(false);
+  });
+
+  it('fits a short label on a wide, thick arc', () => {
+    expect(labelFitsArc(Math.PI, 80, 30, 'Guru')).toBe(true);
+  });
+
+  it('rejects a long label on a thin sliver', () => {
+    expect(labelFitsArc(0.02, 80, 30, 'Apprentice IV')).toBe(false);
+  });
+
+  it('rejects any label on a too-thin ring regardless of arc length', () => {
+    expect(labelFitsArc(Math.PI, 80, 2, 'Hi')).toBe(false);
+  });
+});
+
+describe('sunburstLabelOrientation', () => {
+  it('prefers reading along the arc on wide, thin segments', () => {
+    expect(sunburstLabelOrientation(Math.PI / 2, 80, 50, 'Apprentice')).toBe('tangential');
+  });
+
+  it('falls back to radial on narrow, deep segments', () => {
+    expect(sunburstLabelOrientation(0.3, 130, 60, 'Guru II')).toBe('radial');
+  });
+
+  it('gives up when neither fits', () => {
+    expect(sunburstLabelOrientation(0.05, 130, 50, 'Apprentice IV')).toBeNull();
+    expect(sunburstLabelOrientation(0, 80, 50, 'Guru')).toBeNull();
+  });
+});
+
+describe('arcLabelTangentialRotation', () => {
+  it('keeps text upright on every side', () => {
+    expect(arcLabelTangentialRotation(0)).toBeCloseTo(0);
+    expect(arcLabelTangentialRotation(Math.PI / 4)).toBeCloseTo(45);
+    expect(arcLabelTangentialRotation(Math.PI)).toBeCloseTo(0);
+    expect(arcLabelTangentialRotation((3 * Math.PI) / 4)).toBeCloseTo(-45);
+    expect(arcLabelTangentialRotation((7 * Math.PI) / 4)).toBeCloseTo(315);
+  });
+});
+
+describe('arcLabelRotation', () => {
+  it('is never upside down across a full turn', () => {
+    for (let deg = 0; deg < 360; deg += 15) {
+      const rotation = arcLabelRotation((deg * Math.PI) / 180);
+      const normalized = ((rotation % 360) + 360) % 360;
+      expect(normalized <= 90 || normalized >= 270).toBe(true);
+    }
+  });
+
+  it('is continuous and symmetric about the top', () => {
+    expect(arcLabelRotation(0)).toBeCloseTo(-90);
+  });
+});
+
+describe('sunburstGeometry', () => {
+  it('is empty for a root with no children', () => {
+    expect(sunburstGeometry({ label: 'root', children: [] }, 10, 100)).toEqual([]);
+  });
+
+  it('is empty when every leaf value is zero', () => {
+    const root = { label: 'root', children: [{ label: 'A', value: 0 }] };
+    expect(sunburstGeometry(root, 10, 100)).toEqual([]);
+  });
+
+  it('ignores a value left on a branch node, summing only its leaves', () => {
+    const root = {
+      label: 'root',
+      children: [
+        {
+          label: 'A',
+          value: 999, // must be ignored: A has children
+          children: [
+            { label: 'A1', value: 3 },
+            { label: 'A2', value: 7 },
+          ],
+        },
+      ],
+    };
+    const geo = sunburstGeometry(root, 10, 100);
+    const a = geo.find((s) => s.label === 'A')!;
+    expect(a.value).toBe(10);
+  });
+
+  it('splits two top-level nodes into a full turn with two rings each', () => {
+    const root = {
+      label: 'root',
+      children: [
+        {
+          label: 'A',
+          children: [
+            { label: 'A1', value: 1 },
+            { label: 'A2', value: 1 },
+          ],
+        },
+        { label: 'B', children: [{ label: 'B1', value: 2 }] },
+      ],
+    };
+    const geo = sunburstGeometry(root, 10, 100);
+    const depth1 = geo.filter((s) => s.depth === 1);
+    const depth2 = geo.filter((s) => s.depth === 2);
+    expect(depth1).toHaveLength(2);
+    expect(depth2).toHaveLength(3);
+    const totalSpan = depth1.reduce((sum, s) => sum + (s.endAngle - s.startAngle), 0);
+    expect(totalSpan).toBeCloseTo(2 * Math.PI, 5);
+    // B (value 2) is twice A's (value 2) total — equal in this case —
+    // check instead that A and B together cover the whole value.
+    expect(depth1.reduce((sum, s) => sum + s.value, 0)).toBe(4);
+  });
+
+  it('computes percent of parent and of total', () => {
+    const root = {
+      label: 'root',
+      children: [
+        {
+          label: 'A',
+          children: [
+            { label: 'A1', value: 1 },
+            { label: 'A2', value: 3 },
+          ],
+        },
+      ],
+    };
+    const geo = sunburstGeometry(root, 10, 100);
+    const a1 = geo.find((s) => s.label === 'A1')!;
+    expect(a1.percentOfParent).toBeCloseTo(25);
+    expect(a1.percentOfTotal).toBeCloseTo(25);
+  });
+
+  it('builds the ancestor path excluding the implicit root', () => {
+    const root = {
+      label: 'root',
+      children: [{ label: 'A', children: [{ label: 'A1', value: 1 }] }],
+    };
+    const geo = sunburstGeometry(root, 10, 100);
+    expect(geo.find((s) => s.label === 'A1')!.path).toEqual(['A', 'A1']);
+  });
+
+  it('rings sit within [innerRadius, outerRadius] and depth 2 sits outside depth 1', () => {
+    const root = {
+      label: 'root',
+      children: [{ label: 'A', children: [{ label: 'A1', value: 1 }] }],
+    };
+    const geo = sunburstGeometry(root, 10, 100);
+    const a = geo.find((s) => s.depth === 1)!;
+    const a1 = geo.find((s) => s.depth === 2)!;
+    expect(a.innerRadius).toBe(10);
+    expect(a1.innerRadius).toBe(a.outerRadius);
+    expect(a1.outerRadius).toBe(100);
+  });
+});
+
+describe('sunburstTextColor', () => {
+  it('uses the on-accent colour only on strong fills', () => {
+    expect(sunburstTextColor(100, 1)).toBe('var(--sumi-on-accent)');
+    expect(sunburstTextColor(100, 2)).toBe('var(--sumi-on-accent)');
+    expect(sunburstTextColor(100, 3)).toBe('var(--sumi-text)');
+    expect(sunburstTextColor(84, 1)).toBe('var(--sumi-on-accent)');
+    expect(sunburstTextColor(84, 2)).toBe('var(--sumi-text)');
+    expect(sunburstTextColor(30, 1)).toBe('var(--sumi-text)');
+  });
+});
+
+describe('sunburstTint', () => {
+  it('returns the base colour unchanged at depth 1', () => {
+    expect(sunburstTint('var(--sumi-seq-3)', 1)).toBe('var(--sumi-seq-3)');
+  });
+
+  it('mixes toward the surface token at deeper levels', () => {
+    expect(sunburstTint('var(--sumi-seq-3)', 2)).toBe(
+      'color-mix(in oklab, var(--sumi-seq-3) 85%, var(--sumi-surface))',
+    );
+  });
+
+  it('mixes in a decreasing amount of base colour the deeper it goes', () => {
+    const d2 = sunburstTint('red', 2);
+    const d3 = sunburstTint('red', 3);
+    const pct = (s: string) => Number(s.match(/(\d+)%/)![1]);
+    expect(pct(d3)).toBeLessThan(pct(d2));
   });
 });

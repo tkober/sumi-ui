@@ -31,6 +31,17 @@ export {
   matrixCellGeometry,
   heatmapCellColor,
   heatmapTextColor,
+  largestRemainderPercentages,
+  donutSegments,
+  arcPath,
+  polarPoint,
+  labelFitsArc,
+  arcLabelRotation,
+  sunburstGeometry,
+  sunburstTint,
+  sunburstTextColor,
+  sunburstLabelOrientation,
+  arcLabelTangentialRotation,
   type SumiPoint,
   type SparklineGeometry,
   type SegmentGeometry,
@@ -42,6 +53,10 @@ export {
   type CalendarGeometry,
   type SumiMatrixCellInput,
   type MatrixCellGeometry,
+  type SumiDonutSegment,
+  type DonutSegmentGeometry,
+  type SumiSunburstNode,
+  type SunburstSegmentGeometry,
 } from './math';
 
 export { SumiStatTile } from './stat-tile/stat-tile';
@@ -59,6 +74,8 @@ export { SumiRampLegend } from './ramp-legend/ramp-legend';
 export { SumiDataTable, type SumiTableColumn, type SumiTableRow } from './data-table/data-table';
 export { SumiCalendarHeatmap } from './calendar-heatmap/calendar-heatmap';
 export { SumiMatrixHeatmap } from './matrix-heatmap/matrix-heatmap';
+export { SumiDonut } from './donut/donut';
+export { SumiSunburst } from './sunburst/sunburst';
 
 import { SumiStatTile } from './stat-tile/stat-tile';
 import { SumiStatGrid } from './stat-grid/stat-grid';
@@ -70,6 +87,8 @@ import { SumiRampLegend } from './ramp-legend/ramp-legend';
 import { SumiDataTable } from './data-table/data-table';
 import { SumiCalendarHeatmap } from './calendar-heatmap/calendar-heatmap';
 import { SumiMatrixHeatmap } from './matrix-heatmap/matrix-heatmap';
+import { SumiDonut } from './donut/donut';
+import { SumiSunburst } from './sunburst/sunburst';
 
 /** Convenience array for `imports: [...SUMI_CHARTS]` in a standalone component. */
 export const SUMI_CHARTS = [
@@ -83,4 +102,6 @@ export const SUMI_CHARTS = [
   SumiDataTable,
   SumiCalendarHeatmap,
   SumiMatrixHeatmap,
+  SumiDonut,
+  SumiSunburst,
 ] as const;

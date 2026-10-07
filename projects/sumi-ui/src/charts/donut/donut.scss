@@ -1,0 +1,98 @@
+:host {
+  display: block;
+}
+
+.sumi-donut__body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sumi-space-4);
+}
+
+// Legend sits beside the ring once the measured width leaves room for both
+// (see `isWide` in donut.ts) — an emulated-encapsulation host modifier
+// class, since a plain class on the template root cannot be targeted from
+// outside the component's own stylesheet.
+:host(.sumi-donut--wide) .sumi-donut__body {
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+}
+
+.sumi-donut__ring-wrap {
+  position: relative;
+  flex: none;
+}
+
+.sumi-donut__svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.sumi-donut__segment {
+  cursor: pointer;
+  // A thin surface-coloured seam between segments — colour is never the
+  // only thing separating two adjacent slices (see docs/concept.md's
+  // "Nie nur Farbe"), and it reads fine against either theme's surface.
+  stroke: var(--sumi-surface);
+  stroke-width: 1.5;
+  transition: filter 0.1s ease-out;
+
+  &:focus-visible {
+    outline: none;
+    filter: brightness(1.12);
+  }
+}
+
+.sumi-donut__segment--active {
+  filter: brightness(1.12);
+}
+
+.sumi-donut__empty {
+  opacity: 0.6;
+}
+
+.sumi-donut__center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  // Keeps long labels (a segment's own name, when hovered) from pushing
+  // past the ring's inner hole.
+  padding: 0 14%;
+  pointer-events: none;
+}
+
+.sumi-donut__center-value {
+  font-size: var(--sumi-text-xl);
+  font-weight: 600;
+  color: var(--sumi-text);
+  line-height: 1.1;
+}
+
+.sumi-donut__center-label {
+  font-size: var(--sumi-text-xs);
+  color: var(--sumi-muted);
+  overflow-wrap: break-word;
+}
+
+.sumi-donut__table {
+  margin-top: var(--sumi-space-2);
+}
+
+.sumi-donut__table summary {
+  cursor: pointer;
+  font-size: var(--sumi-text-sm);
+  color: var(--sumi-muted);
+}
+
+// Beside the ring the legend reads as a list; below it, it wraps in rows
+// with sumi-legend's own gaps.
+:host(.sumi-donut--wide) sumi-legend.sumi-donut__legend {
+  flex-direction: column;
+  max-width: 220px;
+}
