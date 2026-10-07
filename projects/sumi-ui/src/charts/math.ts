@@ -7,7 +7,14 @@
  * so a consumer's bundler can tree-shake the parts that go unused.
  */
 import { scaleBand, scaleLinear } from 'd3-scale';
-import { area as d3Area, curveMonotoneX, line as d3Line } from 'd3-shape';
+import {
+  arc as d3Arc,
+  area as d3Area,
+  curveMonotoneX,
+  line as d3Line,
+  pie as d3Pie,
+} from 'd3-shape';
+import { hierarchy, partition as d3Partition } from 'd3-hierarchy';
 
 /** A single {x, y} data point, as `sumi-sparkline` accepts besides a bare number array. */
 export interface SumiPoint {
@@ -710,4 +717,291 @@ export function heatmapCellColor(bucket: number): string {
  *  so steps 4 and 5 switch to `--sumi-on-accent` instead. */
 export function heatmapTextColor(bucket: number): string {
   return bucket >= 4 ? 'var(--sumi-on-accent)' : 'var(--sumi-text)';
+}
+
+// --- Donut and sunburst (sumi-donut, sumi-sunburst) ------------------------
+//
+// Both are angle-based "parts of a whole" charts built on `d3-shape`'s
+// `pie`/`arc` (donut: one ring) and `d3-hierarchy`'s `partition` (sunburst:
+// several concentric rings). Angles use d3's convention throughout this
+// file: 0 at 12 o'clock, increasing clockwise, matching `pie`/`arc`/
+// `partition`'s own output so no re-mapping is needed between them.
+
+/** One slice of `sumi-donut`'s `segments` input, same shape as
+ *  `sumi-segmented-bar`'s `SumiSegment`. */
+export interface SumiDonutSegment {
+  label: string;
+  value: number;
+  color?: string;
+}
+
+/** A resolved donut slice: angles (radians, d3 convention) plus the
+ *  rounded percentage and default colour. */
+export interface DonutSegmentGeometry {
+  label: string;
+  value: number;
+  color: string;
+  /** Rounded %, sums to exactly 100 across all segments (see
+   *  `largestRemainderPercentages`) — unlike naive per-segment rounding,
+   *  which can sum to 99 or 101. */
+  percent: number;
+  startAngle: number;
+  endAngle: number;
+  midAngle: number;
+}
+
+/** A small, fixed gap (radians) between adjacent donut/sunburst segments —
+ *  only meaningful with 2+ segments; a single segment is a full ring with
+ *  no gap to itself. Kept small enough that even the thinnest realistic
+ *  slice (a handful of percent) still reads as a wedge, not a sliver cut
+ *  in half by the pad. */
+const ARC_PAD_ANGLE = 0.02;
+
+/**
+ * Rounds `values`' shares of their total to whole percentages that sum to
+ * exactly 100 (the "largest remainder" / Hamilton method): every value is
+ * rounded down first, then the values whose rounded-down remainder was
+ * largest each get one more percentage point, as many as it takes to reach
+ * 100. Naive per-value `Math.round` can over- or undershoot 100 (e.g.
+ * three equal thirds round to 33/33/33 = 99). Returns `[]` for an empty or
+ * all-zero input.
+ */
+export function largestRemainderPercentages(values: readonly number[]): number[] {
+  const total = values.reduce((sum, value) => sum + value, 0);
+  if (values.length === 0 || total <= 0) {
+    return values.map(() => 0);
+  }
+  const raw = values.map((value) => (value / total) * 100);
+  const floors = raw.map((value) => Math.floor(value));
+  const used = floors.reduce((sum, value) => sum + value, 0);
+  let remainder = 100 - used;
+  const byFraction = raw
+    .map((value, index) => ({ index, fraction: value - Math.floor(value) }))
+    .sort((a, b) => b.fraction - a.fraction);
+  const result = [...floors];
+  for (let i = 0; remainder > 0 && i < byFraction.length; i++, remainder--) {
+    result[byFraction[i].index] += 1;
+  }
+  return result;
+}
+
+/**
+ * Resolves `sumi-donut`'s `segments` into angle geometry via `d3-shape`'s
+ * `pie`. Zero-value segments are dropped (same as `segmentGeometry`).
+ * Edge cases:
+ *
+ * - no data (empty input, or every value <= 0): `[]`.
+ * - a single segment: a full ring (`startAngle` 0, `endAngle` 2π), no pad
+ *   angle (there is no neighbour to pad against).
+ */
+export function donutSegments(segments: readonly SumiDonutSegment[]): DonutSegmentGeometry[] {
+  const nonZero = segments.filter((segment) => segment.value > 0);
+  if (nonZero.length === 0) {
+    return [];
+  }
+  const percentages = largestRemainderPercentages(nonZero.map((segment) => segment.value));
+  const pie = d3Pie<SumiDonutSegment>()
+    .value((segment) => segment.value)
+    .sort(null)
+    .padAngle(nonZero.length > 1 ? ARC_PAD_ANGLE : 0);
+  const arcs = pie(nonZero);
+  return arcs.map((arc, index) => ({
+    label: nonZero[index].label,
+    value: nonZero[index].value,
+    color: nonZero[index].color ?? rampColor(index, nonZero.length),
+    percent: percentages[index],
+    startAngle: arc.startAngle,
+    endAngle: arc.endAngle,
+    midAngle: (arc.startAngle + arc.endAngle) / 2,
+  }));
+}
+
+/** The SVG path `d` for one donut/sunburst arc, via `d3-shape`'s `arc`.
+ *  A tiny `cornerRadius` softens the cut between adjacent segments without
+ *  rounding a lone full ring into anything visibly different. */
+export function arcPath(
+  startAngle: number,
+  endAngle: number,
+  innerRadius: number,
+  outerRadius: number,
+  padAngle = 0,
+): string {
+  const generator = d3Arc().cornerRadius(1);
+  return (
+    generator({
+      startAngle,
+      endAngle,
+      innerRadius,
+      outerRadius,
+      padAngle,
+    }) ?? ''
+  );
+}
+
+/** A point on a circle of `radius` around `(cx, cy)` at `angle` (radians,
+ *  d3 convention: 0 at 12 o'clock, clockwise) — used to position donut/
+ *  sunburst labels and hit-test-free hover targets along an arc's
+ *  midpoint. */
+export function polarPoint(cx: number, cy: number, radius: number, angle: number): SumiPoint {
+  return { x: cx + radius * Math.sin(angle), y: cy - radius * Math.cos(angle) };
+}
+
+// Rough average glyph width/line height at `--sumi-text-xs` (12px), good
+// enough for a fits/doesn't-fit decision — not pixel-exact typesetting.
+const LABEL_CHAR_WIDTH = 6;
+const LABEL_LINE_HEIGHT = 11;
+
+/**
+ * Whether a label of `label.length` characters has room on an arc
+ * spanning `angleSpan` radians at `radius`, `ringThickness` wide: both the
+ * arc length (at the segment's mid-radius) and the ring's radial
+ * thickness need to exceed the label's estimated footprint. Segments that
+ * fail this stay unlabelled on the chart itself — never cut a label short
+ * or shrink it below the base font size — and still get their label/value/
+ * percent in the legend and table fallback.
+ */
+export function labelFitsArc(
+  angleSpan: number,
+  radius: number,
+  ringThickness: number,
+  label: string,
+): boolean {
+  if (angleSpan <= 0 || radius <= 0 || label.length === 0) {
+    return false;
+  }
+  const arcLength = angleSpan * radius;
+  return arcLength >= label.length * LABEL_CHAR_WIDTH && ringThickness >= LABEL_LINE_HEIGHT;
+}
+
+/**
+ * Rotation (degrees) for a label centred at `midAngle` (radians, d3
+ * convention), meant to be applied as a single `rotate(...)` on a `<text>`
+ * already translated to its position (e.g. via `polarPoint`): the label
+ * reads outward from the centre (radial), flipped 180° on the left half of
+ * the circle so it never renders upside down. Same recipe as d3's
+ * "zoomable sunburst" example (`rotate(x - 90) ... rotate(x < 180 ? 0 :
+ * 180)`, collapsed into the one rotation this function returns).
+ */
+export function arcLabelRotation(midAngle: number): number {
+  const deg = (midAngle * 180) / Math.PI;
+  const normalized = ((deg % 360) + 360) % 360;
+  return normalized - 90 + (normalized < 180 ? 0 : 180);
+}
+
+/** One node of `sumi-sunburst`'s `root` input: a label, an optional value
+ *  (ignored — and unnecessary — on a node that has `children`, since its
+ *  value is the sum of its descendants' values) and optional colour
+ *  (top-level nodes only; see `sunburstGeometry`). */
+export interface SumiSunburstNode {
+  label: string;
+  value?: number;
+  color?: string;
+  children?: SumiSunburstNode[];
+}
+
+/** A resolved sunburst segment: one ring wedge, with its ancestor path for
+ *  the table fallback. */
+export interface SunburstSegmentGeometry {
+  label: string;
+  value: number;
+  color: string;
+  /** 1 = innermost ring (a `root.children` entry), 2 = its children, … */
+  depth: number;
+  startAngle: number;
+  endAngle: number;
+  midAngle: number;
+  innerRadius: number;
+  outerRadius: number;
+  percentOfParent: number;
+  percentOfTotal: number;
+  /** Ancestor labels from the top level down to and including this
+   *  segment, e.g. `['Guru', 'Guru II']`. */
+  path: string[];
+}
+
+/**
+ * Partitions `root` into ring geometry via `d3-hierarchy`'s `hierarchy` +
+ * `partition`: angle (`x0`/`x1`) comes from each node's share of its
+ * parent's value, radius (`y0`/`y1`) from its depth, both already in the
+ * `[0, 2π]` / `[0, outerRadius - innerRadius]` ranges `arcPath`/
+ * `polarPoint` expect. `root` itself is never rendered as a segment (it is
+ * the implicit "whole"); its direct children become the innermost ring.
+ *
+ * A node's value is the sum of its own leaves' values — `sum()` only
+ * counts a node that has no `children`, so a branch's displayed value is
+ * always its children's total and can never silently double-count a
+ * `value` left over on a node that also has `children`. Colour: a
+ * top-level node (depth 1) uses its own `color`, defaulting to `rampColor`
+ * over its siblings; every deeper node tints that ancestor's colour via
+ * `sunburstTint`. Returns `[]` for an empty hierarchy (no children, or
+ * every leaf value <= 0).
+ */
+export function sunburstGeometry(
+  root: SumiSunburstNode,
+  innerRadius: number,
+  outerRadius: number,
+): SunburstSegmentGeometry[] {
+  const node = hierarchy<SumiSunburstNode>(root, (d) => d.children);
+  node.sum((d) => (d.children && d.children.length > 0 ? 0 : (d.value ?? 0)));
+  const total = node.value ?? 0;
+  if (total <= 0) {
+    return [];
+  }
+  // Only the angles (`x0`/`x1`) come from `d3-hierarchy`'s `partition` —
+  // it is the one piece of maths worth pulling in `d3-hierarchy` for,
+  // since it splits each node's angular span by its *own* share of its
+  // *parent's* value (nested percentages), not just of the grand total.
+  // Its radii (`y0`/`y1`) are not used: by default `partition` gives the
+  // root its own non-zero band (an `outerRadius - innerRadius` split into
+  // `maxDepth + 1` equal bands, one wasted on the invisible root), so ring
+  // radii are computed directly below instead, one equal-thickness ring
+  // per depth level from `innerRadius` to `outerRadius`.
+  d3Partition<SumiSunburstNode>().size([2 * Math.PI, 1])(node);
+  const maxDepth = node.height;
+  const ringThickness = (outerRadius - innerRadius) / maxDepth;
+
+  const topLevel = root.children ?? [];
+  return node
+    .descendants()
+    .filter((d) => d.depth > 0)
+    .map((d) => {
+      const topAncestor = d.ancestors().find((a) => a.depth === 1)!;
+      const topIndex = topLevel.indexOf(topAncestor.data);
+      const baseColor = topAncestor.data.color ?? rampColor(topIndex, Math.max(1, topLevel.length));
+      const value = d.value ?? 0;
+      const parentValue = d.parent?.value ?? total;
+      return {
+        label: d.data.label,
+        value,
+        color: sunburstTint(baseColor, d.depth),
+        depth: d.depth,
+        startAngle: d.x0 ?? 0,
+        endAngle: d.x1 ?? 0,
+        midAngle: ((d.x0 ?? 0) + (d.x1 ?? 0)) / 2,
+        innerRadius: innerRadius + (d.depth - 1) * ringThickness,
+        outerRadius: innerRadius + d.depth * ringThickness,
+        percentOfParent: parentValue > 0 ? (value / parentValue) * 100 : 0,
+        percentOfTotal: (value / total) * 100,
+        path: d
+          .ancestors()
+          .reverse()
+          .slice(1)
+          .map((a) => a.data.label),
+      };
+    });
+}
+
+/** `baseColor` (a top-level sunburst segment's colour) tinted for a
+ *  descendant `depth` levels deep: `color-mix(in oklab, ...)` toward
+ *  `--sumi-surface`, the same mix direction `_tokens.scss`'s `--sumi-seq-*`
+ *  ramp already uses — so a child reads as a lighter/darker step of its
+ *  parent in both themes (surface is near-white in light mode, near-black
+ *  in dark mode) without any per-theme branching here. `depth <= 1`
+ *  (the top level itself) is returned unchanged. */
+export function sunburstTint(baseColor: string, depth: number): string {
+  if (depth <= 1) {
+    return baseColor;
+  }
+  const retained = Math.max(35, 85 - (depth - 2) * 25);
+  return `color-mix(in oklab, ${baseColor} ${retained}%, var(--sumi-surface))`;
 }
