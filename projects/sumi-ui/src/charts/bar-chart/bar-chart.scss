@@ -13,7 +13,7 @@
 .sumi-bar-chart__max {
   font-family: var(--sumi-font-ui);
   font-variant-numeric: tabular-nums;
-  font-size: 11px;
+  font-size: var(--sumi-text-xs);
   fill: var(--sumi-muted);
 }
 
@@ -28,7 +28,7 @@
 .sumi-bar-chart__label {
   font-family: var(--sumi-font-ui);
   font-variant-numeric: tabular-nums;
-  font-size: 10px;
+  font-size: var(--sumi-text-xs);
   fill: var(--sumi-muted);
 }
 
