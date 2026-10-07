@@ -1,0 +1,74 @@
+// `sumi-segmented-control` is a component (not a directive + class), so it
+// styles itself via `:host` under default `ViewEncapsulation` — see the
+// issue's "composite controls are components" decision.
+
+:host {
+  display: inline-flex;
+
+  > div {
+    display: inline-flex;
+    gap: 2px;
+    padding: 2px;
+    border-radius: var(--sumi-radius-sm);
+    background: var(--sumi-sunken);
+  }
+}
+
+.sumi-segmented-control__option {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.5rem;
+  height: 2.5rem;
+  padding: 0 var(--sumi-space-3);
+  border: none;
+  border-radius: var(--sumi-radius-sm);
+  background: transparent;
+  color: var(--sumi-text-2);
+  font-family: var(--sumi-font-ui);
+  font-size: var(--sumi-text-md);
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease;
+
+  &:hover {
+    background: var(--sumi-surface);
+  }
+
+  &--selected {
+    background: var(--sumi-accent);
+    color: var(--sumi-on-accent);
+
+    &:hover {
+      background: var(--sumi-accent);
+    }
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+@media (pointer: coarse) {
+  .sumi-segmented-control__option {
+    min-height: 44px;
+  }
+}
+
+// Full width on narrow screens, per docs/concept.md's "Daumen zuerst".
+@media (max-width: 480px) {
+  :host {
+    display: flex;
+    width: 100%;
+
+    > div {
+      width: 100%;
+    }
+  }
+
+  .sumi-segmented-control__option {
+    flex: 1;
+  }
+}

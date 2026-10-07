@@ -1,9 +1,18 @@
 /**
- * Layout area: `sumi-app-shell`, the app switcher and other page scaffolding.
+ * Layout area: `sumi-card`, `sumi-banner`, `sumi-badge` and other page
+ * scaffolding, see docs/concept.md.
  *
- * This is a placeholder entry point. A follow-up issue adds the real
- * components described in docs/concept.md.
+ * `sumi-app-shell` and the app switcher are a follow-up issue; this one
+ * covers the general-purpose layout building blocks.
  */
 
-/** Marks that the layout area has been wired up; replaced by real exports later. */
-export const SUMI_LAYOUT_PLACEHOLDER = 'layout';
+export { SumiCard } from './card/card';
+export { SumiBanner, type SumiBannerTone } from './banner/banner';
+export { SumiBadge, type SumiBadgeTone } from './badge/badge';
+
+import { SumiCard } from './card/card';
+import { SumiBanner } from './banner/banner';
+import { SumiBadge } from './badge/badge';
+
+/** Convenience array for `imports: [...SUMI_LAYOUT]` in a standalone component. */
+export const SUMI_LAYOUT = [SumiCard, SumiBanner, SumiBadge] as const;

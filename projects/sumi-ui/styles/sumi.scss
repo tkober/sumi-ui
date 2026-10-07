@@ -14,3 +14,15 @@
 // fonts are a progressive enhancement, not a dependency of first paint.
 @use 'tokens';
 @use 'base';
+
+// Opt-in component styles, scoped to their `.sumi-*` classes only (see
+// `projects/sumi-ui/src/forms/*.ts` for the directives that add them and
+// docs/concept.md for the components themselves). Forwarding them here
+// means `@use 'sumi-ui/projects/sumi-ui/styles/sumi'` keeps being the only
+// `@use` an app needs.
+@use 'components/button';
+@use 'components/input';
+@use 'components/select';
+@use 'components/textarea';
+@use 'components/slider';
+@use 'components/kbd';

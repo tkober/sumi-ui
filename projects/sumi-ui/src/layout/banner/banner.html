@@ -1,0 +1,41 @@
+<span class="sumi-banner__icon" aria-hidden="true">
+  @switch (tone()) {
+    @case ('error') {
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="10" cy="10" r="8" />
+        <path d="M10 6v5" stroke-linecap="round" />
+        <circle cx="10" cy="14" r="0.5" fill="currentColor" stroke="none" />
+      </svg>
+    }
+    @case ('success') {
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="10" cy="10" r="8" />
+        <path d="M6.5 10.5l2.5 2.5 4.5-5.5" stroke-linecap="round" stroke-linejoin="round" />
+      </svg>
+    }
+    @case ('notice') {
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M10 3l8 14H2z" stroke-linejoin="round" />
+        <path d="M10 8.5v3.5" stroke-linecap="round" />
+        <circle cx="10" cy="15" r="0.5" fill="currentColor" stroke="none" />
+      </svg>
+    }
+    @default {
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="10" cy="10" r="8" />
+        <path d="M10 9v4.5" stroke-linecap="round" />
+        <circle cx="10" cy="6" r="0.5" fill="currentColor" stroke="none" />
+      </svg>
+    }
+  }
+</span>
+<div class="sumi-banner__text">
+  <ng-content></ng-content>
+</div>
+@if (dismissible()) {
+  <button type="button" class="sumi-banner__dismiss" aria-label="Dismiss" (click)="dismiss.emit()">
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M5 5l10 10M15 5L5 15" stroke-linecap="round" />
+    </svg>
+  </button>
+}

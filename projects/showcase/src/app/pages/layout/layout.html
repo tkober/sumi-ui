@@ -1,9 +1,42 @@
 <section>
   <h1>Layout</h1>
-  <p>
-    <code>sumi-app-shell</code>, the app switcher and other page scaffolding. Placeholder for now.
-  </p>
-  <p>
-    Area: <code>{{ placeholder }}</code>
-  </p>
+  <p><code>sumi-card</code>, <code>sumi-banner</code> and <code>sumi-badge</code>.</p>
+</section>
+
+<section>
+  <h2>Card</h2>
+  <div class="row">
+    <sumi-card class="card-demo">Plain card with just body content.</sumi-card>
+    <sumi-card class="card-demo" [interactive]="true">Interactive card (hover me).</sumi-card>
+    <sumi-card class="card-demo">
+      <div sumiCardHeader><strong>Header</strong></div>
+      Body content between header and footer.
+      <div sumiCardFooter>
+        <button type="button" sumiButton variant="primary" size="sm">Action</button>
+      </div>
+    </sumi-card>
+  </div>
+</section>
+
+<section>
+  <h2>Banner</h2>
+  @for (tone of bannerTones; track tone) {
+    @if (!dismissed()[tone]) {
+      <sumi-banner [tone]="tone" [dismissible]="tone === 'notice'" (dismiss)="dismiss(tone)">
+        This is a {{ tone }} banner.
+      </sumi-banner>
+    }
+  }
+  <button type="button" sumiButton size="sm" (click)="restoreBanners()">Restore dismissed</button>
+</section>
+
+<section>
+  <h2>Badge</h2>
+  <div class="row">
+    <sumi-badge tone="neutral">Neutral</sumi-badge>
+    <sumi-badge tone="accent">Accent</sumi-badge>
+    <sumi-badge tone="correct">42 correct</sumi-badge>
+    <sumi-badge tone="wrong">7 wrong</sumi-badge>
+    <sumi-badge tone="retry">3 retry</sumi-badge>
+  </div>
 </section>

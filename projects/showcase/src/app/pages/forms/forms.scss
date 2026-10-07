@@ -1,0 +1,22 @@
+section {
+  margin-bottom: var(--sumi-space-8);
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sumi-space-3);
+  margin-bottom: var(--sumi-space-3);
+}
+
+input,
+select,
+textarea {
+  max-width: 260px;
+}
+
+textarea {
+  width: 100%;
+  max-width: 420px;
+}

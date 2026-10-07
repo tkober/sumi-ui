@@ -1,0 +1,20 @@
+// `.sumi-textarea`: styling for `textarea[sumiTextarea]` (see
+// `SumiTextareaDirective`). Independent of `SumiSubmitOnEnterDirective`,
+// which only changes keyboard behaviour and carries no styling of its own.
+@use 'input';
+
+.sumi-textarea {
+  @include input.sumi-field-base;
+
+  height: auto;
+  min-height: 2.5rem;
+  padding: var(--sumi-space-2) var(--sumi-space-3);
+  line-height: 1.5;
+  resize: vertical;
+}
+
+@media (pointer: coarse) {
+  .sumi-textarea {
+    min-height: 44px;
+  }
+}

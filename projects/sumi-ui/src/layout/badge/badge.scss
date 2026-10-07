@@ -1,0 +1,35 @@
+:host {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sumi-space-1);
+  padding: 0.15em 0.6em;
+  border-radius: var(--sumi-radius-pill);
+  background: var(--sumi-sunken);
+  color: var(--sumi-text-2);
+  font-family: var(--sumi-font-ui);
+  font-size: var(--sumi-text-xs);
+  line-height: 1.4;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+:host(.sumi-badge--accent) {
+  background: var(--sumi-accent-soft);
+  color: var(--sumi-accent-ink);
+}
+
+:host(.sumi-badge--correct) {
+  background: var(--sumi-correct-soft);
+  color: var(--sumi-correct);
+}
+
+:host(.sumi-badge--wrong) {
+  background: var(--sumi-wrong-soft);
+  color: var(--sumi-wrong);
+}
+
+:host(.sumi-badge--retry) {
+  background: var(--sumi-retry-soft);
+  color: var(--sumi-retry);
+}

@@ -1,0 +1,15 @@
+<button
+  type="button"
+  role="switch"
+  class="sumi-toggle__control"
+  [class.sumi-toggle__control--on]="value()"
+  [attr.aria-checked]="value()"
+  [attr.aria-labelledby]="labelId"
+  [disabled]="isDisabled()"
+  (click)="toggle()"
+>
+  <span class="sumi-toggle__thumb"></span>
+</button>
+<span class="sumi-toggle__label" [id]="labelId" (click)="toggle()">
+  <ng-content></ng-content>
+</span>
