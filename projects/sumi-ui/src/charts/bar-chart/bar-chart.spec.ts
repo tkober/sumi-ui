@@ -80,6 +80,23 @@ describe('SumiBarChart', () => {
     expect(rects.length).toBe(4); // 2 rows * 2 series
   });
 
+  it('gives each stacked series its own fill, inline so no shared class wins the cascade', () => {
+    const fixture = setup();
+    fixture.componentInstance.bars.set(undefined);
+    fixture.componentInstance.rows.set([{ label: 'Mon', values: { a: 2, b: 3 } }]);
+    fixture.componentInstance.series.set([
+      { key: 'a', label: 'A', color: 'red' },
+      { key: 'b', label: 'B', color: 'blue' },
+    ]);
+    fixture.detectChanges();
+    const rects = [
+      ...fixture.nativeElement.querySelectorAll('rect.sumi-bar-chart__bar'),
+    ] as HTMLElement[];
+    expect(rects.length).toBe(2);
+    expect(rects[0].style.fill).toBe('red');
+    expect(rects[1].style.fill).toBe('blue');
+  });
+
   it('renders the table toggle with one row per bar', () => {
     const fixture = setup();
     fixture.componentInstance.table.set(true);

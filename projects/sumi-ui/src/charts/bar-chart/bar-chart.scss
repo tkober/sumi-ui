@@ -5,12 +5,15 @@
 .sumi-bar-chart__svg {
   display: block;
   width: 100%;
-  height: auto;
+  /* height is set per-instance via [style.height.px] in the template, kept
+     fixed in real px regardless of width (see bar-chart.ts's observeWidth
+     usage) so axis text/bars never stretch at a wide container. */
 }
 
 .sumi-bar-chart__max {
-  font-family: var(--sumi-font-mono);
-  font-size: 10px;
+  font-family: var(--sumi-font-ui);
+  font-variant-numeric: tabular-nums;
+  font-size: 11px;
   fill: var(--sumi-muted);
 }
 
@@ -23,15 +26,15 @@
 }
 
 .sumi-bar-chart__label {
-  font-family: var(--sumi-font-mono);
-  font-size: 8px;
+  font-family: var(--sumi-font-ui);
+  font-variant-numeric: tabular-nums;
+  font-size: 10px;
   fill: var(--sumi-muted);
 }
 
 .sumi-bar-chart__baseline {
   stroke: var(--sumi-line);
   stroke-width: 1;
-  vector-effect: non-scaling-stroke;
 }
 
 .sumi-bar-chart__table {

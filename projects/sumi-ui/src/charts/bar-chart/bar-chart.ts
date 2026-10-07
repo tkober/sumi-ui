@@ -1,12 +1,22 @@
-import { Component, computed, input } from '@angular/core';
 import {
-  DEFAULT_BAR_PLOT,
+  Component,
+  DestroyRef,
+  ElementRef,
+  afterNextRender,
+  computed,
+  inject,
+  input,
+  signal,
+} from '@angular/core';
+import {
   barGeometry,
+  rampColor,
   sparseLabelIndices,
   stackedBarGeometry,
   type PlotBox,
 } from '../math';
 import { SumiDataTable, type SumiTableColumn, type SumiTableRow } from '../data-table/data-table';
+import { observeWidth } from '../util/observe-width';
 
 export interface SumiBar {
   label: string;
@@ -25,14 +35,11 @@ export interface SumiStackedRow {
   values: Record<string, number>;
 }
 
-const SEQ_RAMP = [
-  'var(--sumi-seq-0)',
-  'var(--sumi-seq-1)',
-  'var(--sumi-seq-2)',
-  'var(--sumi-seq-3)',
-  'var(--sumi-seq-4)',
-  'var(--sumi-seq-5)',
-];
+const FALLBACK_WIDTH = 320;
+const DEFAULT_HEIGHT = 160;
+/** Fixed padding in real px, reserved for the max-value callout, the
+ *  x-axis labels and the baseline — never scaled, see `observeWidth`. */
+const PAD = { top: 20, right: 8, bottom: 20, left: 8 };
 
 /**
  * Vertical bars over time (e.g. a 24h "coming up" forecast, or days). Plain
@@ -41,6 +48,13 @@ const SEQ_RAMP = [
  * series, coloured from the `--sumi-seq-*` ramp (e.g. a 7-day forecast by
  * SRS stage). The max value is called out top-left, like kanji-trainer's
  * dashboard; `labelEvery` thins the x-axis labels so they do not collide.
+ *
+ * The chart's width tracks its container via `ResizeObserver` (see
+ * `../util/observe-width.ts`) but `height` is a fixed, real pixel value —
+ * the `viewBox` is always built from the *measured* width, so 1 SVG unit is
+ * 1 CSS px and axis text/bars never stretch at a wide or narrow container,
+ * unlike a `viewBox` with an arbitrary design-time width left to scale with
+ * `preserveAspectRatio`.
  *
  * ```html
  * <sumi-bar-chart ariaLabel="Reviews arriving per hour" [bars]="hourly" [labelEvery]="6" />
@@ -66,7 +80,26 @@ export class SumiBarChart {
   readonly series = input<readonly SumiBarSeries[]>();
   readonly labelEvery = input(1);
   readonly table = input(false);
-  readonly plot = input<PlotBox>(DEFAULT_BAR_PLOT);
+  /** Fixed chart height in real px (the width always tracks the container). */
+  readonly height = input(DEFAULT_HEIGHT);
+
+  private readonly hostRef = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly destroyRef = inject(DestroyRef);
+  protected readonly measuredWidth = signal(FALLBACK_WIDTH);
+
+  constructor() {
+    afterNextRender(() => {
+      observeWidth(this.hostRef.nativeElement, this.destroyRef, (width) =>
+        this.measuredWidth.set(width),
+      );
+    });
+  }
+
+  protected readonly plot = computed<PlotBox>(() => ({
+    width: this.measuredWidth(),
+    height: this.height(),
+    ...PAD,
+  }));
 
   protected readonly stacked = computed(() => !!this.rows() && !!this.series()?.length);
 
@@ -78,7 +111,7 @@ export class SumiBarChart {
 
   protected readonly stackedBars = computed(() => {
     const series = this.series() ?? [];
-    const colors = series.map((s, i) => s.color ?? SEQ_RAMP[i % SEQ_RAMP.length]);
+    const colors = series.map((s, i) => s.color ?? rampColor(i, series.length));
     return stackedBarGeometry(
       this.rows() ?? [],
       series.map((s) => s.key),
@@ -116,12 +149,6 @@ export class SumiBarChart {
     }
     return { anchor: 'middle', x: x + width / 2 };
   }
-
-  protected readonly columnLabels = computed(() =>
-    this.stacked()
-      ? (this.rows() ?? []).map((r) => r.label)
-      : (this.bars() ?? []).map((b) => b.label),
-  );
 
   protected readonly tableColumns = computed<SumiTableColumn[]>(() => {
     if (this.stacked()) {

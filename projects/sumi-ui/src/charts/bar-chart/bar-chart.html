@@ -1,11 +1,12 @@
 <svg
   class="sumi-bar-chart__svg"
   [attr.viewBox]="'0 0 ' + plot().width + ' ' + plot().height"
+  [style.height.px]="height()"
   preserveAspectRatio="xMidYMid meet"
   role="img"
   [attr.aria-label]="ariaLabel()"
 >
-  <text class="sumi-bar-chart__max" x="0" [attr.y]="plot().top - 4">{{ maxValue() }}</text>
+  <text class="sumi-bar-chart__max" x="0" [attr.y]="plot().top - 6">{{ maxValue() }}</text>
 
   @if (!stacked()) {
     @for (bar of singleBars(); track bar.label; let i = $index) {
@@ -24,7 +25,7 @@
         <text
           class="sumi-bar-chart__label"
           [attr.x]="pos.x"
-          [attr.y]="plot().height - 4"
+          [attr.y]="plot().height - 6"
           [attr.text-anchor]="pos.anchor"
         >
           {{ bar.label }}
@@ -40,7 +41,7 @@
           [attr.y]="segment.y"
           [attr.width]="column.width"
           [attr.height]="segment.height"
-          [attr.fill]="segment.color"
+          [style.fill]="segment.color"
         >
           <title>{{ column.label }} / {{ segment.key }}: {{ segment.value }}</title>
         </rect>
@@ -50,7 +51,7 @@
         <text
           class="sumi-bar-chart__label"
           [attr.x]="pos.x"
-          [attr.y]="plot().height - 4"
+          [attr.y]="plot().height - 6"
           [attr.text-anchor]="pos.anchor"
         >
           {{ column.label }}
