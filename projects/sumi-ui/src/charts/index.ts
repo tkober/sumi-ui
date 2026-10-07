@@ -18,6 +18,7 @@ export {
   stackedBarGeometry,
   stackOffsets,
   sparseLabelIndices,
+  rampColor,
   DEFAULT_BAR_PLOT,
   type SumiPoint,
   type SparklineGeometry,

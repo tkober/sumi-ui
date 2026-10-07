@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   barGeometry,
+  rampColor,
   segmentGeometry,
   sparklineGeometry,
   sparseLabelIndices,
@@ -54,9 +55,10 @@ describe('sparklineGeometry', () => {
     expect(geo.max).toBe(100);
   });
 
-  it("places the last point at the series maximum's x", () => {
+  it('places the last point near the right edge, inset so its dot/stroke never clips', () => {
     const geo = sparklineGeometry([1, 2, 3, 2, 1], 240, 64);
-    expect(geo.last.x).toBeCloseTo(240);
+    expect(geo.last.x).toBeLessThan(240);
+    expect(geo.last.x).toBeGreaterThan(230);
   });
 
   it('reports min/max across the series', () => {
@@ -92,18 +94,47 @@ describe('segmentGeometry', () => {
     expect(segmentGeometry([{ label: 'a', value: 0 }])).toEqual([]);
   });
 
-  it('assigns colours from the sequential ramp in order when none is given', () => {
+  it('spreads default colours over seq-1..seq-5, skipping the near-invisible seq-0', () => {
     const segs = segmentGeometry([
       { label: 'a', value: 1 },
       { label: 'b', value: 1 },
     ]);
-    expect(segs[0].color).toBe('var(--sumi-seq-0)');
-    expect(segs[1].color).toBe('var(--sumi-seq-1)');
+    expect(segs[0].color).toBe('var(--sumi-seq-1)');
+    expect(segs[1].color).toBe('var(--sumi-seq-5)');
   });
 
   it('keeps an explicit colour over the ramp default', () => {
     const segs = segmentGeometry([{ label: 'a', value: 1, color: '#ff0000' }]);
     expect(segs[0].color).toBe('#ff0000');
+  });
+});
+
+describe('rampColor', () => {
+  it('uses the strongest step for a single item', () => {
+    expect(rampColor(0, 1)).toBe('var(--sumi-seq-5)');
+  });
+
+  it('spreads two items across the full range', () => {
+    expect(rampColor(0, 2)).toBe('var(--sumi-seq-1)');
+    expect(rampColor(1, 2)).toBe('var(--sumi-seq-5)');
+  });
+
+  it('uses every step in order for five items', () => {
+    expect([0, 1, 2, 3, 4].map((i) => rampColor(i, 5))).toEqual([
+      'var(--sumi-seq-1)',
+      'var(--sumi-seq-2)',
+      'var(--sumi-seq-3)',
+      'var(--sumi-seq-4)',
+      'var(--sumi-seq-5)',
+    ]);
+  });
+
+  it('never returns seq-0', () => {
+    for (let count = 1; count <= 6; count++) {
+      for (let i = 0; i < count; i++) {
+        expect(rampColor(i, count)).not.toBe('var(--sumi-seq-0)');
+      }
+    }
   });
 });
 
@@ -143,16 +174,36 @@ describe('barGeometry', () => {
 });
 
 describe('stackedBarGeometry', () => {
-  it("stacks segment offsets by each column's own total", () => {
+  it("stacks segment offsets by each column's own total, with a gap between segments", () => {
     const plot = { width: 100, height: 100, top: 0, right: 0, bottom: 0, left: 0 };
     const rows = [{ label: 'day1', values: { a: 2, b: 2 } }];
     const geo = stackedBarGeometry(rows, ['a', 'b'], ['red', 'blue'], plot);
     expect(geo).toHaveLength(1);
     expect(geo[0].total).toBe(4);
-    // 'a' sits at the bottom, 'b' stacks above it.
+    // 'a' sits at the bottom, 'b' stacks above it, with a visible gap
+    // between them rather than touching edges (see STACK_GAP in math.ts).
     const [segA, segB] = geo[0].segments;
-    expect(segA.y + segA.height).toBeCloseTo(100);
-    expect(segB.y + segB.height).toBeCloseTo(segA.y);
+    // SVG y grows downward: 'a' is the bottom segment (larger y), 'b' stacks
+    // above it (smaller y) — so segB ends (y + height) above where segA
+    // begins, with a visible gap between the two, and segA itself does not
+    // quite reach the very bottom edge.
+    expect(segA.y + segA.height).toBeLessThan(100);
+    expect(segB.y + segB.height).toBeLessThan(segA.y);
+  });
+
+  it('gives every series its own colour, matched by index, not a single shared fill', () => {
+    const plot = { width: 100, height: 100, top: 0, right: 0, bottom: 0, left: 0 };
+    const rows = [{ label: 'day1', values: { a: 1, b: 1, c: 1 } }];
+    const geo = stackedBarGeometry(rows, ['a', 'b', 'c'], ['red', 'green', 'blue'], plot);
+    const colors = geo[0].segments.map((s) => s.color);
+    expect(colors).toEqual(['red', 'green', 'blue']);
+    expect(new Set(colors).size).toBe(3);
+  });
+
+  it('spreads default colours over the ramp when none are given', () => {
+    const rows = [{ label: 'day1', values: { a: 1, b: 1 } }];
+    const geo = stackedBarGeometry(rows, ['a', 'b']);
+    expect(geo[0].segments.map((s) => s.color)).toEqual(['var(--sumi-seq-1)', 'var(--sumi-seq-5)']);
   });
 
   it('is empty with no rows or no series keys', () => {

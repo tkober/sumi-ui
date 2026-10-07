@@ -30,8 +30,12 @@ export interface SparklineGeometry {
 }
 
 const SPARKLINE_WIDTH = 240;
-const SPARKLINE_HEIGHT = 64;
+const SPARKLINE_HEIGHT = 56;
 const SPARKLINE_PAD_Y = 4;
+/** Horizontal inset for the plotted line/area, so the emphasised last-point
+ *  dot and the line's stroke width are never cropped by the viewBox edge
+ *  (a plain 0..width domain puts the last point exactly on the boundary). */
+const SPARKLINE_PAD_X = 4;
 
 /** Normalises `sumi-sparkline`'s `points` input (numbers or `{x,y}`) to `{x,y}[]`,
  *  assigning evenly spaced `x` to a bare number array. */
@@ -85,7 +89,7 @@ export function sparklineGeometry(
 
   const x = scaleLinear()
     .domain([Math.min(...xs), Math.max(...xs) || 1])
-    .range([0, width]);
+    .range([SPARKLINE_PAD_X, width - SPARKLINE_PAD_X]);
   // A flat series (including a single point) would divide by zero; clamp the
   // domain to at least 1 so the line is drawn centred instead of collapsing.
   const y = scaleLinear()
@@ -96,9 +100,7 @@ export function sparklineGeometry(
   // A single point has only one x; nudge the synthetic twin so the line
   // generator still has two distinct x values to draw a flat segment across.
   const plottedXs =
-    data.length === 1
-      ? [x(data[0].x) - width / 2, x(data[0].x) + width / 2]
-      : plotted.map((p) => x(p.x));
+    data.length === 1 ? [SPARKLINE_PAD_X, width - SPARKLINE_PAD_X] : plotted.map((p) => x(p.x));
 
   const lineGen = d3Line<number>()
     .x((_, i) => plottedXs[i])
@@ -135,8 +137,11 @@ export interface SegmentGeometry {
   percent: number;
 }
 
-const SEQ_RAMP = [
-  'var(--sumi-seq-0)',
+// `--sumi-seq-0` is deliberately excluded from the default ramp: mixed only
+// 12% into the surface colour, it is close to invisible against
+// `--sumi-sunken` (a segmented bar's track) in both themes. `rampColor`
+// spreads evenly over the five visible steps instead.
+const SEQ_RAMP_1_5 = [
   'var(--sumi-seq-1)',
   'var(--sumi-seq-2)',
   'var(--sumi-seq-3)',
@@ -144,10 +149,22 @@ const SEQ_RAMP = [
   'var(--sumi-seq-5)',
 ];
 
+/** The default colour for item `index` of `count` (segments, stacked
+ *  series, …): spreads evenly over `--sumi-seq-1`…`-5` regardless of how
+ *  many items there are, so two items are never both the faint end of the
+ *  ramp and five items use the full spread. A single item gets the
+ *  strongest step. */
+export function rampColor(index: number, count: number): string {
+  if (count <= 1) {
+    return SEQ_RAMP_1_5[SEQ_RAMP_1_5.length - 1];
+  }
+  const position = Math.round((index / (count - 1)) * (SEQ_RAMP_1_5.length - 1));
+  return SEQ_RAMP_1_5[position];
+}
+
 /** Resolves `sumi-segmented-bar`'s `segments` input into percentages that sum to
  *  100 (zero-value segments omitted, so they never need a sliver of width) and
- *  default colours from the sequential ramp, cycling if there are more
- *  segments than ramp steps. */
+ *  default colours spread evenly over the sequential ramp (see `rampColor`). */
 export function segmentGeometry(
   segments: readonly { label: string; value: number; color?: string }[],
 ): SegmentGeometry[] {
@@ -159,7 +176,7 @@ export function segmentGeometry(
   return nonZero.map((segment, index) => ({
     label: segment.label,
     value: segment.value,
-    color: segment.color ?? SEQ_RAMP[index % SEQ_RAMP.length],
+    color: segment.color ?? rampColor(index, nonZero.length),
     percent: (segment.value / total) * 100,
   }));
 }
@@ -242,6 +259,10 @@ export function barGeometry(
   });
 }
 
+/** Gap (in px, now that plots are built in real pixels) between two stacked
+ *  segments within the same column. */
+const STACK_GAP = 2;
+
 /** Stacked bar geometry: one column per entry, segments stacked bottom-up in
  *  `seriesKeys`' order with offsets from each column's own running total
  *  (not a shared max across columns — see `stackOffsets`), scaled against the
@@ -249,12 +270,14 @@ export function barGeometry(
 export function stackedBarGeometry(
   rows: readonly { label: string; values: Record<string, number> }[],
   seriesKeys: readonly string[],
-  colors: readonly string[] = SEQ_RAMP,
+  colors?: readonly string[],
   plot: PlotBox = DEFAULT_BAR_PLOT,
 ): StackedBarGeometry[] {
   if (rows.length === 0 || seriesKeys.length === 0) {
     return [];
   }
+  const resolvedColors =
+    colors ?? seriesKeys.map((_, keyIndex) => rampColor(keyIndex, seriesKeys.length));
   const totals = rows.map((row) =>
     seriesKeys.reduce((sum, key) => sum + (row.values[key] ?? 0), 0),
   );
@@ -271,12 +294,19 @@ export function stackedBarGeometry(
       const value = row.values[key] ?? 0;
       const segHeight = y(value);
       const bottom = y(offsets[keyIndex]);
+      const rawY = plot.height - plot.bottom - bottom - segHeight;
+      // A thin gap between stacked segments (see docs/concept.md's "Nie nur
+      // Farbe" — adjacent sequential-ramp steps must stay visually
+      // distinguishable, not just by a shared, touching edge). Half the gap
+      // insets each edge so segments never overlap; clamped so a very thin
+      // segment never gets a negative height.
+      const inset = Math.min(STACK_GAP / 2, segHeight / 2);
       return {
         key,
         value,
-        height: segHeight,
-        y: plot.height - plot.bottom - bottom - segHeight,
-        color: colors[keyIndex % colors.length],
+        height: Math.max(0, segHeight - inset * 2),
+        y: rawY + inset,
+        color: resolvedColors[keyIndex % resolvedColors.length],
       };
     });
     return { label: row.label, total: totals[index], x, width, segments };
