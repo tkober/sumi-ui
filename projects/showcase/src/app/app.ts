@@ -1,18 +1,16 @@
 import { Component, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { SumiAccent, SumiAccentPreset, SumiHotkeyHelp } from 'sumi-ui/core';
-import { SumiAppShellBrand, SumiNavItem, SumiShell, SUMI_LAYOUT } from 'sumi-ui/layout';
-import { SumiButtonDirective } from 'sumi-ui/forms';
+import { SumiAppShellBrand, SumiNavItem, SUMI_LAYOUT } from 'sumi-ui/layout';
 
 @Component({
-  imports: [RouterOutlet, ...SUMI_LAYOUT, SumiButtonDirective, SumiHotkeyHelp],
+  imports: [RouterOutlet, ...SUMI_LAYOUT, SumiHotkeyHelp],
   selector: 'app-root',
   styleUrl: './app.scss',
   templateUrl: './app.html',
 })
 export class App {
   private readonly accent = inject(SumiAccent);
-  protected readonly shell = inject(SumiShell);
 
   protected readonly brand: SumiAppShellBrand = { glyph: '墨', name: 'Sumi UI Showcase' };
 

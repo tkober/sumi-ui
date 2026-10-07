@@ -1,0 +1,27 @@
+<div class="sumi-verdict__row">
+  <sumi-icon class="sumi-verdict__icon" [name]="icon()" />
+  <div class="sumi-verdict__body">
+    <p class="sumi-verdict__title">{{ resolvedTitle() }}</p>
+    @if (message(); as m) {
+      <p class="sumi-verdict__message">{{ m }}</p>
+    }
+    @if (expected(); as e) {
+      <p class="sumi-verdict__expected" lang="ja">{{ e }}</p>
+    }
+  </div>
+  @if (hasDetails()) {
+    <button
+      type="button"
+      class="sumi-verdict__toggle"
+      [attr.aria-expanded]="detailsOpen()"
+      aria-label="Toggle details"
+      (click)="toggleDetails()"
+    >
+      <sumi-icon name="chevron-down" />
+    </button>
+  }
+</div>
+
+<div class="sumi-verdict__details" [hidden]="!detailsOpen()">
+  <ng-content select="[sumiVerdictDetails]" />
+</div>

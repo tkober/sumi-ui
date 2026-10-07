@@ -2,43 +2,28 @@ section {
   margin-bottom: var(--sumi-space-8);
 }
 
-.demo input {
-  display: block;
-  max-width: 320px;
-  margin: var(--sumi-space-3) 0;
+.demo__round {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sumi-space-4);
+  max-width: 420px;
+  margin: 0 auto;
 }
 
-.demo__feedback {
-  color: var(--sumi-text-2);
+sumi-session-bar {
+  width: 100%;
 }
 
-.demo__details {
-  padding: var(--sumi-space-3);
-  border: 1px solid var(--sumi-line);
-  border-radius: var(--sumi-radius-sm);
-  background: var(--sumi-sunken);
-  margin-bottom: var(--sumi-space-3);
+sumi-prompt-card {
+  width: 100%;
 }
 
-.demo__card {
-  text-align: center;
-  margin-bottom: var(--sumi-space-4);
-}
-
-.demo__characters {
-  font-family: var(--sumi-font-display);
-  font-size: clamp(2.5rem, 10vw, 4rem);
-  line-height: 1.1;
-}
-
-.demo__label {
-  color: var(--sumi-muted);
-  font-size: var(--sumi-text-sm);
+sumi-countdown-ring {
+  margin: var(--sumi-space-3) auto 0;
 }
 
 sumi-answer-field {
-  max-width: 320px;
-  margin: 0 auto;
+  width: 100%;
 }
 
 .demo__actions {
@@ -46,34 +31,14 @@ sumi-answer-field {
   align-items: center;
   justify-content: center;
   gap: var(--sumi-space-3);
-  margin-top: var(--sumi-space-4);
 }
 
-.demo__score {
-  color: var(--sumi-muted);
-  font-size: var(--sumi-text-sm);
-  font-variant-numeric: tabular-nums;
-}
-
-.demo__hint {
-  text-align: center;
-  color: var(--sumi-text-2);
-  font-size: var(--sumi-text-sm);
-}
-
-.demo__done {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--sumi-space-3);
-}
-
-sumi-segmented-control {
-  margin: var(--sumi-space-3) 0;
+.demo__verdict {
+  width: 100%;
 }
 
 .demo__log {
-  margin-top: var(--sumi-space-4);
+  margin-top: var(--sumi-space-2);
 
   h3 {
     margin: 0 0 var(--sumi-space-2);
@@ -85,4 +50,48 @@ sumi-segmented-control {
     margin: 0;
     padding-left: var(--sumi-space-5);
   }
+}
+
+.demo input {
+  display: block;
+  max-width: 320px;
+  margin: var(--sumi-space-3) 0;
+}
+
+sumi-segmented-control {
+  margin: var(--sumi-space-3) 0;
+}
+
+.demo > sumi-answer-field {
+  max-width: 320px;
+  margin: 0 auto;
+}
+
+.demo__furigana {
+  display: flex;
+  align-items: center;
+  gap: var(--sumi-space-4);
+  font-size: var(--sumi-text-xl);
+  margin-bottom: var(--sumi-space-4);
+}
+
+.demo__row {
+  display: flex;
+  gap: var(--sumi-space-6);
+  margin-bottom: var(--sumi-space-4);
+}
+
+.demo__sample {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sumi-space-2);
+  font-size: var(--sumi-text-xs);
+  color: var(--sumi-muted);
+}
+
+.demo__verdict-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--sumi-space-4);
 }

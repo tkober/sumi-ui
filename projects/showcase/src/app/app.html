@@ -13,13 +13,12 @@
       }
     </select>
   </div>
-  <div sumiShellFocusActions>
-    @if (shell.focusMode()) {
-      <button type="button" sumiButton size="sm" (click)="shell.leaveFocusMode()">
-        End session
-      </button>
-    }
-  </div>
+  <!-- sumiShellFocusActions is left empty here: the Practice page's own
+       sumi-session-bar (#12) is the real "End session" control now, wired
+       to its own session state. A shell-level stand-in button that bypassed
+       that state (calling shell.leaveFocusMode() directly) would double up
+       with it and could desync the two — see sumi-session-bar's doc
+       comment for the intended placement. -->
   <router-outlet />
   <sumi-hotkey-help />
 </sumi-app-shell>

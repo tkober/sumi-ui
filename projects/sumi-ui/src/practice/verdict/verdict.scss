@@ -1,0 +1,113 @@
+// `sumi-verdict` — colour, icon and text, never colour alone (see
+// docs/concept.md's "Nie nur Farbe").
+
+:host {
+  display: block;
+  padding: var(--sumi-space-4);
+  border-radius: var(--sumi-radius);
+  border: 1px solid var(--sumi-line);
+  background: var(--sumi-sunken);
+  color: var(--sumi-text);
+}
+
+:host(.sumi-verdict--correct) {
+  border-color: var(--sumi-correct);
+  background: var(--sumi-correct-soft);
+}
+
+:host(.sumi-verdict--wrong) {
+  border-color: var(--sumi-wrong);
+  background: var(--sumi-wrong-soft);
+}
+
+:host(.sumi-verdict--retry),
+:host(.sumi-verdict--held) {
+  border-color: var(--sumi-retry);
+  background: var(--sumi-retry-soft);
+}
+
+.sumi-verdict__row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sumi-space-3);
+}
+
+.sumi-verdict__icon {
+  flex: none;
+  font-size: 1.5rem;
+  margin-top: 2px;
+}
+
+:host(.sumi-verdict--correct) .sumi-verdict__icon {
+  color: var(--sumi-correct);
+}
+
+:host(.sumi-verdict--wrong) .sumi-verdict__icon {
+  color: var(--sumi-wrong);
+}
+
+:host(.sumi-verdict--retry) .sumi-verdict__icon,
+:host(.sumi-verdict--held) .sumi-verdict__icon {
+  color: var(--sumi-retry);
+}
+
+.sumi-verdict__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.sumi-verdict__title {
+  margin: 0;
+  font-weight: 700;
+}
+
+:host(.sumi-verdict--correct) .sumi-verdict__title {
+  color: var(--sumi-correct);
+}
+
+:host(.sumi-verdict--wrong) .sumi-verdict__title {
+  color: var(--sumi-wrong);
+}
+
+:host(.sumi-verdict--retry) .sumi-verdict__title,
+:host(.sumi-verdict--held) .sumi-verdict__title {
+  color: var(--sumi-retry);
+}
+
+.sumi-verdict__message {
+  margin: var(--sumi-space-1) 0 0;
+  color: var(--sumi-text-2);
+  font-size: var(--sumi-text-sm);
+}
+
+.sumi-verdict__expected {
+  margin: var(--sumi-space-2) 0 0;
+  font-size: var(--sumi-text-xl);
+}
+
+.sumi-verdict__toggle {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: var(--sumi-radius-sm);
+  background: transparent;
+  color: var(--sumi-text-2);
+  cursor: pointer;
+  transition: transform 150ms ease;
+
+  &[aria-expanded='true'] {
+    transform: rotate(180deg);
+  }
+}
+
+.sumi-verdict__details {
+  margin-top: var(--sumi-space-3);
+  padding-top: var(--sumi-space-3);
+  border-top: 1px solid var(--sumi-line);
+  color: var(--sumi-text-2);
+  font-size: var(--sumi-text-sm);
+}

@@ -1,0 +1,60 @@
+// `sumi-countdown-ring` — ported from jp-conjugation's `countdown-ring`
+// (SVG ring, r=19 in a 44px box) and katakana-reading's inline ring. The
+// `reduce` branch in `_base.scss` already zeroes every transition
+// duration globally, so the stroke glide below needs no extra media query.
+
+:host {
+  display: inline-flex;
+  width: 44px;
+  height: 44px;
+  flex: none;
+}
+
+.sumi-countdown-ring__svg {
+  width: 100%;
+  height: 100%;
+}
+
+.sumi-countdown-ring__track,
+.sumi-countdown-ring__value {
+  fill: none;
+  stroke-width: 3;
+}
+
+.sumi-countdown-ring__track {
+  stroke: var(--sumi-line);
+}
+
+.sumi-countdown-ring__value {
+  stroke: var(--sumi-muted);
+  transform: rotate(-90deg);
+  transform-origin: 50% 50%;
+  transition: stroke-dashoffset 100ms linear;
+}
+
+// Only the stroke turns colour — filling the circle would swallow the
+// number sitting inside it. Never the accent: see the class doc comment.
+:host(.sumi-countdown-ring--low) .sumi-countdown-ring__value {
+  stroke: var(--sumi-retry);
+}
+
+:host(.sumi-countdown-ring--overtime) .sumi-countdown-ring__value {
+  stroke: var(--sumi-wrong);
+}
+
+.sumi-countdown-ring__text {
+  fill: var(--sumi-muted);
+  font-family: var(--sumi-font-mono);
+  font-size: 11px;
+  text-anchor: middle;
+  dominant-baseline: central;
+  stroke: none;
+}
+
+:host(.sumi-countdown-ring--low) .sumi-countdown-ring__text {
+  fill: var(--sumi-retry);
+}
+
+:host(.sumi-countdown-ring--overtime) .sumi-countdown-ring__text {
+  fill: var(--sumi-wrong);
+}

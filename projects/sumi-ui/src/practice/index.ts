@@ -1,8 +1,9 @@
 /**
- * Practice area: the kana-conversion logic and `sumi-answer-field`, the
- * library's heart (see docs/concept.md#eingabe-sumi-answer-field and the
- * issue this implements). Session building blocks such as countdown rings
- * and session-summary tiles are a later follow-up.
+ * Practice area: the kana-conversion logic, `sumi-answer-field` and the
+ * practice-screen building blocks around it — prompt, verdict, countdown,
+ * session progress/summary/gate and furigana (see
+ * docs/concept.md#eingabe-sumi-answer-field,
+ * docs/concept.md#layout-und-mobil and the issue this implements).
  */
 
 export {
@@ -14,6 +15,7 @@ export {
   romajiToKana,
   romajiToKatakana,
 } from './kana';
+export { glyphCount } from './glyphs';
 export { SumiHoldFocus } from './hold-focus';
 export {
   SumiAnswerField,
@@ -22,9 +24,40 @@ export {
   type SumiVerdict,
   type SumiVerdictKind,
 } from './answer-field/answer-field';
+export { SumiPromptCard } from './prompt-card/prompt-card';
+export { SumiVerdictCard } from './verdict/verdict';
+export { SumiVerdictDetailsDirective } from './verdict/verdict-details.directive';
+export { SumiCountdownRing } from './countdown-ring/countdown-ring';
+export { SumiSessionBar } from './session-bar/session-bar';
+export { SumiSessionSummary } from './session-summary/session-summary';
+export { SumiSessionGate } from './session-gate/session-gate';
+export { SumiFurigana } from './furigana/furigana.service';
+export { SumiFuriganaText, type SumiFuriganaSegment } from './furigana/furigana-text';
+export { SumiFuriganaToggle } from './furigana/furigana-toggle';
 
 import { SumiHoldFocus } from './hold-focus';
 import { SumiAnswerField } from './answer-field/answer-field';
+import { SumiPromptCard } from './prompt-card/prompt-card';
+import { SumiVerdictCard } from './verdict/verdict';
+import { SumiVerdictDetailsDirective } from './verdict/verdict-details.directive';
+import { SumiCountdownRing } from './countdown-ring/countdown-ring';
+import { SumiSessionBar } from './session-bar/session-bar';
+import { SumiSessionSummary } from './session-summary/session-summary';
+import { SumiSessionGate } from './session-gate/session-gate';
+import { SumiFuriganaText } from './furigana/furigana-text';
+import { SumiFuriganaToggle } from './furigana/furigana-toggle';
 
 /** Convenience array for `imports: [...SUMI_PRACTICE]` in a standalone component. */
-export const SUMI_PRACTICE = [SumiAnswerField, SumiHoldFocus] as const;
+export const SUMI_PRACTICE = [
+  SumiAnswerField,
+  SumiHoldFocus,
+  SumiPromptCard,
+  SumiVerdictCard,
+  SumiVerdictDetailsDirective,
+  SumiCountdownRing,
+  SumiSessionBar,
+  SumiSessionSummary,
+  SumiSessionGate,
+  SumiFuriganaText,
+  SumiFuriganaToggle,
+] as const;

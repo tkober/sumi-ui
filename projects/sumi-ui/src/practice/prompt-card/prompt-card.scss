@@ -1,0 +1,83 @@
+// `sumi-prompt-card` — see docs/concept.md#layout-und-mobil and
+// kanji-trainer's `.prompt`/`.characters` (`pages/review/review.scss`),
+// which this ports.
+
+:host {
+  display: block;
+  position: relative;
+  // Lets `.sumi-prompt-card__text` size itself off this card's own width
+  // (`cqi`) below, rather than the viewport.
+  container-type: inline-size;
+  padding: var(--sumi-space-6) var(--sumi-space-4) var(--sumi-space-4);
+  border-radius: var(--sumi-radius);
+  border: 1px solid var(--sumi-line);
+  border-top: 3px solid var(--sumi-prompt-tone, var(--sumi-line));
+  background: var(--sumi-surface);
+  text-align: center;
+  transition: padding 150ms ease;
+}
+
+.sumi-prompt-card__kind {
+  display: inline-block;
+  margin-bottom: var(--sumi-space-3);
+  padding: 2px var(--sumi-space-3);
+  border-radius: var(--sumi-radius-pill);
+  background: color-mix(
+    in oklab,
+    var(--sumi-prompt-tone, var(--sumi-accent)) 16%,
+    var(--sumi-surface)
+  );
+  color: var(--sumi-prompt-tone, var(--sumi-accent-ink));
+  font-size: var(--sumi-text-xs);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.sumi-prompt-card__text {
+  // Always the UI/learning-material font, never the display font — see
+  // docs/concept.md#schrift ("UI und Lernstoff ... auch Prompts").
+  font-family: var(--sumi-font-ui);
+  // CJK glyphs (kanji and kana, including small っ) are full-width, so a
+  // string of N of them needs about N em of inline space: `--glyphs` (set
+  // per prompt in the component, see `glyphCount()`) turns that into
+  // `100cqi / --glyphs`, the font size at which the string exactly fills
+  // the card's content width. The clamp is the ceiling — a single glyph
+  // still renders at a sane max size — and 2rem is the floor. The 0.95
+  // factor is a safety margin so rounding does not push the last glyph onto
+  // a new line. Wrapping is left alone: only once the floor is reached does
+  // a string that still does not fit wrap. `overflow-wrap: anywhere`
+  // covers a run with no break opportunity at all.
+  font-size: max(2rem, min(clamp(2.5rem, 14vw, 5rem), calc(100cqi / var(--glyphs, 1) * 0.95)));
+  line-height: 1.1;
+  font-weight: 400;
+  overflow-wrap: anywhere;
+}
+
+.sumi-prompt-card__meta {
+  display: flex;
+  justify-content: center;
+  gap: var(--sumi-space-2);
+  margin: var(--sumi-space-4) 0 0;
+  color: var(--sumi-muted);
+  font-size: var(--sumi-text-sm);
+}
+
+.sumi-prompt-card__meta-dot {
+  color: var(--sumi-line);
+}
+
+// The on-screen keyboard is open: shrink so the prompt + field both fit
+// above it — see docs/concept.md#layout-und-mobil and
+// `SumiKeyboardVisibility`.
+:host(.sumi-prompt-card--compact) {
+  padding: var(--sumi-space-3) var(--sumi-space-3) var(--sumi-space-2);
+}
+
+:host(.sumi-prompt-card--compact) .sumi-prompt-card__text {
+  font-size: max(1.5rem, min(clamp(1.75rem, 9vw, 3rem), calc(100cqi / var(--glyphs, 1) * 0.95)));
+}
+
+:host(.sumi-prompt-card--compact) .sumi-prompt-card__meta {
+  margin-top: var(--sumi-space-2);
+}

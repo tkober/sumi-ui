@@ -1,12 +1,14 @@
-import { Component, computed, inject, signal, viewChild } from '@angular/core';
-import { SumiPage } from 'sumi-ui/layout';
+import { Component, DestroyRef, computed, inject, signal, viewChild } from '@angular/core';
+import { SumiFocusModeDirective, SumiPage } from 'sumi-ui/layout';
 import { SumiButtonDirective, SumiSegmentedControl } from 'sumi-ui/forms';
 import { SUMI_KEYS, SumiHotkeys, injectHotkey } from 'sumi-ui/core';
 import {
   SUMI_PRACTICE,
   SumiAnswerField,
   type SumiAnswerMode,
+  type SumiFuriganaSegment,
   type SumiVerdict,
+  type SumiVerdictKind,
 } from 'sumi-ui/practice';
 
 /** One card of the showcase round, modelled on docs/concept.md's mockup. */
@@ -14,6 +16,9 @@ interface Card {
   characters: string;
   label: 'Reading' | 'Meaning';
   mode: SumiAnswerMode;
+  meta: string[];
+  /** Domain colouring, e.g. kanji-trainer's kanji/vocabulary colours. */
+  tone?: string;
   /** Answers that settle the card as correct. */
   accepted: string[];
   /** Real answers that are simply not what was asked — settle as `retry`. */
@@ -21,6 +26,8 @@ interface Card {
   /** Meaning cards forgive a one-character typo (see `distance`). */
   typoTolerant?: boolean;
   hint: string;
+  /** Cards with a time target show a `sumi-countdown-ring`. */
+  timeTargetMs?: number;
 }
 
 const CARDS: Card[] = [
@@ -28,13 +35,17 @@ const CARDS: Card[] = [
     characters: '食べる',
     label: 'Reading',
     mode: 'kana',
+    meta: ['Vocabulary', 'N5'],
     accepted: ['たべる'],
     hint: 'to eat',
+    timeTargetMs: 6000,
   },
   {
     characters: '女',
     label: 'Reading',
     mode: 'kana',
+    meta: ['Kanji', 'N3'],
+    tone: '#6b4f96',
     accepted: ['じょ', 'にょ'],
     retry: ['おんな', 'め'],
     hint: 'on-yomi only — おんな/め are real readings, just not this one',
@@ -43,6 +54,8 @@ const CARDS: Card[] = [
     characters: '森',
     label: 'Meaning',
     mode: 'latin',
+    meta: ['Kanji', 'N4'],
+    tone: '#6b4f96',
     accepted: ['forest', 'woods'],
     typoTolerant: true,
     hint: 'forest, woods',
@@ -51,9 +64,18 @@ const CARDS: Card[] = [
     characters: '先生',
     label: 'Reading',
     mode: 'kana',
+    meta: ['Vocabulary', 'N5'],
     accepted: ['せんせい'],
     hint: 'teacher',
+    timeTargetMs: 5000,
   },
+];
+
+const FURIGANA_SAMPLE: SumiFuriganaSegment[] = [
+  { base: '日本語', reading: 'にほんご' },
+  { base: 'を' },
+  { base: '勉強', reading: 'べんきょう' },
+  { base: 'する' },
 ];
 
 /** Plain Levenshtein distance, for the one-typo tolerance on 森. */
@@ -78,27 +100,40 @@ function distance(a: string, b: string): number {
   return d[rows - 1][cols - 1];
 }
 
+type SessionState = 'idle' | 'running' | 'ended';
+
 /**
- * Showcase for `sumi-answer-field` (#11) — a four-card round exercising
- * every state from docs/concept.md's table, plus a standalone field below
- * for trying `katakana`/`romaji`/`latin`/`free` modes outside the grading
- * flow. The hotkey log and the page-level `F`/`?` registrations from the
- * #10 showcase are kept: they still coexist with the field's own `practice`
- * scope hotkeys (Enter/Esc/Alt+K/Alt+H), registered inside the field itself.
+ * Showcase for every practice building block from issue #12, composed into
+ * one realistic screen: `sumi-session-gate` (idle/ended) around a
+ * `sumiFocusMode` round with `sumi-session-bar`, `sumi-prompt-card`, the
+ * existing `sumi-answer-field` (#11) and `sumi-verdict` with a collapsible
+ * details block, plus a `sumi-countdown-ring` on cards that have a time
+ * target and a `sumi-session-summary` at the end. A small "Other building
+ * blocks" section below shows furigana, every countdown state and every
+ * verdict kind side by side.
  */
 @Component({
   selector: 'app-practice-page',
   templateUrl: './practice.html',
   styleUrl: './practice.scss',
-  imports: [SumiPage, SumiButtonDirective, SumiSegmentedControl, ...SUMI_PRACTICE],
+  imports: [
+    SumiPage,
+    SumiButtonDirective,
+    SumiSegmentedControl,
+    SumiFocusModeDirective,
+    ...SUMI_PRACTICE,
+  ],
 })
 export class PracticePage {
   private readonly hotkeys = inject(SumiHotkeys);
+  private readonly destroyRef = inject(DestroyRef);
 
   protected readonly cards = CARDS;
+  protected readonly furiganaSample = FURIGANA_SAMPLE;
+
+  protected readonly sessionState = signal<SessionState>('idle');
   protected readonly index = signal(0);
   protected readonly card = computed(() => this.cards[this.index()]);
-  protected readonly done = computed(() => this.index() >= this.cards.length);
 
   protected readonly value = signal('');
   protected readonly verdict = signal<SumiVerdict | null>(null);
@@ -134,24 +169,18 @@ export class PracticePage {
     { value: 'free', label: 'Free' },
   ];
 
-  constructor() {
-    // Kept from #10, exactly as before: bare F/? only become hotkeys once a
-    // verdict is on screen, via `allowInEditable` + `enabled`. These are a
-    // *page*-level concern (showing the current card's hint, and the shared
-    // hotkey flyout) — not something `sumi-answer-field` should own, since a
-    // real app's practice page decides what "show details" even means.
-    injectHotkey({
-      keys: SUMI_KEYS.details,
-      label: 'Show item info (after answering)',
-      scope: 'feedback',
-      allowInEditable: true,
-      enabled: () => this.verdict() !== null,
-      handler: () => {
-        this.detailsOpen.update((open) => !open);
-        this.logHotkey('F');
-      },
-    });
+  /** The running countdown for the current card, if it has a time target. */
+  protected readonly elapsedMs = signal(0);
+  private timerHandle: ReturnType<typeof setInterval> | undefined;
+  private timerStart = 0;
 
+  protected readonly sessionDurationMs = signal(0);
+  private sessionStartedAt = 0;
+
+  constructor() {
+    // Kept from #10/#11, exactly as before: bare F/? only become hotkeys once
+    // a verdict is on screen. `sumi-verdict` now registers `F` itself (scope
+    // `feedback`), so this page only still owns `?`.
     injectHotkey({
       keys: SUMI_KEYS.help,
       label: 'Toggle this menu (after answering)',
@@ -163,6 +192,28 @@ export class PracticePage {
         this.logHotkey('?');
       },
     });
+
+    this.destroyRef.onDestroy(() => this.stopTimer());
+  }
+
+  protected startSession(): void {
+    this.sessionState.set('running');
+    this.index.set(0);
+    this.value.set('');
+    this.verdict.set(null);
+    this.answered.set(0);
+    this.correct.set(0);
+    this.heldOnce = false;
+    this.detailsOpen.set(false);
+    this.log.set([]);
+    this.sessionStartedAt = Date.now();
+    this.startTimerFor(this.card());
+  }
+
+  protected endSession(): void {
+    this.stopTimer();
+    this.sessionDurationMs.set(Date.now() - this.sessionStartedAt);
+    this.sessionState.set('ended');
   }
 
   protected onSubmitted(answer: string): void {
@@ -229,30 +280,26 @@ export class PracticePage {
     this.settle({ kind: 'wrong', message: `Expected: ${this.card().accepted[0]}` });
   }
 
-  protected restart(): void {
-    this.index.set(0);
-    this.value.set('');
-    this.verdict.set(null);
-    this.answered.set(0);
-    this.correct.set(0);
-    this.heldOnce = false;
-    this.detailsOpen.set(false);
-  }
-
   private settle(verdict: SumiVerdict): void {
     this.verdict.set(verdict);
     this.answered.update((n) => n + 1);
     if (verdict.kind === 'correct') {
       this.correct.update((n) => n + 1);
     }
+    this.stopTimer();
   }
 
   private advance(): void {
+    if (this.index() + 1 >= this.cards.length) {
+      this.endSession();
+      return;
+    }
     this.index.update((i) => i + 1);
     this.value.set('');
     this.verdict.set(null);
     this.heldOnce = false;
     this.detailsOpen.set(false);
+    this.startTimerFor(this.card());
   }
 
   protected onCheckClick(): void {
@@ -262,4 +309,47 @@ export class PracticePage {
   private logHotkey(label: string): void {
     this.log.update((entries) => [label, ...entries].slice(0, 6));
   }
+
+  private startTimerFor(card: Card): void {
+    this.stopTimer();
+    if (!card.timeTargetMs) {
+      this.elapsedMs.set(0);
+      return;
+    }
+    this.elapsedMs.set(0);
+    this.timerStart = Date.now();
+    this.timerHandle = setInterval(() => {
+      this.elapsedMs.set(Date.now() - this.timerStart);
+    }, 100);
+  }
+
+  private stopTimer(): void {
+    clearInterval(this.timerHandle);
+    this.timerHandle = undefined;
+  }
+
+  // --- "Other building blocks" section ---------------------------------
+
+  protected readonly countdownSamples: { label: string; elapsedMs: number; targetMs: number }[] = [
+    { label: 'On time', elapsedMs: 1000, targetMs: 5000 },
+    { label: 'Low (≤25% left)', elapsedMs: 4200, targetMs: 5000 },
+    { label: 'Overtime', elapsedMs: 6200, targetMs: 5000 },
+  ];
+
+  protected readonly verdictSamples: {
+    kind: SumiVerdictKind;
+    message: string;
+    expected?: string;
+    withDetails?: boolean;
+  }[] = [
+    { kind: 'correct', message: 'Nice and fast.' },
+    {
+      kind: 'wrong',
+      message: 'Close, but not quite.',
+      expected: '食べる',
+      withDetails: true,
+    },
+    { kind: 'retry', message: "That's a real reading, just not the one asked for." },
+    { kind: 'held', message: 'Sure? Enter counts it, Esc lets you fix it.' },
+  ];
 }
