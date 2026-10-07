@@ -1,0 +1,50 @@
+:host {
+  display: flex;
+  align-items: center;
+  gap: var(--sumi-space-4);
+  min-width: 0;
+}
+
+.sumi-session-bar__stats {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sumi-space-2);
+  font-size: var(--sumi-text-sm);
+  white-space: nowrap;
+}
+
+.sumi-session-bar__count {
+  font-weight: 600;
+}
+
+.sumi-session-bar__accuracy {
+  color: var(--sumi-muted);
+}
+
+.sumi-session-bar__progress {
+  flex: 1;
+  min-width: 48px;
+  height: 4px;
+  border-radius: var(--sumi-radius-pill);
+  background: var(--sumi-sunken);
+  overflow: hidden;
+}
+
+.sumi-session-bar__progress-fill {
+  height: 100%;
+  background: var(--sumi-accent);
+  border-radius: var(--sumi-radius-pill);
+  transition: width 150ms ease;
+}
+
+.sumi-session-bar__end {
+  flex: none;
+}
+
+// Compact on narrow screens: the progress bar is the first to go, the
+// stats stay — they are the useful part on a phone.
+@media (max-width: 480px) {
+  .sumi-session-bar__progress {
+    display: none;
+  }
+}

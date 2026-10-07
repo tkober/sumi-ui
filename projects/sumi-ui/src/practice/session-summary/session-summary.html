@@ -1,0 +1,37 @@
+<div class="sumi-session-summary__art">
+  <ng-content select="[sumiSummaryArt]" />
+</div>
+
+<h2 class="sumi-session-summary__headline">Session complete</h2>
+
+<dl class="sumi-session-summary__tiles">
+  <div class="sumi-session-summary__tile">
+    <dt>Answered</dt>
+    <dd class="sumi-tabular">{{ answered() }}</dd>
+  </div>
+  <div class="sumi-session-summary__tile">
+    <dt>Correct</dt>
+    <dd class="sumi-tabular">
+      {{ correct() }} <small>({{ accuracy() }}%)</small>
+    </dd>
+  </div>
+  <div class="sumi-session-summary__tile">
+    <dt>Time</dt>
+    <dd class="sumi-tabular">{{ duration() }}</dd>
+  </div>
+  @if (hasDelta()) {
+    <div class="sumi-session-summary__tile">
+      <dt>{{ deltaLabel() ?? 'Change' }}</dt>
+      <dd
+        class="sumi-tabular"
+        [class.sumi-session-summary__tile-value--up]="deltaSign() === 'up'"
+        [class.sumi-session-summary__tile-value--down]="deltaSign() === 'down'"
+      >
+        {{ delta()! > 0 ? '+' : '' }}{{ delta() }}
+      </dd>
+    </div>
+  }
+  <ng-content />
+</dl>
+
+<button type="button" sumiButton variant="primary" (click)="restart.emit()">Practice again</button>

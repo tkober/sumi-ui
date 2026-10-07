@@ -1,0 +1,26 @@
+<div class="sumi-session-bar__stats">
+  <span class="sumi-session-bar__count sumi-tabular">
+    {{ answered() }}
+    @if (totalCount(); as t) {
+      <span> / {{ t }}</span>
+    }
+  </span>
+  <span class="sumi-session-bar__accuracy sumi-tabular">{{ accuracy() }}%</span>
+</div>
+
+@if (progress(); as p) {
+  <div class="sumi-session-bar__progress">
+    <div class="sumi-session-bar__progress-fill" [style.width.%]="p"></div>
+  </div>
+}
+
+<button
+  type="button"
+  sumiButton
+  variant="ghost"
+  size="sm"
+  class="sumi-session-bar__end"
+  (click)="end.emit()"
+>
+  End session
+</button>

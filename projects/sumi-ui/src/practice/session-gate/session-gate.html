@@ -1,0 +1,16 @@
+<div class="sumi-session-gate__content">
+  @if (title(); as t) {
+    <h1 class="sumi-session-gate__title">{{ t }}</h1>
+  }
+  @if (text(); as t) {
+    <p class="sumi-session-gate__text">{{ t }}</p>
+  }
+
+  <ng-content />
+
+  @if (showAction()) {
+    <button type="button" sumiButton variant="primary" (click)="start.emit()">
+      {{ actionLabel() }}
+    </button>
+  }
+</div>
