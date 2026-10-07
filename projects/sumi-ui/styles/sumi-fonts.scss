@@ -18,7 +18,7 @@
 // with or without the non-blocking loading above.
 //
 // Only the weights actually referenced by tokens/_base.scss are imported:
-// Shippori Mincho 700 (headings), Zen Kaku Gothic New 400 and 700 (body
+// Murecho 700 (headings), Zen Kaku Gothic New 400 and 700 (body
 // text and emphasis), IBM Plex Mono 400 (tables, kbd, numbers). No medium
 // (500) weight ships — labels and emphasis use 400 or 700 instead, see
 // _base.scss and app.scss for where the showcase had to adjust. Japanese
@@ -29,7 +29,7 @@
 // `peerDependencies` (see package.json); resolution goes through the
 // app's own `node_modules`, the same way the library's TypeScript source
 // compiles against the app's Angular install.
-@use '@fontsource/shippori-mincho/700.css' as *;
+@use '@fontsource/murecho/700.css' as *;
 @use '@fontsource/zen-kaku-gothic-new/400.css' as *;
 @use '@fontsource/zen-kaku-gothic-new/700.css' as *;
 @use '@fontsource/ibm-plex-mono/400.css' as *;

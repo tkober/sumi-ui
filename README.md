@@ -303,7 +303,7 @@ successfully with `ng build` from a throwaway Angular 22 app):
    `peerDependencies` here, so this repo expects the app to provide them:
 
    ```bash
-   npm install @fontsource/shippori-mincho @fontsource/zen-kaku-gothic-new @fontsource/ibm-plex-mono
+   npm install @fontsource/murecho @fontsource/zen-kaku-gothic-new @fontsource/ibm-plex-mono
    ```
 
 6. Load the fonts as their own, non-blocking stylesheet. `sumi.scss` (step
