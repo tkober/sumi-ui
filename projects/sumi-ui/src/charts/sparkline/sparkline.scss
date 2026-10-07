@@ -1,0 +1,76 @@
+:host {
+  display: block;
+}
+
+.sumi-sparkline__row {
+  display: flex;
+  align-items: center;
+  gap: var(--sumi-space-3);
+}
+
+.sumi-sparkline__svg {
+  flex: 1;
+  min-width: 0;
+  height: 64px;
+}
+
+.sumi-sparkline__baseline {
+  stroke: var(--sumi-line);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.sumi-sparkline__area {
+  fill: var(--sumi-accent-soft);
+  stroke: none;
+}
+
+.sumi-sparkline__line {
+  fill: none;
+  stroke: var(--sumi-accent);
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+}
+
+.sumi-sparkline__dot {
+  fill: var(--sumi-accent);
+}
+
+.sumi-sparkline__readout {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  flex: none;
+}
+
+.sumi-sparkline__value {
+  font-family: var(--sumi-font-mono);
+  font-size: var(--sumi-text-lg);
+  font-weight: 600;
+}
+
+.sumi-sparkline__delta {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: var(--sumi-text-xs);
+  color: var(--sumi-muted);
+}
+
+.sumi-sparkline__delta--up {
+  color: var(--sumi-correct);
+}
+
+.sumi-sparkline__delta--down {
+  color: var(--sumi-wrong);
+}
+
+.sumi-sparkline__table {
+  margin-top: var(--sumi-space-2);
+}
+
+.sumi-sparkline__table summary {
+  cursor: pointer;
+  font-size: var(--sumi-text-sm);
+  color: var(--sumi-muted);
+}
