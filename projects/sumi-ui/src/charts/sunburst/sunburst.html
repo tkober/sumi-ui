@@ -1,0 +1,75 @@
+<div class="sumi-sunburst__ring-wrap" [style.width.px]="diameter()" [style.height.px]="diameter()">
+  <svg
+    class="sumi-sunburst__svg"
+    [attr.viewBox]="'0 0 ' + diameter() + ' ' + diameter()"
+    role="img"
+    [attr.aria-label]="ariaLabel()"
+  >
+    <g [attr.transform]="'translate(' + center() + ',' + center() + ')'">
+      @if (segments().length === 0) {
+        <circle
+          class="sumi-sunburst__empty"
+          [attr.r]="(innerRadius() + outerRadius()) / 2"
+          fill="none"
+          [style.stroke]="'var(--sumi-sunken)'"
+          [attr.stroke-width]="outerRadius() - innerRadius()"
+        >
+          <title>No data</title>
+        </circle>
+      } @else {
+        @for (segment of segments(); track segment.path.join('/'); let i = $index) {
+          <path
+            class="sumi-sunburst__segment"
+            [class.sumi-sunburst__segment--active]="activeIndex() === i"
+            [attr.d]="arcFor(segment)"
+            [style.fill]="segment.color"
+            tabindex="0"
+            [attr.aria-label]="
+              segment.path.join(' / ') +
+              ': ' +
+              segment.value +
+              ' (' +
+              (segment.percentOfTotal | number: '1.0-0') +
+              '% of total)'
+            "
+            (pointerenter)="setHover(i)"
+            (pointerleave)="clearHover(i)"
+            (focus)="setHover(i)"
+            (blur)="clearHover(i)"
+            (click)="togglePin(i)"
+          >
+            <title>
+              {{ segment.path.join(' / ') }}: {{ segment.value }} ({{
+                segment.percentOfTotal | number: '1.0-0'
+              }}% of total)
+            </title>
+          </path>
+        }
+        @for (segment of segments(); track segment.path.join('/') + '-label'; let i = $index) {
+          @if (labelFor(segment)) {
+            <text
+              class="sumi-sunburst__label"
+              [style.fill]="textColorFor(segment)"
+              [attr.transform]="labelTransform(segment)"
+              text-anchor="middle"
+              dominant-baseline="middle"
+            >
+              {{ labelFor(segment) }}
+            </text>
+          }
+        }
+      }
+    </g>
+  </svg>
+  <div class="sumi-sunburst__center">
+    <span class="sumi-sunburst__center-value sumi-tabular">{{ centerValueDisplay() }}</span>
+    <span class="sumi-sunburst__center-label">{{ centerLabelDisplay() }}</span>
+  </div>
+</div>
+
+@if (table()) {
+  <details class="sumi-sunburst__table">
+    <summary>Show as table</summary>
+    <sumi-data-table [columns]="tableColumns" [rows]="tableRows()" />
+  </details>
+}

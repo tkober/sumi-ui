@@ -956,12 +956,12 @@ export function sunburstGeometry(
   // `maxDepth + 1` equal bands, one wasted on the invisible root), so ring
   // radii are computed directly below instead, one equal-thickness ring
   // per depth level from `innerRadius` to `outerRadius`.
-  d3Partition<SumiSunburstNode>().size([2 * Math.PI, 1])(node);
-  const maxDepth = node.height;
+  const rect = d3Partition<SumiSunburstNode>().size([2 * Math.PI, 1])(node);
+  const maxDepth = rect.height;
   const ringThickness = (outerRadius - innerRadius) / maxDepth;
 
   const topLevel = root.children ?? [];
-  return node
+  return rect
     .descendants()
     .filter((d) => d.depth > 0)
     .map((d) => {
@@ -975,9 +975,9 @@ export function sunburstGeometry(
         value,
         color: sunburstTint(baseColor, d.depth),
         depth: d.depth,
-        startAngle: d.x0 ?? 0,
-        endAngle: d.x1 ?? 0,
-        midAngle: ((d.x0 ?? 0) + (d.x1 ?? 0)) / 2,
+        startAngle: d.x0,
+        endAngle: d.x1,
+        midAngle: (d.x0 + d.x1) / 2,
         innerRadius: innerRadius + (d.depth - 1) * ringThickness,
         outerRadius: innerRadius + d.depth * ringThickness,
         percentOfParent: parentValue > 0 ? (value / parentValue) * 100 : 0,
