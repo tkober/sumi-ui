@@ -90,10 +90,9 @@
   color: var(--sumi-muted);
 }
 
-sumi-legend.sumi-donut__legend {
-  display: block;
-}
-
+// Beside the ring the legend reads as a list; below it, it wraps in rows
+// with sumi-legend's own gaps.
 :host(.sumi-donut--wide) sumi-legend.sumi-donut__legend {
+  flex-direction: column;
   max-width: 220px;
 }

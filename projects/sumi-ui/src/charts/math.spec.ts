@@ -26,6 +26,9 @@ import {
   stackOffsets,
   sunburstGeometry,
   sunburstTint,
+  sunburstTextColor,
+  sunburstLabelOrientation,
+  arcLabelTangentialRotation,
   toPoints,
 } from './math';
 
@@ -591,6 +594,31 @@ describe('labelFitsArc', () => {
   });
 });
 
+describe('sunburstLabelOrientation', () => {
+  it('prefers reading along the arc on wide, thin segments', () => {
+    expect(sunburstLabelOrientation(Math.PI / 2, 80, 50, 'Apprentice')).toBe('tangential');
+  });
+
+  it('falls back to radial on narrow, deep segments', () => {
+    expect(sunburstLabelOrientation(0.3, 130, 60, 'Guru II')).toBe('radial');
+  });
+
+  it('gives up when neither fits', () => {
+    expect(sunburstLabelOrientation(0.05, 130, 50, 'Apprentice IV')).toBeNull();
+    expect(sunburstLabelOrientation(0, 80, 50, 'Guru')).toBeNull();
+  });
+});
+
+describe('arcLabelTangentialRotation', () => {
+  it('keeps text upright on every side', () => {
+    expect(arcLabelTangentialRotation(0)).toBeCloseTo(0);
+    expect(arcLabelTangentialRotation(Math.PI / 4)).toBeCloseTo(45);
+    expect(arcLabelTangentialRotation(Math.PI)).toBeCloseTo(0);
+    expect(arcLabelTangentialRotation((3 * Math.PI) / 4)).toBeCloseTo(-45);
+    expect(arcLabelTangentialRotation((7 * Math.PI) / 4)).toBeCloseTo(315);
+  });
+});
+
 describe('arcLabelRotation', () => {
   it('is never upside down across a full turn', () => {
     for (let deg = 0; deg < 360; deg += 15) {
@@ -699,6 +727,17 @@ describe('sunburstGeometry', () => {
     expect(a.innerRadius).toBe(10);
     expect(a1.innerRadius).toBe(a.outerRadius);
     expect(a1.outerRadius).toBe(100);
+  });
+});
+
+describe('sunburstTextColor', () => {
+  it('uses the on-accent colour only on strong fills', () => {
+    expect(sunburstTextColor(100, 1)).toBe('var(--sumi-on-accent)');
+    expect(sunburstTextColor(100, 2)).toBe('var(--sumi-on-accent)');
+    expect(sunburstTextColor(100, 3)).toBe('var(--sumi-text)');
+    expect(sunburstTextColor(84, 1)).toBe('var(--sumi-on-accent)');
+    expect(sunburstTextColor(84, 2)).toBe('var(--sumi-text)');
+    expect(sunburstTextColor(30, 1)).toBe('var(--sumi-text)');
   });
 });
 

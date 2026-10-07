@@ -12,7 +12,8 @@ import { DecimalPipe } from '@angular/common';
 import {
   arcLabelRotation,
   arcPath,
-  labelFitsArc,
+  sunburstLabelOrientation,
+  arcLabelTangentialRotation,
   polarPoint,
   sunburstGeometry,
   type SumiSunburstNode,
@@ -30,7 +31,7 @@ const MAX_DIAMETER = 320;
  *  two/three-line label/value/percent, small enough that it doesn't eat
  *  into the rings themselves (unlike `sumi-donut`, most of a sunburst's
  *  radius is the data, not the hole). */
-const HOLE_RATIO = 0.17;
+const HOLE_RATIO = 0.3;
 
 /**
  * A 2-3 level hierarchy (e.g. SRS stage → sub-stage, word class → form) as
@@ -42,7 +43,7 @@ const HOLE_RATIO = 0.17;
  * The innermost ring is `root.children`, each coloured from the
  * sequential ramp (or its own `color`); every deeper ring tints its
  * top-level ancestor's colour via `sunburstTint`. A segment only gets an
- * on-arc label when `labelFitsArc` says the wedge is wide/thick enough —
+ * on-arc label when `sunburstLabelOrientation` says the wedge is wide/thick enough —
  * every segment still has its label/value/percent in the table fallback.
  * Hovering (mouse), focusing (keyboard — every arc is `tabindex="0"`) or
  * tapping (the tap also *pins* the segment via `click`, since a touch
@@ -134,24 +135,25 @@ export class SumiSunburst {
     const angleSpan = segment.endAngle - segment.startAngle;
     const midRadius = (segment.innerRadius + segment.outerRadius) / 2;
     const ringThickness = segment.outerRadius - segment.innerRadius;
-    return labelFitsArc(angleSpan, midRadius, ringThickness, segment.label) ? segment.label : null;
+    return sunburstLabelOrientation(angleSpan, midRadius, ringThickness, segment.label)
+      ? segment.label
+      : null;
   }
 
   protected labelTransform(segment: SunburstSegmentGeometry): string {
     const midRadius = (segment.innerRadius + segment.outerRadius) / 2;
     const point = polarPoint(0, 0, midRadius, segment.midAngle);
-    const rotation = arcLabelRotation(segment.midAngle);
+    const orientation = sunburstLabelOrientation(
+      segment.endAngle - segment.startAngle,
+      midRadius,
+      segment.outerRadius - segment.innerRadius,
+      segment.label,
+    );
+    const rotation =
+      orientation === 'tangential'
+        ? arcLabelTangentialRotation(segment.midAngle)
+        : arcLabelRotation(segment.midAngle);
     return `translate(${point.x}, ${point.y}) rotate(${rotation})`;
-  }
-
-  /** On-arc label text stays readable on both the strong depth-1 fill and
-   *  its lighter/darker descendants without per-segment contrast maths:
-   *  depth 1 is the strongest, most saturated step of the ramp (needs the
-   *  accent's own "on" colour, same as `heatmapTextColor`'s bucket 4-5),
-   *  every deeper ring is tinted enough toward the surface that the
-   *  page's default ink reads fine on it. */
-  protected textColorFor(segment: SunburstSegmentGeometry): string {
-    return segment.depth === 1 ? 'var(--sumi-on-accent)' : 'var(--sumi-text)';
   }
 
   protected readonly centerValueDisplay = computed<string | number>(() => {

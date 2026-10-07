@@ -49,7 +49,7 @@
           @if (labelFor(segment)) {
             <text
               class="sumi-sunburst__label"
-              [style.fill]="textColorFor(segment)"
+              [style.fill]="segment.textColor"
               [attr.transform]="labelTransform(segment)"
               text-anchor="middle"
               dominant-baseline="middle"

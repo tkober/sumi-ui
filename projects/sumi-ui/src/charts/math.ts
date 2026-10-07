@@ -162,12 +162,18 @@ const SEQ_RAMP_1_5 = [
  *  ramp and five items use the full spread. A single item gets the
  *  strongest step. */
 export function rampColor(index: number, count: number): string {
-  if (count <= 1) {
-    return SEQ_RAMP_1_5[SEQ_RAMP_1_5.length - 1];
-  }
-  const position = Math.round((index / (count - 1)) * (SEQ_RAMP_1_5.length - 1));
-  return SEQ_RAMP_1_5[position];
+  return SEQ_RAMP_1_5[rampIndex(index, count)];
 }
+
+function rampIndex(index: number, count: number): number {
+  if (count <= 1) {
+    return SEQ_RAMP_1_5.length - 1;
+  }
+  return Math.round((index / (count - 1)) * (SEQ_RAMP_1_5.length - 1));
+}
+
+/** How much accent each `SEQ_RAMP_1_5` step mixes in (see `_tokens.scss`). */
+const SEQ_ACCENT_SHARE = [30, 48, 66, 84, 100];
 
 /** Resolves `sumi-segmented-bar`'s `segments` input into percentages that sum to
  *  100 (zero-value segments omitted, so they never need a sliver of width) and
@@ -891,6 +897,41 @@ export function arcLabelRotation(midAngle: number): number {
   return normalized - 90 + (normalized < 180 ? 0 : 180);
 }
 
+/**
+ * How a sunburst label fits its wedge: `'tangential'` (reading along the
+ * arc, preferred — wide inner segments like "Apprentice" are too thin
+ * radially for a long word), `'radial'` (reading outward, for narrow but
+ * deep wedges; see `labelFitsArc`), or `null` when neither fits.
+ */
+export function sunburstLabelOrientation(
+  angleSpan: number,
+  radius: number,
+  ringThickness: number,
+  label: string,
+): 'tangential' | 'radial' | null {
+  if (angleSpan <= 0 || radius <= 0 || label.length === 0) {
+    return null;
+  }
+  const arcLength = angleSpan * radius;
+  // Measured on the chord rather than the arc, so text near the ends of a
+  // wide wedge still stays inside it; plus a little breathing room.
+  const chord = 2 * radius * Math.sin(Math.min(angleSpan, Math.PI) / 2);
+  if (
+    Math.min(arcLength, chord) >= label.length * LABEL_CHAR_WIDTH + 8 &&
+    ringThickness >= LABEL_LINE_HEIGHT + 6
+  ) {
+    return 'tangential';
+  }
+  return labelFitsArc(angleSpan, radius, ringThickness, label) ? 'radial' : null;
+}
+
+/** Rotation (degrees) for a tangential label at `midAngle`: follows the
+ *  arc, flipped on the lower half so it never reads upside down. */
+export function arcLabelTangentialRotation(midAngle: number): number {
+  const deg = ((((midAngle * 180) / Math.PI) % 360) + 360) % 360;
+  return deg > 90 && deg < 270 ? deg - 180 : deg;
+}
+
 /** One node of `sumi-sunburst`'s `root` input: a label, an optional value
  *  (ignored — and unnecessary — on a node that has `children`, since its
  *  value is the sum of its descendants' values) and optional colour
@@ -908,6 +949,9 @@ export interface SunburstSegmentGeometry {
   label: string;
   value: number;
   color: string;
+  /** Text colour for an on-arc label: the accent's "on" colour once the
+   *  fill is strong enough, the default ink otherwise. */
+  textColor: string;
   /** 1 = innermost ring (a `root.children` entry), 2 = its children, … */
   depth: number;
   startAngle: number;
@@ -973,10 +1017,14 @@ export function sunburstGeometry(
       const baseColor = topAncestor.data.color ?? rampColor(topIndex, Math.max(1, topLevel.length));
       const value = d.value ?? 0;
       const parentValue = d.parent?.value ?? total;
+      const baseShare = topAncestor.data.color
+        ? 100
+        : SEQ_ACCENT_SHARE[rampIndex(topIndex, Math.max(1, topLevel.length))];
       return {
         label: d.data.label,
         value,
         color: sunburstTint(baseColor, d.depth),
+        textColor: sunburstTextColor(baseShare, d.depth),
         depth: d.depth,
         startAngle: d.x0,
         endAngle: d.x1,
@@ -1005,6 +1053,19 @@ export function sunburstTint(baseColor: string, depth: number): string {
   if (depth <= 1) {
     return baseColor;
   }
-  const retained = Math.max(35, 85 - (depth - 2) * 25);
-  return `color-mix(in oklab, ${baseColor} ${retained}%, var(--sumi-surface))`;
+  return `color-mix(in oklab, ${baseColor} ${sunburstRetained(depth)}%, var(--sumi-surface))`;
+}
+
+function sunburstRetained(depth: number): number {
+  return depth <= 1 ? 100 : Math.max(35, 85 - (depth - 2) * 25);
+}
+
+/** Label colour for a sunburst segment whose top-level colour carries
+ *  `baseShare` % accent (100 for a custom colour), tinted for `depth`.
+ *  Same cut as `heatmapTextColor`: from roughly `--sumi-seq-4` (84 %)
+ *  up the fill is dark (light mode) or light (dark mode) enough that
+ *  only the accent's "on" colour keeps 4.5:1. */
+export function sunburstTextColor(baseShare: number, depth: number): string {
+  const share = (baseShare * sunburstRetained(depth)) / 100;
+  return share >= 75 ? 'var(--sumi-on-accent)' : 'var(--sumi-text)';
 }
