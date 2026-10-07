@@ -1,10 +1,9 @@
 /**
  * Core area: tokens, theme, fonts, icons, hotkeys and `provideSumi()`.
  *
- * Hotkeys (`HotkeyService`) are a placeholder still; a follow-up issue adds
- * them. Everything else described in docs/concept.md's "Tokens" and
- * "Schrift" sections is here, plus the icon set and theme toggle used by
- * `sumi-app-shell` (see docs/concept.md#layout-und-mobil).
+ * See docs/concept.md's "Tokens", "Schrift" and "Hotkeys" sections, plus
+ * the icon set and theme toggle used by `sumi-app-shell` (see
+ * docs/concept.md#layout-und-mobil).
  */
 
 /** Current version of the Sumi UI source tree, bumped by hand per release. */
@@ -37,3 +36,18 @@ export {
   type SumiConfig,
   type SumiMotif,
 } from './provide-sumi';
+export {
+  SUMI_KEYS,
+  SumiHotkeys,
+  injectHotkey,
+  type SumiHotkeyDef,
+  type SumiHotkeyScope,
+} from './hotkeys/hotkeys';
+export {
+  type ParsedHotkey,
+  eventMatchesHotkey,
+  isEditableTarget,
+  parseKeys,
+} from './hotkeys/key-matching';
+export { type SumiPlatform, detectPlatform, formatKeys } from './hotkeys/key-format';
+export { SumiHotkeyHelp } from './hotkey-help/hotkey-help';
