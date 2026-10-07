@@ -623,10 +623,10 @@ successfully with `ng build` from a throwaway Angular 22 app):
    `charts/math.ts`, so a consuming app's bundler tree-shakes away whatever
    it does not call.
 
-   Every chart that is an actual SVG graphic (`sumi-segmented-bar`,
-   `sumi-sparkline`, `sumi-bar-chart`) is drawn with a `viewBox` and
-   `preserveAspectRatio` so it scales with its container, carries
-   `role="img"` plus a **required** `ariaLabel` input, and draws colour only
+   Every chart is sized in real pixels from its measured width (text and
+   bars never scale with the container), carries a **required**
+   `ariaLabel` input (`role="img"`; `role="group"` on `sumi-donut` and
+   `sumi-sunburst`, whose segments are focusable), and draws colour only
    from `--sumi-*` tokens (the sequential `--sumi-seq-0`…`-5` ramp by
    default for multi-segment charts). Each of them also takes an optional
    `table` input that adds a `<details>` "Show as table" fallback rendering
