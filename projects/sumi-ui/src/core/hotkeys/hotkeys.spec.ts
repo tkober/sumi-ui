@@ -220,6 +220,23 @@ describe('SumiHotkeys', () => {
 
     expect(handler).not.toHaveBeenCalled();
   });
+
+  describe('helpOpen', () => {
+    it('starts closed, toggles and closes, independent of any component', () => {
+      const hotkeys = create();
+      expect(hotkeys.helpOpen()).toBe(false);
+
+      hotkeys.toggleHelp();
+      expect(hotkeys.helpOpen()).toBe(true);
+
+      hotkeys.toggleHelp();
+      expect(hotkeys.helpOpen()).toBe(false);
+
+      hotkeys.toggleHelp();
+      hotkeys.closeHelp();
+      expect(hotkeys.helpOpen()).toBe(false);
+    });
+  });
 });
 
 describe('injectHotkey', () => {

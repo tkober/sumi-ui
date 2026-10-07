@@ -103,6 +103,27 @@ export class SumiHotkeys {
     this.registrations().filter((reg) => (reg.enabled ? reg.enabled() : true)),
   );
 
+  private readonly helpOpenSignal = signal(false);
+
+  /**
+   * Whether `sumi-hotkey-help` is open. Lives here, not on the component,
+   * because apps place a single `<sumi-hotkey-help />` once (typically in
+   * the shell) while a page deep inside the router outlet — e.g. a
+   * practice screen overriding `?` for its own feedback state — has no
+   * view-child reach into it. Reading/writing this signal is that page's
+   * way to drive the same flyout: see `toggleHelp`/`closeHelp` and
+   * `SumiHotkeyHelp`'s doc comment for the pattern.
+   */
+  readonly helpOpen = this.helpOpenSignal.asReadonly();
+
+  toggleHelp(): void {
+    this.helpOpenSignal.update((open) => !open);
+  }
+
+  closeHelp(): void {
+    this.helpOpenSignal.set(false);
+  }
+
   constructor() {
     if (!this.isBrowser) {
       return;

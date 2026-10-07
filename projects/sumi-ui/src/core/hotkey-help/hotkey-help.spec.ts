@@ -78,12 +78,20 @@ describe('SumiHotkeyHelp', () => {
     expect(panel()!.textContent).not.toContain('Details');
   });
 
-  it('exposes open as a model and toggle()', () => {
-    const { fixture } = create();
-    const instance = fixture.componentInstance;
-    expect(instance.open()).toBe(false);
-    instance.toggle();
-    expect(instance.open()).toBe(true);
+  it('open/closed state lives on SumiHotkeys, so a page with no view child can drive it', () => {
+    const { fixture, hotkeys, panel } = create();
+
+    // This is the practice-page pattern: no reference to the component at
+    // all, just the injected service — e.g. from a page inside the router
+    // outlet while `sumi-hotkey-help` itself lives once in the shell.
+    expect(hotkeys.helpOpen()).toBe(false);
+    hotkeys.toggleHelp();
+    fixture.detectChanges();
+    expect(panel()).not.toBeNull();
+
+    hotkeys.closeHelp();
+    fixture.detectChanges();
+    expect(panel()).toBeNull();
   });
 
   // The `(hover: hover) and (pointer: fine)` media query that hides the

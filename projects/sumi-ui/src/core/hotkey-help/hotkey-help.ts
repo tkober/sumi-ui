@@ -1,4 +1,4 @@
-import { Component, computed, inject, model } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { SumiIcon } from '../icon/icon';
 import { SumiKbdDirective } from '../../forms/kbd';
 import { type SumiPlatform, detectPlatform, formatKeys } from '../hotkeys/key-format';
@@ -31,14 +31,23 @@ const SCOPE_ORDER: SumiHotkeyScope[] = ['page', 'practice', 'feedback'];
  * `SumiHotkeys.active()`, grouped by scope, each with its key caps
  * (`sumiKbd`) and label.
  *
- * Registers `?` itself (scope `page`) to toggle and `Escape` (enabled only
- * while open) to close — both go through the same `SumiHotkeys` ground
- * rule, so `?` stays inert while a field has focus unless a caller's own
- * registration opts in with `allowInEditable` (see the practice showcase
- * page for the pattern: register `?` again with `allowInEditable: true`
- * and `enabled: feedback`, and call `toggle()`/set `open` from there — the
- * most recently registered one wins, so the practice page's own `?` takes
- * over from this component's while it is enabled).
+ * Open/closed state lives on `SumiHotkeys` itself (`helpOpen`,
+ * `toggleHelp()`, `closeHelp()`), not as a `model()` on this component: an
+ * app places a single `<sumi-hotkey-help />` once, typically in the shell,
+ * while the page that needs to drive it — e.g. a practice screen
+ * overriding `?` for its own feedback state — lives inside the router
+ * outlet and has no view-child reach into the shell's component tree.
+ * Injecting `SumiHotkeys` and calling `toggleHelp()` works from anywhere.
+ *
+ * This component registers `?` itself (scope `page`) to toggle and
+ * `Escape` (enabled only while open) to close — both go through the same
+ * `SumiHotkeys` ground rule, so `?` stays inert while a field has focus
+ * unless a caller's own registration opts in with `allowInEditable` (see
+ * the practice showcase page for the pattern: register `?` again with
+ * `allowInEditable: true` and `enabled: feedback`, and call
+ * `hotkeys.toggleHelp()` from the handler — the most recently registered
+ * one wins, so the practice page's own `?` takes over from this
+ * component's while it is enabled).
  *
  * Hidden entirely without a real pointer (`(hover: hover) and (pointer:
  * fine)`, see `hotkey-help.scss`) — there is nothing for it to remind a
@@ -59,21 +68,22 @@ export class SumiHotkeyHelp {
   private readonly hotkeys = inject(SumiHotkeys);
   private readonly platform: SumiPlatform = detectPlatform();
 
-  readonly open = model(false);
+  /** Thin alias for the template; `SumiHotkeys.helpOpen` is the single source of truth. */
+  protected readonly open = this.hotkeys.helpOpen;
 
   private readonly unregisterToggle = injectHotkey({
     keys: SUMI_KEYS.help,
     label: 'Show hotkeys',
     scope: 'page',
-    handler: () => this.toggle(),
+    handler: () => this.hotkeys.toggleHelp(),
   });
 
   private readonly unregisterClose = injectHotkey({
     keys: SUMI_KEYS.escape,
     label: 'Close hotkeys',
     scope: 'page',
-    enabled: () => this.open(),
-    handler: () => this.open.set(false),
+    enabled: () => this.hotkeys.helpOpen(),
+    handler: () => this.hotkeys.closeHelp(),
   });
 
   protected readonly groups = computed<HotkeyGroup[]>(() => {
@@ -90,7 +100,7 @@ export class SumiHotkeyHelp {
     }));
   });
 
-  toggle(): void {
-    this.open.update((open) => !open);
+  protected toggle(): void {
+    this.hotkeys.toggleHelp();
   }
 }
