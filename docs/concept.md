@@ -22,6 +22,7 @@ Apps. Jede App behält eine eigene Akzentfarbe und ein eigenes Tuschemotiv.
 | 5 | Theme | Standardmäßig nach System, manuell umschaltbar (light / dark / system), Wahl pro Gerät gespeichert |
 | 6 | Hotkeys | Siehe [Hotkeys](#hotkeys). „I know this“ (`Alt K`) gibt es nur im kanji-trainer. |
 | 7 | App-Umschalter | Ja. Einzige Quelle für die App-Liste ist kanazawa-dashboard. |
+| 8 | Überschriften-Schrift | **Murecho** statt Shippori Mincho: modern und klar, Mincho wirkte zu klassisch. UI und Prompt bleiben Zen Kaku Gothic New. |
 
 ## Bestandsaufnahme (Oktober 2026)
 
@@ -105,7 +106,7 @@ einem 4-px-Raster.
 
 | Rolle | Schrift | Einsatz |
 |---|---|---|
-| Display | Shippori Mincho | Überschriften, Session-Ende |
+| Display | Murecho | Überschriften, Marke, Session-Ende |
 | UI und Lernstoff | Zen Kaku Gothic New | alles andere, auch Prompts |
 | Daten | IBM Plex Mono | Tabellen, `kbd`, Zahlen |
 
