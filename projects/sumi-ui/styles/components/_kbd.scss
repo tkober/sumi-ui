@@ -1,0 +1,17 @@
+// `.sumi-kbd`: styling for `kbd[sumiKbd]` (see `SumiKbdDirective`).
+
+.sumi-kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.5em;
+  padding: 0.1em 0.45em;
+  border-radius: var(--sumi-radius-sm);
+  border: 1px solid var(--sumi-line);
+  background: var(--sumi-sunken);
+  color: var(--sumi-text-2);
+  font-family: var(--sumi-font-mono);
+  font-size: 0.85em;
+  line-height: 1.4;
+  box-shadow: 0 1px 0 var(--sumi-line);
+}

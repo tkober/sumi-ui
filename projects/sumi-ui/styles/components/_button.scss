@@ -1,0 +1,107 @@
+// `.sumi-button`: styling for `button[sumiButton]` / `a[sumiButton]`
+// (see `SumiButtonDirective` in `projects/sumi-ui/src/forms/button.ts`).
+//
+// Scoped entirely to the class, never to a bare `button`/`a` selector, so an
+// app that includes `sumi.scss` is not restyled until it opts in — see
+// "Native elements get an attribute directive + an opt-in CSS class" in the
+// issue this implements.
+
+.sumi-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sumi-space-2);
+  box-sizing: border-box;
+  border-radius: var(--sumi-radius-sm);
+  border: 1px solid var(--sumi-line);
+  background: transparent;
+  color: var(--sumi-text);
+  font-family: var(--sumi-font-ui);
+  font-size: var(--sumi-text-md);
+  line-height: 1;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease,
+    color 120ms ease;
+
+  // Sizes. `md` is the default, applied with no modifier class.
+  height: 2.5rem;
+  padding: 0 var(--sumi-space-4);
+
+  &--sm {
+    height: 2rem;
+    padding: 0 var(--sumi-space-3);
+    font-size: var(--sumi-text-sm);
+  }
+
+  &--lg {
+    height: 3rem;
+    padding: 0 var(--sumi-space-5);
+    font-size: var(--sumi-text-lg);
+  }
+
+  // Secondary (the default variant): flat, bordered, subtle hover fill.
+  &:hover {
+    background: var(--sumi-sunken);
+  }
+
+  // Primary: the only variant filled with the accent at rest.
+  &--primary {
+    border-color: var(--sumi-accent);
+    background: var(--sumi-accent);
+    color: var(--sumi-on-accent);
+
+    &:hover {
+      background: var(--sumi-accent-ink);
+      border-color: var(--sumi-accent-ink);
+    }
+  }
+
+  // Ghost: no border at all, otherwise like secondary.
+  &--ghost {
+    border-color: transparent;
+
+    &:hover {
+      background: var(--sumi-sunken);
+    }
+  }
+
+  // Danger: wrong-coloured text/border, filled only on hover.
+  &--danger {
+    border-color: var(--sumi-wrong);
+    color: var(--sumi-wrong);
+
+    &:hover {
+      background: var(--sumi-wrong);
+      color: var(--sumi-on-accent);
+    }
+  }
+
+  &:disabled,
+  &[aria-disabled='true'] {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  // Icon slot: a leading/trailing `svg` or `[sumiIcon]` is sized and spaced
+  // by the gap above; this only fixes its box so icons of different source
+  // sizes line up.
+  :is(svg, [sumiIcon]) {
+    width: 1.1em;
+    height: 1.1em;
+    flex: none;
+  }
+}
+
+@media (pointer: coarse) {
+  .sumi-button {
+    min-height: 44px;
+
+    &--sm {
+      min-height: 44px;
+    }
+  }
+}
