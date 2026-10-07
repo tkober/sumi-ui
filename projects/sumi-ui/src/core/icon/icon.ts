@@ -26,6 +26,7 @@ export type SumiIconName =
   | 'moon'
   | 'check'
   | 'cross'
+  | 'retry'
   | 'info'
   | 'warning'
   | 'keyboard'

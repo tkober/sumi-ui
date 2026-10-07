@@ -16,10 +16,10 @@ projects/
   sumi-ui/
     src/
       core/      # tokens, theme, fonts, provideSumi(), SumiHotkeys, sumi-hotkey-help
-      forms/     # sumi-answer-field and related inputs (placeholder)
-      practice/  # session building blocks (placeholder)
+      forms/     # native-element directives and composite form controls
+      practice/  # kana conversion + sumi-answer-field, sumiHoldFocus
       charts/    # statistics SVG components (placeholder)
-      layout/    # app shell, app switcher (placeholder)
+      layout/    # app shell, app switcher, page, card, badge, banner
     styles/
       sumi.scss        # style entry point: tokens + base styles
       sumi-fonts.scss  # @font-face rules, loaded separately and non-blocking
@@ -299,11 +299,137 @@ successfully with `ng build` from a throwaway Angular 22 app):
    before any registration is considered, so a page's own `Escape` (e.g.
    to clear a field) needs no extra gating.
 
-5. Install the library's font packages as direct dependencies — they are
-   `peerDependencies` here, so this repo expects the app to provide them:
+   ### Answer field
+
+   `sumi-answer-field` (`sumi-ui/practice`) is the library's heart (see
+   docs/concept.md#eingabe-sumi-answer-field): one input that converts
+   romaji to kana/katakana live, never goes `readonly` and never loses
+   focus. It is a dumb renderer of a state the app decides — the app (and
+   its backend) judges the answer and hands the result back as `verdict`;
+   the field only derives `typing` (no verdict) and `incomplete` (Enter
+   pressed on an unfinished syllable, e.g. "kan") on its own:
+
+   ```ts
+   import { SUMI_PRACTICE, type SumiVerdict } from 'sumi-ui/practice';
+
+   @Component({
+     imports: [...SUMI_PRACTICE /* , SumiButtonDirective, ... */],
+     // ...
+   })
+   export class Review {
+     protected readonly value = signal('');
+     protected readonly verdict = signal<SumiVerdict | null>(null);
+
+     protected async onSubmitted(answer: string): Promise<void> {
+       const result = await this.api.answer(answer); // the app's own backend call
+       if (result.heldBack) {
+         this.verdict.set({ kind: 'held', message: 'Sure? Enter counts it, Esc lets you fix it.' });
+         return;
+       }
+       this.verdict.set({
+         kind: result.correct ? 'correct' : 'wrong',
+         message: result.correct ? undefined : `Expected: ${result.expected}`,
+       });
+     }
+
+     protected onConfirmed(): void {
+       // Enter again while held: the learner insists — count it as wrong.
+       this.verdict.set({ kind: 'wrong', message: '…' });
+     }
+
+     protected onEdited(): void {
+       // Any edit while held/retry: clear the verdict so the next Enter is judged fresh.
+       this.verdict.set(null);
+     }
+
+     protected onNext(): void {
+       // Enter while correct/wrong: move to the next prompt.
+       this.value.set('');
+       this.verdict.set(null);
+       // ...load the next item
+     }
+   }
+   ```
+
+   ```html
+   <sumi-answer-field
+     mode="kana"
+     [verdict]="verdict()"
+     [iKnow]="true"
+     [iDontKnow]="true"
+     [(value)]="value"
+     label="Reading"
+     (submitted)="onSubmitted($event)"
+     (confirmed)="onConfirmed()"
+     (edited)="onEdited()"
+     (next)="onNext()"
+     (knew)="markKnown()"
+     (gaveUp)="revealAnswer()"
+   />
+   ```
+
+   `mode` is one of `'kana'`, `'katakana'`, `'romaji'`, `'latin'` (a
+   meaning, no conversion) or `'free'`. `value` is a `model()` holding the
+   *converted* text; the field keeps the romaji behind it internally
+   (`absorbInput`, from `sumi-ui/practice`'s `kana.ts`, also exported for
+   apps that need the bare conversion functions without the component).
+   `iKnow`/`iDontKnow` gate `Alt+K`/`Alt+H` (emitting `knew`/`gaveUp`) in
+   `typing`/`held`; both default to `false`, i.e. off. `disabled` is only
+   for a loading state — it is never how the field freezes after an
+   answer (see below).
+
+   Enter, Escape, Alt+K and Alt+H are registered by the field itself via
+   `injectHotkey` (scope `'practice'`), so an app using
+   `sumi-answer-field` does not register them again. Enter is registered
+   three times with mutually exclusive `enabled()` guards (typing/
+   incomplete, held, settled), which is how its `sumi-hotkey-help` label
+   switches between "Check answer", "Confirm" and "Next" without the
+   hotkey service needing a dynamic label. A `sumiButton`/`sumiHoldFocus`
+   "Check/Next" button next to the field can call the field's own
+   `submit()` method to do the same thing Enter does, without
+   duplicating the state table:
+
+   ```html
+   <button sumiButton variant="primary" sumiHoldFocus (click)="field.submit()">
+     {{ ... }}
+   </button>
+   ```
+
+   **What the field deliberately does *not* register: `F` and `?`.**
+   Those belong to the practice *page*, not the field — "show item info"
+   and "toggle the hotkey flyout" are decisions about what a specific app
+   shows after an answer, not something a generic input should own. A
+   practice page registers them itself, gated on a verdict being on
+   screen, exactly like the #10 showcase kept doing after adopting the
+   real field (see
+   `projects/showcase/src/app/pages/practice/practice.ts`):
+
+   ```ts
+   injectHotkey({
+     keys: SUMI_KEYS.details,
+     label: 'Show item info (after answering)',
+     scope: 'feedback',
+     allowInEditable: true,
+     enabled: () => this.verdict() !== null,
+     handler: () => this.detailsOpen.update((open) => !open),
+   });
+   ```
+
+   While a settled `correct`/`wrong` verdict is up, the field drops
+   keystrokes by restoring `value` inside its own `input` handler — it is
+   never `readonly`, which is what lets a phone's on-screen keyboard stay
+   open across an answer (see the class doc comment on
+   `SumiAnswerField` and kanji-trainer's `Review.onInput`/`keepFocus` for
+   the reasoning this generalises). An `effect` refocuses the field
+   whenever `verdict` changes (or the component first appears); a public
+   `focus()` method covers the rest.
+
+5. Install the library's font and wanakana packages as direct
+   dependencies — they are `peerDependencies` here, so this repo expects
+   the app to provide them:
 
    ```bash
-   npm install @fontsource/murecho @fontsource/zen-kaku-gothic-new @fontsource/ibm-plex-mono
+   npm install @fontsource/murecho @fontsource/zen-kaku-gothic-new @fontsource/ibm-plex-mono wanakana
    ```
 
 6. Load the fonts as their own, non-blocking stylesheet. `sumi.scss` (step
