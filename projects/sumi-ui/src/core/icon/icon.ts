@@ -28,7 +28,9 @@ export type SumiIconName =
   | 'cross'
   | 'info'
   | 'warning'
-  | 'keyboard';
+  | 'keyboard'
+  | 'apps'
+  | 'chevron-down';
 
 /**
  * A small inline-SVG icon, sized by `font-size` via `width/height: 1em` and

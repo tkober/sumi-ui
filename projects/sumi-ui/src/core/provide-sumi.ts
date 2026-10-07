@@ -25,6 +25,7 @@ export interface SumiConfig {
   accent: SumiAccentColors;
   motif: SumiMotif;
   dashboardPort: number;
+  switcherGroup?: string;
 }
 
 /** Options accepted by `provideSumi()`. */
@@ -32,6 +33,13 @@ export interface ProvideSumiOptions {
   accent?: SumiAccentPreset | SumiAccentColors;
   motif?: SumiMotif;
   dashboardPort?: number;
+  /**
+   * Overrides the group `sumi-app-switcher` shows siblings for, for an app
+   * that is not itself listed in kanazawa-dashboard's `apps.yaml` (so origin
+   * detection would otherwise find no current app). See
+   * docs/concept.md#app-umschalter.
+   */
+  switcherGroup?: string;
 }
 
 /** Injection token for the configuration `provideSumi()` resolves. */
@@ -85,6 +93,7 @@ export function provideSumi(options?: ProvideSumiOptions): EnvironmentProviders 
     accent: resolveAccent(options?.accent),
     motif: options?.motif ?? SUMI_DEFAULT_MOTIF,
     dashboardPort: options?.dashboardPort ?? SUMI_DEFAULT_DASHBOARD_PORT,
+    switcherGroup: options?.switcherGroup,
   };
 
   return makeEnvironmentProviders([

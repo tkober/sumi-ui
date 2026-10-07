@@ -1,0 +1,87 @@
+@if (directory.siblings().length > 0) {
+  <button
+    type="button"
+    class="sumi-app-switcher__trigger"
+    aria-haspopup="menu"
+    [attr.aria-expanded]="open()"
+    aria-label="Switch app"
+    (click)="toggle()"
+  >
+    @if (directory.current()?.icon) {
+      <span class="sumi-app-switcher__trigger-icon" lang="ja">{{ directory.current()!.icon }}</span>
+    } @else {
+      <sumi-icon class="sumi-app-switcher__trigger-icon" name="apps" />
+    }
+    <sumi-icon class="sumi-app-switcher__chevron" name="chevron-down" />
+  </button>
+
+  @if (open()) {
+    <div
+      class="sumi-app-switcher__menu"
+      role="menu"
+      aria-label="Switch app"
+      (keydown)="onMenuKeydown($event)"
+    >
+      @for (entry of directory.siblings(); track entry.id) {
+        @if (isCurrent(entry)) {
+          <div class="sumi-app-switcher__item sumi-app-switcher__item--current" aria-current="page">
+            <span
+              class="sumi-app-switcher__item-accent"
+              [style.background]="entry.accent || 'var(--sumi-line)'"
+            ></span>
+            <span class="sumi-app-switcher__item-icon">
+              @if (entry.icon) {
+                <span lang="ja">{{ entry.icon }}</span>
+              } @else {
+                <sumi-icon name="apps" />
+              }
+            </span>
+            <span class="sumi-app-switcher__item-body">
+              <span class="sumi-app-switcher__item-name">{{ entry.name }}</span>
+              @if (entry.description) {
+                <span class="sumi-app-switcher__item-description">{{ entry.description }}</span>
+              }
+            </span>
+            <sumi-icon class="sumi-app-switcher__item-check" name="check" />
+          </div>
+        } @else {
+          <a class="sumi-app-switcher__item" role="menuitem" [href]="entry.url">
+            <span
+              class="sumi-app-switcher__item-accent"
+              [style.background]="entry.accent || 'var(--sumi-line)'"
+            ></span>
+            <span class="sumi-app-switcher__item-icon">
+              @if (entry.icon) {
+                <span lang="ja">{{ entry.icon }}</span>
+              } @else {
+                <sumi-icon name="apps" />
+              }
+            </span>
+            <span class="sumi-app-switcher__item-body">
+              <span class="sumi-app-switcher__item-name">{{ entry.name }}</span>
+              @if (entry.description) {
+                <span class="sumi-app-switcher__item-description">{{ entry.description }}</span>
+              }
+            </span>
+          </a>
+        }
+      }
+
+      <div class="sumi-app-switcher__divider"></div>
+
+      <a
+        class="sumi-app-switcher__item sumi-app-switcher__item--dashboard"
+        role="menuitem"
+        [href]="directory.dashboardUrl()"
+      >
+        <span class="sumi-app-switcher__item-icon">
+          <sumi-icon name="apps" />
+        </span>
+        <span class="sumi-app-switcher__item-body">
+          <span class="sumi-app-switcher__item-name">All apps</span>
+          <span class="sumi-app-switcher__item-description">{{ directory.title() }}</span>
+        </span>
+      </a>
+    </div>
+  }
+}

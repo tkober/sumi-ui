@@ -1,0 +1,137 @@
+:host {
+  position: relative;
+  display: inline-flex;
+}
+
+.sumi-app-switcher__trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sumi-space-1);
+  height: 2rem;
+  padding: 0 var(--sumi-space-2);
+  border: 1px solid var(--sumi-line);
+  border-radius: var(--sumi-radius-pill);
+  background: var(--sumi-surface);
+  color: var(--sumi-text);
+  font: inherit;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--sumi-sunken);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--sumi-focus-ring);
+  }
+}
+
+.sumi-app-switcher__trigger-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--sumi-text-lg);
+  line-height: 1;
+}
+
+.sumi-app-switcher__chevron {
+  font-size: var(--sumi-text-sm);
+  color: var(--sumi-muted);
+}
+
+.sumi-app-switcher__menu {
+  position: absolute;
+  top: calc(100% + var(--sumi-space-2));
+  right: 0;
+  z-index: 30;
+  width: 280px;
+  max-width: calc(100vw - 32px);
+  max-height: 70vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--sumi-space-2);
+  background: var(--sumi-surface);
+  border: 1px solid var(--sumi-line);
+  border-radius: var(--sumi-radius);
+  box-shadow: var(--sumi-shadow);
+}
+
+.sumi-app-switcher__item {
+  display: flex;
+  align-items: center;
+  gap: var(--sumi-space-2);
+  padding: var(--sumi-space-2) var(--sumi-space-2);
+  min-height: 44px;
+  border-radius: var(--sumi-radius-sm);
+  color: var(--sumi-text);
+  text-decoration: none;
+
+  &:hover {
+    background: var(--sumi-sunken);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--sumi-focus-ring);
+  }
+}
+
+.sumi-app-switcher__item--current {
+  color: var(--sumi-text);
+}
+
+.sumi-app-switcher__item--dashboard {
+  color: var(--sumi-text-2);
+}
+
+.sumi-app-switcher__item-accent {
+  flex: none;
+  width: 4px;
+  height: 24px;
+  border-radius: var(--sumi-radius-pill);
+}
+
+.sumi-app-switcher__item-icon {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  font-size: var(--sumi-text-lg);
+  line-height: 1;
+}
+
+.sumi-app-switcher__item-body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.sumi-app-switcher__item-name {
+  font-size: var(--sumi-text-sm);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sumi-app-switcher__item-description {
+  font-size: var(--sumi-text-xs);
+  color: var(--sumi-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sumi-app-switcher__item-check {
+  flex: none;
+  color: var(--sumi-accent-ink);
+}
+
+.sumi-app-switcher__divider {
+  height: 1px;
+  margin: var(--sumi-space-1) var(--sumi-space-2);
+  background: var(--sumi-line);
+}

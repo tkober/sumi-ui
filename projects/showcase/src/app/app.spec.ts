@@ -2,6 +2,8 @@ import { provideZonelessChangeDetection } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { Location } from '@angular/common';
+import { provideSumi } from 'sumi-ui/core';
+import { SUMI_APP_DIRECTORY_WINDOW } from 'sumi-ui/layout';
 
 import { App } from './app';
 import { routes } from './app.routes';
@@ -10,7 +12,25 @@ describe('App', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [App],
-      providers: [provideZonelessChangeDetection(), provideRouter(routes)],
+      providers: [
+        provideZonelessChangeDetection(),
+        provideRouter(routes),
+        provideSumi(),
+        // Keep the app switcher off the network: there is no dashboard in tests.
+        {
+          provide: SUMI_APP_DIRECTORY_WINDOW,
+          useValue: {
+            location: {
+              protocol: 'http:',
+              hostname: 'localhost',
+              origin: 'http://localhost',
+              port: '',
+            },
+            localStorage: window.localStorage,
+            fetch: () => Promise.reject(new Error('no dashboard in tests')),
+          },
+        },
+      ],
     }).compileComponents();
   });
 
