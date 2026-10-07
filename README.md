@@ -576,15 +576,19 @@ successfully with `ng build` from a throwaway Angular 22 app):
    }
    ```
 
-   Then load it from `index.html` so the browser fetches it without
-   blocking first paint, and falls back to a normal blocking stylesheet
-   when JavaScript is off:
+   Then link it from `index.html` as a plain stylesheet:
 
    ```html
-   <link rel="preload" as="style" href="sumi-fonts.css" />
-   <link rel="stylesheet" href="sumi-fonts.css" media="print" onload="this.media = 'all'" />
-   <noscript><link rel="stylesheet" href="sumi-fonts.css" /></noscript>
+   <link rel="stylesheet" href="sumi-fonts.css" />
    ```
+
+   The production build's critical-CSS inliner (on by default with
+   `optimization: true`) rewrites this link into a non-blocking one
+   (`media="print"`, swapped to `all` by its own script, with a `<noscript>`
+   fallback). Do not add the usual `media="print" onload="this.media='all'"`
+   trick by hand: the inliner's script then resets `media` to `print` after
+   the `onload` has fired, and on a cached reload the fonts never apply.
+   In development builds (no inlining) the link simply blocks, which is fine.
 
    `bundleName: 'sumi-fonts'` keeps the output file name
    `sumi-fonts.css` fixed even with `outputHashing: 'all'` in the
