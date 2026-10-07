@@ -124,6 +124,16 @@ export class SumiAnswerField {
    * `absorbInput` and kanji-trainer's `raw` signal.
    */
   private readonly rawBuffer = signal('');
+  /**
+   * The last value this component itself wrote to `value()`, so the resync
+   * effect in the constructor can tell its own writes apart from an
+   * external one (the app clearing the field between prompts, or binding an
+   * initial value) — only an external write should reset `rawBuffer`, or a
+   * reset between cards would leave the old romaji buffer behind and the
+   * next card's first keystrokes would absorb into *that* instead of
+   * starting fresh.
+   */
+  private lastOwnValue = '';
 
   /** Set by Enter on an unfinished syllable, cleared by the next edit. */
   private readonly incomplete = signal(false);
@@ -186,6 +196,17 @@ export class SumiAnswerField {
       this.inputRef()?.nativeElement.focus({ preventScroll: true });
       if (verdict?.kind === 'wrong') {
         this.triggerShake();
+      }
+    });
+
+    // Resyncs the romaji buffer whenever `value` changes from the outside
+    // (the app resetting it to '' for a new prompt, or binding an initial
+    // value) — see `lastOwnValue`'s doc comment.
+    effect(() => {
+      const current = this.value();
+      if (current !== this.lastOwnValue) {
+        this.rawBuffer.set(current);
+        this.lastOwnValue = current;
       }
     });
 
@@ -284,16 +305,14 @@ export class SumiAnswerField {
     const mode = this.mode();
     if (mode === 'kana' || mode === 'katakana') {
       const nextRaw = absorbInput(element.value, this.value(), this.rawBuffer());
-      this.rawBuffer.set(nextRaw);
       const converted = isKana(nextRaw)
         ? nextRaw
         : mode === 'kana'
           ? romajiToKana(nextRaw)
           : romajiToKatakana(nextRaw);
-      this.value.set(converted);
+      this.writeValue(nextRaw, converted);
     } else {
-      this.rawBuffer.set(element.value);
-      this.value.set(element.value);
+      this.writeValue(element.value, element.value);
     }
 
     if (this.incomplete()) {
@@ -322,8 +341,7 @@ export class SumiAnswerField {
         return;
       }
       if (finalised !== current) {
-        this.rawBuffer.set(finalised);
-        this.value.set(finalised);
+        this.writeValue(finalised, finalised);
       }
       this.incomplete.set(false);
       this.submitted.emit(answer);
@@ -342,6 +360,14 @@ export class SumiAnswerField {
     const element = this.inputRef()?.nativeElement;
     element?.focus();
     element?.select();
+  }
+
+  /** Writes both `value` and the romaji buffer behind it as one of this
+   * component's own edits — see `lastOwnValue`'s doc comment. */
+  private writeValue(raw: string, value: string): void {
+    this.rawBuffer.set(raw);
+    this.value.set(value);
+    this.lastOwnValue = value;
   }
 
   private triggerShake(): void {

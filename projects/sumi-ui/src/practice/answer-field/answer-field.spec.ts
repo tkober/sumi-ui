@@ -95,6 +95,24 @@ describe('SumiAnswerField', () => {
     expect(input().value).toBe('さに');
   });
 
+  it('resyncs the romaji buffer when the app resets value between prompts', () => {
+    // Regression: without this, resetting `value` to '' between cards left
+    // the previous card's romaji buffer behind, so the next card's first
+    // keystrokes absorbed into the stale buffer instead of starting fresh.
+    const { fixture, host, input } = create();
+    setValue(input(), 'onnna');
+    fixture.detectChanges();
+    expect(input().value).toBe('おんな');
+
+    host.value.set('');
+    fixture.detectChanges();
+    expect(input().value).toBe('');
+
+    setValue(input(), 'k');
+    fixture.detectChanges();
+    expect(input().value).toBe('k');
+  });
+
   it('submits the finalised, trimmed answer on Enter while typing', () => {
     const { fixture, host, input } = create();
     setValue(input(), 'san');
