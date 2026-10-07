@@ -1,4 +1,12 @@
-import { Component, ElementRef, inject, input, signal } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  Injector,
+  afterNextRender,
+  inject,
+  input,
+  signal,
+} from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { SumiIcon, SumiIconName, SumiKeyboardVisibility, SumiThemeToggle } from 'sumi-ui/core';
 import { SumiBadge, type SumiBadgeTone } from '../badge/badge';
@@ -63,6 +71,7 @@ export class SumiAppShell {
   protected readonly mainId = 'sumi-app-shell-main';
 
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly injector = inject(Injector);
 
   protected readonly moreOpen = signal(false);
 
@@ -84,13 +93,20 @@ export class SumiAppShell {
 
   protected openMore(): void {
     this.moreOpen.set(true);
-    queueMicrotask(() => {
-      this.host.nativeElement
-        .querySelector<HTMLElement>(
-          '.sumi-app-shell__more-sheet a, .sumi-app-shell__more-sheet button',
-        )
-        ?.focus();
-    });
+    // `moreOpen.set()` only schedules change detection; the sheet does not
+    // exist in the DOM yet on this turn. `afterNextRender` runs once the
+    // next render (the one that creates it) has actually committed, unlike
+    // a plain microtask which can still run before Angular's own update.
+    afterNextRender(
+      () => {
+        this.host.nativeElement
+          .querySelector<HTMLElement>(
+            '.sumi-app-shell__more-sheet a, .sumi-app-shell__more-sheet button',
+          )
+          ?.focus();
+      },
+      { injector: this.injector },
+    );
   }
 
   protected closeMore(): void {
