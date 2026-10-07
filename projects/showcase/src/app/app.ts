@@ -1,11 +1,11 @@
 import { Component, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { SumiAccent, SumiAccentPreset } from 'sumi-ui/core';
+import { SumiAccent, SumiAccentPreset, SumiHotkeyHelp } from 'sumi-ui/core';
 import { SumiAppShellBrand, SumiNavItem, SumiShell, SUMI_LAYOUT } from 'sumi-ui/layout';
 import { SumiButtonDirective } from 'sumi-ui/forms';
 
 @Component({
-  imports: [RouterOutlet, ...SUMI_LAYOUT, SumiButtonDirective],
+  imports: [RouterOutlet, ...SUMI_LAYOUT, SumiButtonDirective, SumiHotkeyHelp],
   selector: 'app-root',
   styleUrl: './app.scss',
   templateUrl: './app.html',

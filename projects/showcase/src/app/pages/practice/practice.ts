@@ -1,8 +1,8 @@
-import { Component, ElementRef, signal, viewChild } from '@angular/core';
+import { Component, ElementRef, inject, signal, viewChild } from '@angular/core';
 import { SUMI_PRACTICE_PLACEHOLDER } from 'sumi-ui/practice';
 import { SumiPage } from 'sumi-ui/layout';
 import { SumiInputDirective, SumiKbdDirective } from 'sumi-ui/forms';
-import { SUMI_KEYS, SumiHotkeyHelp, injectHotkey } from 'sumi-ui/core';
+import { SUMI_KEYS, SumiHotkeys, injectHotkey } from 'sumi-ui/core';
 
 /**
  * Hotkey showcase: a plain `sumiInput` field (no kana logic — that is #11)
@@ -20,20 +20,24 @@ import { SUMI_KEYS, SumiHotkeyHelp, injectHotkey } from 'sumi-ui/core';
  *   become real hotkeys — both registered with `allowInEditable: true` and
  *   `enabled: () => this.feedback()`, which is the pattern a real app's
  *   practice screen uses to unlock bare keys only once an answer is no
- *   longer being typed. `?` here calls `help().toggle()` directly on a
- *   view-child `sumi-hotkey-help`, which is how a page overrides the
- *   flyout's own `?` registration (stack semantics: the one registered
- *   more recently, i.e. this page's, wins while it is enabled) — see
- *   `SumiHotkeyHelp`'s doc comment for the general pattern.
+ *   longer being typed. `?` here calls `SumiHotkeys.toggleHelp()` directly
+ *   — not a view child, since the one `<sumi-hotkey-help />` for the whole
+ *   app lives in `app.html`'s shell, outside this page's own template, and
+ *   open/closed state lives on the service for exactly that reason. This
+ *   overrides the flyout's own `?` registration via stack semantics (the
+ *   one registered more recently, i.e. this page's, wins while it is
+ *   enabled) — see `SumiHotkeyHelp`'s doc comment for the general pattern.
  */
 @Component({
   selector: 'app-practice-page',
   templateUrl: './practice.html',
   styleUrl: './practice.scss',
-  imports: [SumiPage, SumiInputDirective, SumiKbdDirective, SumiHotkeyHelp],
+  imports: [SumiPage, SumiInputDirective, SumiKbdDirective],
 })
 export class PracticePage {
   protected readonly placeholder = SUMI_PRACTICE_PLACEHOLDER;
+
+  private readonly hotkeys = inject(SumiHotkeys);
 
   protected readonly value = signal('');
   protected readonly feedback = signal(false);
@@ -41,7 +45,6 @@ export class PracticePage {
   protected readonly log = signal<string[]>([]);
 
   private readonly field = viewChild<ElementRef<HTMLInputElement>>('field');
-  private readonly help = viewChild(SumiHotkeyHelp);
 
   constructor() {
     injectHotkey({
@@ -60,6 +63,13 @@ export class PracticePage {
       keys: SUMI_KEYS.escape,
       label: 'Clear the field',
       scope: 'practice',
+      // Gated on the flyout being closed rather than relying on
+      // registration order: `sumi-hotkey-help` now lives once in the
+      // shell, mounted before this page, so stack semantics alone would
+      // have *this* Escape win over the flyout's close — exactly
+      // backwards. Checking `helpOpen()` here keeps "close the flyout
+      // first" correct independent of where either one happens to mount.
+      enabled: () => !this.hotkeys.helpOpen(),
       handler: () => {
         this.value.set('');
         this.logHotkey('Esc');
@@ -99,7 +109,7 @@ export class PracticePage {
       allowInEditable: true,
       enabled: () => this.feedback(),
       handler: () => {
-        this.help()?.toggle();
+        this.hotkeys.toggleHelp();
         this.logHotkey('?');
       },
     });
