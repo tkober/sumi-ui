@@ -30,6 +30,13 @@
   mask-image: linear-gradient(90deg, transparent, #000 15%, #000 85%, transparent);
 }
 
+// A companion stands in for the landscape: centred, its own square
+// aspect ratio (unlike the landscape's 3:1), no horizontal fade mask.
+.sumi-empty-state__companion {
+  display: block;
+  margin: var(--sumi-space-2) auto;
+}
+
 .sumi-empty-state__body {
   padding: var(--sumi-space-4);
   display: grid;

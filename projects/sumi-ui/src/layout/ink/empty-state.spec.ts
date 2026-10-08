@@ -50,3 +50,37 @@ describe('SumiEmptyState', () => {
     expect(host.querySelector('sumi-pattern')).toBeTruthy();
   });
 });
+
+@Component({
+  imports: [SumiEmptyState],
+  template: `<sumi-empty-state title="No reviews due" companion="usagi" />`,
+})
+class CompanionHostComponent {}
+
+describe('SumiEmptyState with a companion', () => {
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      imports: [CompanionHostComponent],
+      providers: [
+        {
+          provide: SUMI_CONFIG,
+          useValue: {
+            accent: SUMI_ACCENT_PRESETS.ai,
+            motif: 'mountains',
+            pattern: 'seigaiha',
+            dashboardPort: 8087,
+          },
+        },
+      ],
+    });
+  });
+
+  it('shows the companion instead of the landscape, keeping the pattern', () => {
+    const fixture = TestBed.createComponent(CompanionHostComponent);
+    fixture.detectChanges();
+    const host = fixture.nativeElement as HTMLElement;
+    expect(host.querySelector('sumi-companion')).toBeTruthy();
+    expect(host.querySelector('sumi-landscape')).toBeNull();
+    expect(host.querySelector('sumi-pattern')).toBeTruthy();
+  });
+});

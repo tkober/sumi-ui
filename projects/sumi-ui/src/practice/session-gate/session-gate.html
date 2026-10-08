@@ -1,4 +1,7 @@
 <div class="sumi-session-gate__content">
+  @if (companion(); as c) {
+    <sumi-companion class="sumi-session-gate__companion" [kind]="c" [size]="96" />
+  }
   @if (title(); as t) {
     <h1 class="sumi-session-gate__title">{{ t }}</h1>
   }

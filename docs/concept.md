@@ -263,6 +263,43 @@ Umgesetzt in sumi-ui#16, `projects/sumi-ui/src/layout/ink/`.
 - Die Zuordnung von Landschaft/Muster pro App wird später festgelegt
   (sumi-ui#25).
 
+### Begleiter (sumi-ui#38)
+
+`SumiCompanion`, `sumi-companion`, `projects/sumi-ui/src/layout/ink/companions.ts`.
+Neun Tierfiguren im Pinsel-Stil (nicht die verworfenen „detailliert“- und
+„reduziert“-Entwürfe aus dem Motiv-Artifact, siehe Issue-Verlauf): `tsuru`
+(Kranich), `neko` (Katze), `shiba`, `kame` (Schildkröte), `tanuki`, `kitsune`
+(Fuchs), `usagi` (Hase), `koi`, `fukurou` (Eule).
+
+- **Bausteine:** spitz zulaufende Pinselstriche entlang einer Kubik-Kurve mit
+  Breitenprofil (`brushStroke`), daraus abgeleitete Blätter/Klingen (`blade`),
+  Lavierungen als linear/radial verlaufende Verläufe (`wash`/`rwash`), Gras mit
+  einem seeded RNG (`grass`, deterministisch) und ein SVG-Filter mit leichtem
+  Wobbeln (`brushFilter`: zwei `feTurbulence` + `feDisplacementMap`,
+  niederfrequent plus feine Kante) — reine, in `companions.spec.ts` getestete
+  Funktionen, die Tiere selbst sind Daten (`SUMI_COMPANIONS`).
+- **Farbe:** alles in `--sumi-text` mit Deckkraftstufen, wie die Landschaften
+  (im Dunkelmodus helle Tusche). Anders als die Landschaften skalieren
+  Begleiter **nicht** mit `--sumi-ink-strength` — sie sind Vordergrundfiguren,
+  keine Hintergrundlavierung, und behalten die im Entwurf geprüften
+  Deckkraftwerte unverändert.
+- **Akzent:** genau ein Element pro Tier, beim Kranich die Krone in
+  `--sumi-vermilion`, bei den anderen acht in `--sumi-accent`.
+- **Highlights** (z. B. ein Auge, ein Augenring): im Entwurf die Seitenfarbe,
+  in der Bibliothek `--sumi-surface` — die Fläche, die auch
+  `sumi-empty-state` und `sumi-ink-backdrop` für denselben Zweck benutzen.
+- **IDs:** Filter- und Verlaufs-IDs sind pro `sumi-companion`-Instanz
+  eindeutig (ein Zähler pro Komponente), damit zwei Begleiter derselben Art
+  auf einer Seite sich nicht gegenseitig überschreiben.
+- Nie auf dem Übungsscreen selbst (nur Gate, Leerzustand, Session-Ende), nie
+  hinter Text, genau ein Akzent-Element, Pinselstil in `--sumi-text`.
+- `provideSumi({ companion })`, Standard `tsuru` (das einzige Tier mit festem
+  Zinnober-Akzent, liest also in jedem App-Akzent gleich).
+- Platzierungen: `sumi-session-gate`'s `companion`-Input (über dem Titel),
+  `sumi-empty-state`'s `companion`-Input (ersetzt die Landschaft, das Muster
+  bleibt), und `sumi-session-summary`'s bestehender `[sumiSummaryArt]`-Slot
+  (Begleiter neben `sumi-hanko`, keine API-Änderung nötig).
+
 ## App-Umschalter
 
 kanazawa-dashboard ist die einzige Quelle dafür, welche App wo läuft

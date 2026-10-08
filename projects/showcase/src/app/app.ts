@@ -21,6 +21,7 @@ export class App {
     { label: 'Charts', link: 'charts', icon: 'stats' },
     { label: 'Layout', link: 'layout', icon: 'home' },
     { label: 'Motifs', link: 'motifs', icon: 'apps' },
+    { label: 'Companions', link: 'companions', icon: 'more' },
     { label: 'About', link: 'about', icon: 'list' },
   ];
 

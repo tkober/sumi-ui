@@ -30,6 +30,20 @@ export type SumiMotif =
 export type SumiPattern =
   'seigaiha' | 'asanoha' | 'shippo' | 'kikko' | 'sayagata' | 'yagasuri' | 'none';
 
+/**
+ * Brush-style companion animal (see docs/concept.md#tuschemotive and
+ * sumi-ui#38), rendered by `sumi-companion`. Kept as its own literal
+ * union (rather than importing `SumiCompanionId` from
+ * `layout/ink/companions`) so `core` does not depend on `layout` — keep
+ * the two lists in sync. Unlike `SumiMotif`/`SumiPattern` there is no
+ * `'none'`: a companion is only ever shown by explicitly opting in
+ * (`sumi-session-gate`'s `companion` input, `sumi-empty-state`'s
+ * `companion` input, or placing `sumi-companion` directly), never by a
+ * default that renders something unwanted.
+ */
+export type SumiCompanion =
+  'tsuru' | 'neko' | 'shiba' | 'kame' | 'tanuki' | 'kitsune' | 'usagi' | 'koi' | 'fukurou';
+
 /** Default dashboard port, see docs/concept.md#app-umschalter. */
 export const SUMI_DEFAULT_DASHBOARD_PORT = 8087;
 
@@ -39,11 +53,21 @@ export const SUMI_DEFAULT_MOTIF: SumiMotif = 'mountains';
 /** Default pattern, used when `provideSumi()` is called without `pattern`. */
 export const SUMI_DEFAULT_PATTERN: SumiPattern = 'seigaiha';
 
+/**
+ * Default companion, used when `provideSumi()` is called without
+ * `companion` and `sumi-companion`'s own `[kind]` is not set. The crane
+ * (tsuru) is the library's flagship companion — the only one with a
+ * vermilion accent rather than `--sumi-accent`, which makes it read the
+ * same across every app's accent colour.
+ */
+export const SUMI_DEFAULT_COMPANION: SumiCompanion = 'tsuru';
+
 /** Resolved configuration, read by later issues (app switcher, motifs). */
 export interface SumiConfig {
   accent: SumiAccentColors;
   motif: SumiMotif;
   pattern: SumiPattern;
+  companion: SumiCompanion;
   dashboardPort: number;
   switcherGroup?: string;
 }
@@ -53,6 +77,8 @@ export interface ProvideSumiOptions {
   accent?: SumiAccentPreset | SumiAccentColors;
   motif?: SumiMotif;
   pattern?: SumiPattern;
+  /** Which companion animal (see docs/concept.md#tuschemotive) is used by default. */
+  companion?: SumiCompanion;
   dashboardPort?: number;
   /**
    * Overrides the group `sumi-app-switcher` shows siblings for, for an app
@@ -128,6 +154,7 @@ export function provideSumi(options?: ProvideSumiOptions): EnvironmentProviders 
     accent: resolveAccent(options?.accent),
     motif: options?.motif ?? SUMI_DEFAULT_MOTIF,
     pattern: options?.pattern ?? SUMI_DEFAULT_PATTERN,
+    companion: options?.companion ?? SUMI_DEFAULT_COMPANION,
     dashboardPort: options?.dashboardPort ?? SUMI_DEFAULT_DASHBOARD_PORT,
     switcherGroup: options?.switcherGroup,
   };

@@ -6,7 +6,11 @@
     [tileHeight]="36"
     background="var(--sumi-sunken)"
   />
-  <sumi-landscape class="sumi-empty-state__scene" [motif]="motif()" />
+  @if (companion(); as c) {
+    <sumi-companion class="sumi-empty-state__companion" [kind]="c" [size]="88" />
+  } @else {
+    <sumi-landscape class="sumi-empty-state__scene" [motif]="motif()" />
+  }
 </div>
 <div class="sumi-empty-state__body">
   <h3 class="sumi-empty-state__title">{{ title() }}</h3>

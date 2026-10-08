@@ -19,7 +19,7 @@ projects/
       forms/     # native-element directives and composite form controls
       practice/  # kana conversion + sumi-answer-field, sumiHoldFocus
       charts/    # statistics components: stat tile, segmented bar, sparkline, bar chart, calendar/matrix heatmaps, legend, data table
-      layout/    # app shell, app switcher, page, card, badge, banner, ink motifs (landscapes/patterns, sumi-ink-backdrop, sumi-empty-state, sumi-hanko)
+      layout/    # app shell, app switcher, page, card, badge, banner, ink motifs (landscapes/patterns, sumi-ink-backdrop, sumi-empty-state, sumi-hanko, sumi-companion)
     styles/
       sumi.scss        # style entry point: tokens + base styles
       sumi-fonts.scss  # @font-face rules, loaded separately and non-blocking
@@ -192,6 +192,55 @@ successfully with `ng build` from a throwaway Angular 22 app):
      `"合格"`) and `label` (the accessible name) are required; `size`
      defaults to `54` (px). Plays a brief stamp-in animation unless the
      viewer prefers reduced motion.
+
+   ### Companions
+
+   See docs/concept.md#begleiter-sumi-ui38 for the full picture (the
+   sumi-ui#38 showcase page, "Companions", is the easiest way to browse
+   these live).
+
+   Nine brush-style companion animals — tapered strokes, ink washes and a
+   light frayed-edge filter, all in `--sumi-text` like the landscapes, with
+   exactly one accent element each:
+
+   ```html
+   <sumi-companion kind="koi" [size]="120" label="A koi swimming" />
+   ```
+
+   - `kind` (`SumiCompanion`): `'tsuru'` (crane), `'neko'` (cat),
+     `'shiba'`, `'kame'` (turtle), `'tanuki'`, `'kitsune'` (fox), `'usagi'`
+     (rabbit), `'koi'` or `'fukurou'` (owl). Reads `SUMI_CONFIG`'s default
+     (`provideSumi({ companion })`, see below) when unset, falling back to
+     `'tsuru'` with no config at all.
+   - `size` (px, default `104`).
+   - `label`: unset (the default) renders the companion `aria-hidden`
+     (decorative); set it to make the instance a `role="img"` with that
+     accessible name instead.
+   - Every companion has exactly one accent element — `--sumi-vermilion`
+     for the crane's crown, `--sumi-accent` for every other companion.
+     Unlike the landscapes, companions don't scale with
+     `--sumi-ink-strength` — they're foreground figures, not a background
+     wash.
+   - Filter/gradient ids are unique per rendered `sumi-companion`, so two
+     companions of the same kind on one page never clash.
+   - `provideSumi({ companion })`: the app-wide default kind, `'tsuru'` if
+     unset — the only companion with a fixed vermilion accent, so it reads
+     the same regardless of the app's accent colour.
+   - Never put a companion on the practice screen itself or behind text
+     (see docs/concept.md#tuschemotive). Three approved placements:
+     - `sumi-session-gate`'s `companion` input shows it above the title.
+     - `sumi-empty-state`'s `companion` input shows it instead of the
+       landscape (the pattern band stays).
+     - `sumi-session-summary`'s existing `[sumiSummaryArt]` slot takes a
+       `sumi-companion` next to `sumi-hanko`, no API change needed:
+       ```html
+       <sumi-session-summary ...>
+         <span sumiSummaryArt style="display:flex; gap:8px; align-items:center">
+           <sumi-companion kind="tsuru" [size]="72" />
+           <sumi-hanko characters="合格" label="Passed, level complete" />
+         </span>
+       </sumi-session-summary>
+       ```
 
    ### App switcher
 

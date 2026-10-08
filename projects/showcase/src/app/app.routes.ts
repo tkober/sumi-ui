@@ -27,6 +27,10 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/motifs/motifs').then((m) => m.MotifsPage),
   },
   {
+    path: 'companions',
+    loadComponent: () => import('./pages/companions/companions').then((m) => m.CompanionsPage),
+  },
+  {
     path: 'about',
     loadComponent: () => import('./pages/about/about').then((m) => m.AboutPage),
   },

@@ -31,12 +31,17 @@ export {
   SumiInkBackdrop,
   SumiEmptyState,
   SumiHanko,
+  SUMI_COMPANIONS,
+  findCompanion,
+  SumiCompanion,
   type SumiGeneratedPattern,
   type SumiHankoSize,
   type SumiLandscapeDef,
   type SumiLandscapeId,
   type SumiPatternDef,
   type SumiPatternId,
+  type SumiCompanionDef,
+  type SumiCompanionId,
 } from './ink';
 
 import { SumiCard } from './card/card';
@@ -48,7 +53,14 @@ import { SumiNavLockDirective } from './shell/nav-lock.directive';
 import { SumiShellFocusActionsDirective } from './shell/focus-actions.directive';
 import { SumiPage } from './page/page';
 import { SumiAppSwitcher } from './app-switcher/app-switcher';
-import { SumiLandscape, SumiPattern, SumiInkBackdrop, SumiEmptyState, SumiHanko } from './ink';
+import {
+  SumiLandscape,
+  SumiPattern,
+  SumiInkBackdrop,
+  SumiEmptyState,
+  SumiHanko,
+  SumiCompanion,
+} from './ink';
 
 /** Convenience array for `imports: [...SUMI_LAYOUT]` in a standalone component. */
 export const SUMI_LAYOUT = [
@@ -66,4 +78,5 @@ export const SUMI_LAYOUT = [
   SumiInkBackdrop,
   SumiEmptyState,
   SumiHanko,
+  SumiCompanion,
 ] as const;

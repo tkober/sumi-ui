@@ -1,0 +1,88 @@
+<sumi-page
+  title="Companions"
+  subtitle="Brush-style companion animals (sumi-ui#38). Toggle the theme and accent above to see both."
+>
+  <section>
+    <h2>All companions</h2>
+    <p class="hint">
+      Every companion has exactly one accent element — the accent picker above recolours it live
+      (the crane's crown is always vermilion, never the accent).
+    </p>
+    <div class="gallery">
+      @for (c of companions; track c.id) {
+        <button type="button" class="tile" (click)="select(c.id)">
+          <span class="tile-art"><sumi-companion [kind]="c.id" [size]="128" /></span>
+          <span class="tile-name"
+            >{{ c.name }} <span lang="ja" class="muted">{{ c.jp }}</span></span
+          >
+        </button>
+      }
+    </div>
+  </section>
+
+  <section>
+    <h2>Session gate</h2>
+    <p class="hint">
+      <code>sumi-session-gate</code>'s <code>companion</code> input shows a companion above the
+      title — the gate is the idle/ended screen, never the practice screen itself.
+    </p>
+    <sumi-session-gate
+      class="placement-demo"
+      title="Ready to practice?"
+      text="10 cards are due."
+      actionLabel="Start session"
+      [companion]="selected()"
+      (start)="startSession()"
+    />
+  </section>
+
+  <section>
+    <h2>Empty state</h2>
+    <p class="hint">
+      <code>sumi-empty-state</code>'s <code>companion</code> input swaps in a companion instead of
+      the landscape; the pattern band stays.
+    </p>
+    <sumi-empty-state
+      class="placement-demo placement-demo--empty"
+      title="No reviews due"
+      [companion]="selected()"
+    >
+      The next item comes back at 14:00.
+      <button sumiEmptyAction sumiButton variant="primary" type="button">Go to lessons</button>
+    </sumi-empty-state>
+  </section>
+
+  <section>
+    <h2>Session end, with a hanko</h2>
+    <p class="hint">
+      <code>sumi-session-summary</code>'s <code>[sumiSummaryArt]</code> slot already accepts any
+      content — put a <code>sumi-companion</code> next to <code>sumi-hanko</code> there, no API
+      change needed.
+    </p>
+    <sumi-ink-backdrop class="placement-demo placement-demo--end">
+      <sumi-session-summary
+        [answered]="42"
+        [correct]="37"
+        [durationMs]="372000"
+        (restart)="restart()"
+      >
+        <span sumiSummaryArt class="art-row">
+          <sumi-companion [kind]="selected()" [size]="72" />
+          <sumi-hanko characters="合格" label="Passed, level complete" />
+        </span>
+      </sumi-session-summary>
+    </sumi-ink-backdrop>
+  </section>
+
+  <section>
+    <h2>Two of the same kind, no id clash</h2>
+    <p class="hint">
+      Each <code>sumi-companion</code> generates its own filter/gradient ids — two instances of the
+      same companion never override each other's wobble filter.
+    </p>
+    <div class="pair">
+      <sumi-companion [kind]="selected()" [size]="128" />
+      <sumi-companion [kind]="selected()" [size]="128" />
+    </div>
+  </section>
+</sumi-page>
