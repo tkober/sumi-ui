@@ -1,6 +1,7 @@
 import { Component, computed, signal } from '@angular/core';
 import {
   SUMI_CHARTS,
+  SumiTableCellTemplate,
   type SumiBar,
   type SumiCalendarDay,
   type SumiDonutSegment,
@@ -8,6 +9,8 @@ import {
   type SumiMatrixCellSelection,
   type SumiStackedRow,
   type SumiSunburstNode,
+  type SumiTableColumn,
+  type SumiTableRow,
 } from 'sumi-ui/charts';
 import { SumiPage } from 'sumi-ui/layout';
 
@@ -22,7 +25,7 @@ import { SumiPage } from 'sumi-ui/layout';
   selector: 'app-charts-page',
   templateUrl: './charts.html',
   styleUrl: './charts.scss',
-  imports: [SumiPage, ...SUMI_CHARTS],
+  imports: [SumiPage, SumiTableCellTemplate, ...SUMI_CHARTS],
 })
 export class ChartsPage {
   // --- KPI tiles, modelled on kanji-trainer's dashboard --------------------
@@ -150,6 +153,43 @@ export class ChartsPage {
       { label: 'Burned', value: 52 },
     ],
   };
+
+  // --- Conjugation review table, sumi-ui#36's cell-template example -------
+  // The three tables jp-conjugation kept as bespoke `<table>`s: tone by
+  // correctness ("Result", via `toneKey` — no template needed), "given →
+  // expected" and a kanji plus its reading in one cell (both via
+  // `sumiTableCell` templates).
+  protected readonly conjugationTableColumns: SumiTableColumn[] = [
+    { key: 'word', label: 'Word' },
+    { key: 'given', label: 'Given' },
+    { key: 'result', label: 'Result', toneKey: 'tone' },
+  ];
+  protected readonly conjugationTableRows: SumiTableRow[] = [
+    {
+      word: '食べる',
+      reading: 'たべる',
+      given: 'tabemasu',
+      expected: 'tabemasu',
+      result: 'Correct',
+      tone: 'correct',
+    },
+    {
+      word: '飲む',
+      reading: 'のむ',
+      given: 'nomimasu',
+      expected: 'nomimasu',
+      result: 'Correct',
+      tone: 'correct',
+    },
+    {
+      word: '話す',
+      reading: 'はなす',
+      given: 'hanashimasu',
+      expected: 'hanasemasu',
+      result: 'Wrong',
+      tone: 'wrong',
+    },
+  ];
 }
 
 /** A fixed pseudo-random walk, same recipe as `buildEloHistory` above — a

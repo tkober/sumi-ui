@@ -41,3 +41,12 @@
     grid-template-columns: 56px 1fr 72px;
   }
 }
+
+.demo__table-reading {
+  font-size: var(--sumi-text-xs);
+  color: var(--sumi-muted);
+}
+
+.demo__table-arrow {
+  color: var(--sumi-muted);
+}

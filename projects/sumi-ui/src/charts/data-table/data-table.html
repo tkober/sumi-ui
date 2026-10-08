@@ -18,8 +18,16 @@
       @for (row of rows(); track $index) {
         <tr>
           @for (column of columns(); track column.key) {
-            <td class="sumi-tabular" [class.sumi-data-table__cell--end]="column.align === 'end'">
-              {{ row[column.key] }}
+            <td
+              class="sumi-tabular"
+              [class.sumi-data-table__cell--end]="column.align === 'end'"
+              [attr.data-tone]="toneFor(row, column)"
+            >
+              @if (templateFor(column.key); as template) {
+                <ng-container *ngTemplateOutlet="template; context: { $implicit: row }" />
+              } @else {
+                {{ row[column.key] }}
+              }
             </td>
           }
         </tr>

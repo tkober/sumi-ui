@@ -154,4 +154,26 @@
       }
     </div>
   </section>
+
+  <section class="demo">
+    <h2>Conjugation review (data table with cell templates)</h2>
+    <p class="demo__note">
+      jp-conjugation's three hand-rolled tables (sumi-ui#36): tone by correctness, "given →
+      expected", and kanji plus reading in one cell — each a `sumiTableCell` template instead of a
+      bespoke `&lt;table&gt;`.
+    </p>
+    <sumi-data-table [columns]="conjugationTableColumns" [rows]="conjugationTableRows">
+      <ng-template sumiTableCell="word" let-row>
+        <strong>{{ row.word }}</strong>
+        <div class="demo__table-reading">{{ row.reading }}</div>
+      </ng-template>
+      <ng-template sumiTableCell="given" let-row>
+        {{ row.given }} <span class="demo__table-arrow">→</span> {{ row.expected }}
+      </ng-template>
+    </sumi-data-table>
+    <p class="demo__note">
+      The "Result" column uses <code>toneKey</code> instead of a template — it just colours the
+      cell by the row's own <code>tone</code> field.
+    </p>
+  </section>
 </sumi-page>
