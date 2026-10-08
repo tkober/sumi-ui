@@ -1,4 +1,4 @@
-import { Component, computed, input } from '@angular/core';
+import { Component, computed, input, output } from '@angular/core';
 import {
   heatmapCellColor,
   heatmapTextColor,
@@ -11,6 +11,17 @@ import { SumiDataTable, type SumiTableColumn, type SumiTableRow } from '../data-
 import { SumiRampLegend } from '../ramp-legend/ramp-legend';
 
 const DEFAULT_FORMAT = (value: number) => `${value}`;
+
+/** A `(row, column)` pair plus its value/detail, emitted by `cellSelect`
+ *  on click, focus or hover of a cell when `selectable` is on. Mirrors
+ *  the shape of `selected` so a consumer can round-trip one into the
+ *  other. */
+export interface SumiMatrixCellSelection {
+  row: string;
+  column: string;
+  value: number | null;
+  detail?: string;
+}
 
 /**
  * Any rows × columns grid of values as a heat grid: kana confidence
@@ -30,6 +41,17 @@ const DEFAULT_FORMAT = (value: number) => `${value}`;
  * `"ja"`) sets the row headers' language/font for scripts that need it
  * (kana row labels), independent of the column headers.
  *
+ * A cell's `detail` (e.g. "7/10 correct", or "not practised yet" on a
+ * `value: null` cell) rides along in its `title` and the table fallback's
+ * cell text — enough for a user to tell a cell resting on one answer from
+ * one resting on thirty, without a second chart. `selectable` turns each
+ * cell into a real `<button>` (keyboard-reachable, accessible name equal
+ * to its title); it then emits `cellSelect` on click, focus and hover —
+ * the one event a consumer wires to a readout line below the chart, since
+ * hover is the desktop interaction and tap/focus cover touch and
+ * keyboard. `selected` marks the matching cell with a thick inset ring
+ * (not colour alone) plus `aria-pressed="true"`.
+ *
  * ```html
  * <sumi-matrix-heatmap
  *   ariaLabel="Katakana reading confidence"
@@ -39,6 +61,18 @@ const DEFAULT_FORMAT = (value: number) => `${value}`;
  *   cellLang="ja"
  *   [domain]="[0, 1]"
  *   [format]="toPercent"
+ * />
+ *
+ * <sumi-matrix-heatmap
+ *   ariaLabel="Conjugation miss rate, by form and word type"
+ *   [rows]="rows"
+ *   [columns]="columns"
+ *   [cells]="missRateCells"
+ *   [domain]="[0, 1]"
+ *   [format]="toPercent"
+ *   selectable
+ *   [selected]="selectedCell()"
+ *   (cellSelect)="selectedCell.set($event)"
  * />
  * ```
  */
@@ -63,6 +97,18 @@ export class SumiMatrixHeatmap {
    *  "no data" state; omit to leave that entry out of the legend. */
   readonly noDataLabel = input<string>('No data');
   readonly table = input(false);
+  /** Renders each cell as a `<button>` (keyboard-reachable, with an
+   *  accessible name equal to its title) instead of a plain `<div>`, and
+   *  turns on `cellSelect`/`selected`. Off by default, so existing
+   *  markup and behaviour are unchanged without it. */
+  readonly selectable = input(false);
+  /** Emitted on click, focus or hover (mouse hover for a desktop readout,
+   *  tap for a touch device) of a cell, only when `selectable` is on. */
+  readonly cellSelect = output<SumiMatrixCellSelection>();
+  /** The `(row, column)` currently marked selected (a thick inset ring
+   *  plus `aria-pressed="true"`, not colour alone) — typically the last
+   *  cell a consumer received through `cellSelect`. */
+  readonly selected = input<{ row: string; column: string } | null>(null);
 
   protected readonly resolvedDomain = computed(() => this.domain() ?? matrixDomain(this.cells()));
 
@@ -93,6 +139,20 @@ export class SumiMatrixHeatmap {
     };
   }
 
+  protected onCellInteract(cell: MatrixCellGeometry): void {
+    this.cellSelect.emit({
+      row: cell.row,
+      column: cell.column,
+      value: cell.value,
+      detail: cell.detail,
+    });
+  }
+
+  protected isSelected(row: string, column: string): boolean {
+    const selected = this.selected();
+    return selected !== null && selected.row === row && selected.column === column;
+  }
+
   protected fill(bucket: number): string {
     return heatmapCellColor(bucket);
   }
@@ -113,10 +173,20 @@ export class SumiMatrixHeatmap {
     this.rows().map((row) => {
       const values: SumiTableRow = { row };
       for (const column of this.columns()) {
-        const cell = this.cellAt(row, column);
-        values[column] = cell.label ?? 'no data';
+        values[column] = this.tableCellText(this.cellAt(row, column));
       }
       return values;
     }),
   );
+
+  /** The table fallback's text for one cell: `"<label> · <detail>"` when
+   *  both are present, the detail alone for a "no data" cell that has
+   *  one (e.g. "not practised yet"), and `cell.label`/`"no data"`
+   *  otherwise — see the class doc comment. */
+  private tableCellText(cell: MatrixCellGeometry): string {
+    if (cell.label === null) {
+      return cell.detail ?? 'no data';
+    }
+    return cell.detail ? `${cell.label} · ${cell.detail}` : cell.label;
+  }
 }

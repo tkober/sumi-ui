@@ -7,6 +7,11 @@
   max-width: 60ch;
 }
 
+.demo__readout {
+  margin-top: var(--sumi-space-3);
+  font-size: var(--sumi-text-sm);
+}
+
 .demo__coverage {
   display: flex;
   flex-direction: column;

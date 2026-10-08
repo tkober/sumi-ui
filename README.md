@@ -739,6 +739,32 @@ successfully with `ng build` from a throwaway Angular 22 app):
    its row-header column stays `position: sticky` while the grid scrolls
    horizontally on a narrow screen.
 
+   A cell can carry a `detail` string alongside its `value` (e.g. "7/10
+   correct", or "not practised yet" on a `value: null` cell) — enough to
+   tell a cell resting on one answer from one resting on thirty. It rides
+   along in the cell's `title` ("row / column: 42% · 7/10 correct") and
+   the `table` fallback's cell text. `selectable` turns every cell into a
+   real, keyboard-reachable `<button>` (its accessible name is the title)
+   and enables `cellSelect` (emitted on click, focus *and* hover — the one
+   event a consumer wires to a readout line below the chart) and
+   `selected` (marks the matching cell with a thick inset ring plus
+   `aria-pressed="true"`, never colour alone):
+
+   ```html
+   <sumi-matrix-heatmap
+     ariaLabel="Conjugation miss rate, by form and word type"
+     [rows]="rows"
+     [columns]="columns"
+     [cells]="missRateCells"
+     [domain]="[0, 1]"
+     [format]="toPercent"
+     selectable
+     [selected]="selectedCell()"
+     (cellSelect)="selectedCell.set($event)"
+     table
+   />
+   ```
+
    `sumi-donut` and `sumi-sunburst` are the "parts of a whole" charts —
    `sumi-segmented-bar`'s angular siblings for when the whole itself (a
    centre value) matters as much as the parts, or the parts nest two or

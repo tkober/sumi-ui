@@ -57,6 +57,27 @@
   font-size: var(--sumi-text-xs);
 }
 
+// A `<button>` cell (selectable) resets the UA button chrome so it
+// matches the plain `<div>` cell exactly — only the element and the
+// interaction differ, never the geometry or colour.
+.sumi-matrix-heatmap__cell--selectable {
+  width: 100%;
+  border: none;
+  margin: 0;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+.sumi-matrix-heatmap__cell--selected {
+  // Colour alone never carries the selected state either (same "Nie nur
+  // Farbe" rule as the no-data hatch below) — a thick inset ring reads on
+  // every ramp step, in both themes, independent of the cell's fill.
+  outline: 3px solid var(--sumi-text);
+  outline-offset: -3px;
+}
+
 .sumi-matrix-heatmap__cell--no-data {
   // Colour alone never carries the "no data" state (see "Nie nur Farbe"
   // in docs/concept.md's Leitbild) — a diagonal hatch over the sunken

@@ -1,4 +1,8 @@
-<div class="sumi-matrix-heatmap__scroll" role="img" [attr.aria-label]="ariaLabel()">
+<div
+  class="sumi-matrix-heatmap__scroll"
+  [attr.role]="selectable() ? 'group' : 'img'"
+  [attr.aria-label]="ariaLabel()"
+>
   <div
     class="sumi-matrix-heatmap__grid"
     [style.grid-template-columns]="'auto repeat(' + columns().length + ', minmax(40px, 1fr))'"
@@ -11,17 +15,38 @@
       <div class="sumi-matrix-heatmap__row-header" [attr.lang]="cellLang()">{{ row }}</div>
       @for (column of columns(); track column) {
         @let cell = cellAt(row, column);
-        <div
-          class="sumi-matrix-heatmap__cell"
-          [class.sumi-matrix-heatmap__cell--no-data]="cell.bucket === -1"
-          [style.background-color]="fill(cell.bucket)"
-          [style.color]="textColor(cell.bucket)"
-          [title]="cell.title"
-        >
-          @if (showValues() && cell.label) {
-            {{ cell.label }}
-          }
-        </div>
+        @if (selectable()) {
+          <button
+            type="button"
+            class="sumi-matrix-heatmap__cell sumi-matrix-heatmap__cell--selectable"
+            [class.sumi-matrix-heatmap__cell--no-data]="cell.bucket === -1"
+            [class.sumi-matrix-heatmap__cell--selected]="isSelected(row, column)"
+            [style.background-color]="fill(cell.bucket)"
+            [style.color]="textColor(cell.bucket)"
+            [title]="cell.title"
+            [attr.aria-label]="cell.title"
+            [attr.aria-pressed]="isSelected(row, column)"
+            (click)="onCellInteract(cell)"
+            (focus)="onCellInteract(cell)"
+            (mouseenter)="onCellInteract(cell)"
+          >
+            @if (showValues() && cell.label) {
+              {{ cell.label }}
+            }
+          </button>
+        } @else {
+          <div
+            class="sumi-matrix-heatmap__cell"
+            [class.sumi-matrix-heatmap__cell--no-data]="cell.bucket === -1"
+            [style.background-color]="fill(cell.bucket)"
+            [style.color]="textColor(cell.bucket)"
+            [title]="cell.title"
+          >
+            @if (showValues() && cell.label) {
+              {{ cell.label }}
+            }
+          </div>
+        }
       }
     }
   </div>
