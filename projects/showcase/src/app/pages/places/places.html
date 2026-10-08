@@ -1,0 +1,153 @@
+<sumi-page
+  title="Places"
+  subtitle="Every ink place from sumi-ui#42 (docs/concept.md#tuschemotive): gate, empty state, page header/end, error state."
+>
+  <section>
+    <h2>Pick motifs</h2>
+    <div class="controls">
+      <label>
+        Landscape
+        <select name="motif" [ngModel]="motif()" (ngModelChange)="motif.set($event)">
+          <option value="fuji">Fuji</option>
+          <option value="mountains">Mountains</option>
+          <option value="temple">Pagoda</option>
+          <option value="torii">Torii</option>
+          <option value="waves">Waves</option>
+          <option value="bamboo">Bamboo</option>
+          <option value="moon">Moon</option>
+        </select>
+      </label>
+      <label>
+        Pattern
+        <select name="pattern" [ngModel]="pattern()" (ngModelChange)="pattern.set($event)">
+          <option value="none">None</option>
+          <option value="seigaiha">Seigaiha</option>
+          <option value="asanoha">Asanoha</option>
+          <option value="shippo">Shippō</option>
+          <option value="kikko">Kikkō</option>
+          <option value="sayagata">Sayagata</option>
+          <option value="yagasuri">Yagasuri</option>
+        </select>
+      </label>
+      <label>
+        Companion
+        <select
+          name="companion"
+          [ngModel]="companionChoice()"
+          (ngModelChange)="companionChoice.set($event)"
+        >
+          <option value="">None</option>
+          @for (c of companions; track c.id) {
+            <option [value]="c.id">{{ c.name }}</option>
+          }
+        </select>
+      </label>
+    </div>
+  </section>
+
+  <section>
+    <h2>T1 · Start gate</h2>
+    <p class="hint">
+      Pattern band fading down, centred landscape at the bottom, title/text/button centred in the
+      free space, companion small on the ground line.
+    </p>
+    <div class="scene-box">
+      <sumi-session-gate
+        title="Ready to practice?"
+        text="Conjugate the word into the form you are asked for."
+        actionLabel="Start session"
+        [motif]="motif()"
+        [pattern]="pattern()"
+        [companion]="companion()"
+        (start)="noop()"
+      />
+    </div>
+  </section>
+
+  <section>
+    <h2>T2 · Session end</h2>
+    <p class="hint">
+      Same scene as T1 — <code>sumi-session-summary</code> inside
+      <code>sumi-session-gate [showAction]="false"</code>. The hanko stays in
+      <code>[sumiSummaryArt]</code>; a second 昇級 hanko shows when <code>levelUp</code> is set.
+    </p>
+    <div class="scene-box">
+      <sumi-session-gate
+        [showAction]="false"
+        [motif]="motif()"
+        [pattern]="pattern()"
+        [companion]="companion()"
+        (start)="noop()"
+      >
+        <sumi-session-summary
+          [answered]="20"
+          [correct]="17"
+          [durationMs]="252000"
+          [delta]="12"
+          deltaLabel="Elo"
+          levelUp="Level 4"
+          (restart)="noop()"
+        >
+          <sumi-hanko sumiSummaryArt characters="合格" label="Passed" />
+        </sumi-session-summary>
+      </sumi-session-gate>
+    </div>
+  </section>
+
+  <section>
+    <h2>T3 · Empty state</h2>
+    <p class="hint">
+      Pattern band and landscape always show; the companion, if set, draws small in front of the
+      landscape instead of replacing it.
+    </p>
+    <sumi-empty-state
+      title="Nothing practised yet"
+      [motif]="motif()"
+      [pattern]="pattern()"
+      [companion]="companion()"
+      class="empty-demo"
+    >
+      Finish a session and your stats show up here.
+      <button sumiEmptyAction sumiButton variant="primary" type="button">Go to practice</button>
+    </sumi-empty-state>
+  </section>
+
+  <section>
+    <h2>T4 / T5 · Page header and page end</h2>
+    <p class="hint">
+      A nested <code>sumi-page</code>: a faint pattern band behind its title (T4, no landscape
+      there), and a landscape with a small companion below its body (T5) — only because this demo
+      page is tall enough to scroll. Never <code>position: fixed</code>.
+    </p>
+    <div class="nested-page-frame">
+      <sumi-page
+        title="Words"
+        subtitle="A nested page, just for this demo."
+        [pattern]="pattern()"
+        [motif]="motif()"
+        [companion]="companion()"
+      >
+        <div class="field-demo">Search</div>
+        @for (row of fillerRows; track row) {
+          <div class="card-demo">Row {{ row + 1 }} of filler content, so this page scrolls.</div>
+        }
+      </sumi-page>
+    </div>
+  </section>
+
+  <section>
+    <h2>T6 · Error / not found</h2>
+    <p class="hint">Same full-bleed scene as T1, with a title, body text and an action button.</p>
+    <div class="scene-box">
+      <sumi-error-state
+        title="Can't reach the server"
+        [motif]="motif()"
+        [pattern]="pattern()"
+        [companion]="companion()"
+      >
+        Your progress is safe. Check the connection and try again.
+        <button sumiErrorAction sumiButton variant="secondary" type="button">Try again</button>
+      </sumi-error-state>
+    </div>
+  </section>
+</sumi-page>

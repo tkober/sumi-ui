@@ -1,5 +1,11 @@
 @if (title()) {
   <header class="sumi-page__header">
+    <sumi-pattern
+      class="sumi-page__headband"
+      [pattern]="pattern()"
+      [tileWidth]="480"
+      [tileHeight]="72"
+    />
     <div class="sumi-page__heading">
       <h1>{{ title() }}</h1>
       @if (subtitle()) {
@@ -14,3 +20,11 @@
 <div class="sumi-page__body">
   <ng-content />
 </div>
+@if (showInkEnd()) {
+  <div class="sumi-page__end">
+    <sumi-landscape class="sumi-page__end-scene" [motif]="motif()" />
+    @if (companion(); as c) {
+      <sumi-companion class="sumi-page__end-companion" [kind]="c" [size]="56" />
+    }
+  </div>
+}

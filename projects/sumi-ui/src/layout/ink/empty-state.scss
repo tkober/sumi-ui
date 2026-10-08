@@ -8,6 +8,7 @@
 }
 
 .sumi-empty-state__art {
+  position: relative;
   background: var(--sumi-sunken);
   overflow: hidden;
 }
@@ -30,11 +31,13 @@
   mask-image: linear-gradient(90deg, transparent, #000 15%, #000 85%, transparent);
 }
 
-// A companion stands in for the landscape: centred, its own square
-// aspect ratio (unlike the landscape's 3:1), no horizontal fade mask.
+// The companion stands in front of the landscape, small, on its right
+// side — it never replaces it (see docs/concept.md#tuschemotive, T3).
 .sumi-empty-state__companion {
-  display: block;
-  margin: var(--sumi-space-2) auto;
+  position: absolute;
+  right: 8%;
+  bottom: 0;
+  pointer-events: none;
 }
 
 .sumi-empty-state__body {

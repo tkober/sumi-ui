@@ -1,7 +1,13 @@
 import { Component, input, output } from '@angular/core';
-import { SUMI_KEYS, injectHotkey, type SumiCompanion as SumiCompanionId } from 'sumi-ui/core';
+import {
+  SUMI_KEYS,
+  injectHotkey,
+  type SumiCompanion as SumiCompanionId,
+  type SumiMotif,
+  type SumiPattern,
+} from 'sumi-ui/core';
 import { SumiButtonDirective } from 'sumi-ui/forms';
-import { SumiCompanion } from 'sumi-ui/layout';
+import { SumiInkBackdrop } from 'sumi-ui/layout';
 
 /**
  * The start/end screen container for a practice session: a title, text
@@ -25,10 +31,19 @@ import { SumiCompanion } from 'sumi-ui/layout';
  * `title` is optional for exactly that reason — the ended state typically
  * omits it and lets its projected content carry the heading instead.
  *
+ * The gate is T1/T2 of docs/concept.md#tuschemotive (sumi-ui#42): it wraps
+ * its content in `sumi-ink-backdrop` with `layout="full"` — a pattern band
+ * fading out at the top, a centred landscape at the bottom,
+ * the title/text/button (or the projected `sumi-session-summary`) centred
+ * in the free space between them. `motif`/`pattern` override `SUMI_CONFIG`
+ * for this instance, same as `sumi-ink-backdrop` itself.
+ *
  * `companion` (see docs/concept.md#tuschemotive and sumi-ui#38) shows a
- * brush-style companion animal above the title — a gate screen is idle
- * or ended, never the practice screen itself, so this is one of the
- * approved placements. Omit it (the default) for no change in behaviour.
+ * small (56px) brush-style companion animal standing on the landscape's
+ * ground line, off to the side — not above the title any more (sumi-ui#42
+ * moved it out of the content area and into the scene, so it never sits
+ * next to the title/text/button). Omit it (the default) for no change in
+ * behaviour.
  *
  * Unlike the field-level `Enter` registrations in `sumi-answer-field`,
  * this one is **not** `allowInEditable` — a gate screen has no field to
@@ -39,7 +54,7 @@ import { SumiCompanion } from 'sumi-ui/layout';
   selector: 'sumi-session-gate',
   templateUrl: './session-gate.html',
   styleUrl: './session-gate.scss',
-  imports: [SumiButtonDirective, SumiCompanion],
+  imports: [SumiButtonDirective, SumiInkBackdrop],
   host: { class: 'sumi-session-gate' },
 })
 export class SumiSessionGate {
@@ -47,7 +62,11 @@ export class SumiSessionGate {
   readonly title = input<string>();
   readonly text = input<string>();
   readonly actionLabel = input('Start session');
-  /** Shows a brush-style companion animal above the title. Omit for none (default). */
+  /** Overrides `SUMI_CONFIG`'s `motif` for this instance. */
+  readonly motif = input<SumiMotif>();
+  /** Overrides `SUMI_CONFIG`'s `pattern` for this instance. */
+  readonly pattern = input<SumiPattern>();
+  /** Shows a small companion animal standing in the scene. Omit for none (default). */
   readonly companion = input<SumiCompanionId>();
   /**
    * Set to `false` when the projected content already supplies its own

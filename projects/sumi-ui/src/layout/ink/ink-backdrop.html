@@ -8,3 +8,6 @@
   <ng-content />
 </div>
 <sumi-landscape class="sumi-ink-backdrop__scene" [motif]="motif()" />
+@if (layout() === 'full' && companion(); as c) {
+  <sumi-companion class="sumi-ink-backdrop__companion" [kind]="c" [size]="56" />
+}

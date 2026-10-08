@@ -101,11 +101,26 @@ class CompanionHostComponent {
 }
 
 describe('SumiSessionGate with a companion', () => {
-  it('renders the companion above the title when [companion] is set', () => {
+  it('renders the companion in the scene, not next to the title', () => {
     TestBed.configureTestingModule({ imports: [CompanionHostComponent] });
     const fixture = TestBed.createComponent(CompanionHostComponent);
     fixture.detectChanges();
     const host = fixture.nativeElement as HTMLElement;
     expect(host.querySelector('sumi-companion')).toBeTruthy();
+    // It lives in sumi-ink-backdrop's scene, not inside the gate's own
+    // centred content column (see sumi-ui#42).
+    expect(host.querySelector('.sumi-session-gate__content sumi-companion')).toBeNull();
+  });
+});
+
+describe('SumiSessionGate uses sumi-ink-backdrop for its scene', () => {
+  it('wraps its content in a full-bleed sumi-ink-backdrop', () => {
+    TestBed.configureTestingModule({ imports: [HostComponent] });
+    const fixture = TestBed.createComponent(HostComponent);
+    fixture.detectChanges();
+    const host = fixture.nativeElement as HTMLElement;
+    const backdrop = host.querySelector('sumi-ink-backdrop');
+    expect(backdrop).toBeTruthy();
+    expect(backdrop?.classList).toContain('sumi-ink-backdrop--full');
   });
 });

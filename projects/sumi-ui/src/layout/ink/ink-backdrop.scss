@@ -56,3 +56,52 @@
     mask-image: linear-gradient(90deg, transparent, #000 25%);
   }
 }
+
+// Full: no card chrome, the landscape stands centred at the bottom with
+// its own 3:1 ratio (never cropped, sides fading out like the default
+// layout, at most 540px wide so it stays a small gimmick), and the content centres in the space between band and landscape. Used
+// by sumi-session-gate (T1/T2) and sumi-error-state (T6). The bottom
+// padding is generous enough that the content never sits under the scene
+// or the companion, down to 360px width (see docs/concept.md#tuschemotive).
+:host(.sumi-ink-backdrop--full) {
+  display: flex;
+  flex-direction: column;
+  min-height: 60vh;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+}
+
+:host(.sumi-ink-backdrop--full) .sumi-ink-backdrop__band {
+  height: 72px;
+}
+
+:host(.sumi-ink-backdrop--full) .sumi-ink-backdrop__content {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sumi-space-6) var(--sumi-space-4) clamp(132px, 36vw, 200px);
+}
+
+:host(.sumi-ink-backdrop--full) .sumi-ink-backdrop__scene {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  translate: -50% 0;
+  width: min(100%, 540px);
+  margin: 0;
+}
+
+// The companion stands to the right of centre, on the landscape's ground
+// line — never above the content, never behind it.
+.sumi-ink-backdrop__companion {
+  position: absolute;
+  // Inside the scene's right third: the scene is centred and at most
+  // 540px wide, so on wide screens the companion follows it inward.
+  right: max(12%, calc(50% - 230px));
+  bottom: clamp(4px, 1.5vw, 14px);
+  pointer-events: none;
+}

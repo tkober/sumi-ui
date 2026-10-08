@@ -19,7 +19,7 @@ projects/
       forms/     # native-element directives and composite form controls
       practice/  # kana conversion + sumi-answer-field, sumiHoldFocus
       charts/    # statistics components: stat tile, segmented bar, sparkline, bar chart, calendar/matrix heatmaps, legend, data table
-      layout/    # app shell, app switcher, page, card, badge, banner, ink motifs (landscapes/patterns, sumi-ink-backdrop, sumi-empty-state, sumi-hanko, sumi-companion)
+      layout/    # app shell, app switcher, page, card, badge, banner, ink motifs (landscapes/patterns, sumi-ink-backdrop, sumi-empty-state, sumi-error-state, sumi-hanko, sumi-companion)
     styles/
       sumi.scss        # style entry point: tokens + base styles
       sumi-fonts.scss  # @font-face rules, loaded separately and non-blocking
@@ -169,7 +169,10 @@ successfully with `ng build` from a throwaway Angular 22 app):
      `'asanoha'`, `'shippo'`, `'kikko'`, `'sayagata'`, `'yagasuri'`, or
      `'none'`. A pattern's SVG is generated once per exact tile size and
      cached (`buildPatternSvg` in `layout/ink/patterns.ts`), not
-     regenerated on every render.
+     regenerated on every render. **The default is `'none'`** — unlike
+     `motif`/`companion`, an unset pattern used to silently render
+     Seigaiha everywhere; an app that wants a pattern now says so in
+     `provideSumi({ pattern })` (see docs/concept.md#tuschemotive).
    - `--sumi-ink-strength` (CSS custom property, default `1`): a
      multiplier on every motif's opacity. Set it lower to fade motifs out
      further, or higher to make them more present, e.g.
@@ -177,21 +180,41 @@ successfully with `ng build` from a throwaway Angular 22 app):
    - `sumi-landscape` / `sumi-pattern`: the building blocks. Both read
      `SUMI_CONFIG`'s default and accept a per-instance `[motif]` /
      `[pattern]` override; both are `aria-hidden`.
-   - `sumi-ink-backdrop`: wraps projected content for a dashboard header or
-     a session-end screen — a pattern band fading out at the top, a
-     landscape at the bottom, content in between. Nothing overlaps: with
-     `layout="below"` (default) the landscape stands under the content;
-     with `layout="aside"` (a left-aligned header) it stands in the
-     bottom-right corner on cards at least 640px wide and below the content
-     on narrower ones. The landscape keeps its 3:1 ratio and is never
-     cropped.
-   - `sumi-empty-state`: the same split in a small tile, with a `title`
-     input, a default content slot for the body text and a
-     `[sumiEmptyAction]` slot for a button.
+   - `sumi-ink-backdrop`: wraps projected content for a dashboard header,
+     a full-bleed start/end screen or an error scene — a pattern band
+     fading out at the top, a landscape at the bottom, content in
+     between. Nothing overlaps: with `layout="below"` (default) the
+     landscape stands under the content on a bordered card; with
+     `layout="aside"` (a left-aligned header) it stands in the
+     bottom-right corner on cards at least 640px wide and below the
+     content on narrower ones; with `layout="full"` (used internally by
+     `sumi-session-gate` and `sumi-error-state`) there is no card chrome,
+     the landscape stands centred at the bottom (at most 540px wide) and an optional `companion`
+     stands small (56px) on its ground line, off to the side. The
+     landscape always keeps its 3:1 ratio and is never cropped.
+   - `sumi-empty-state`: the same band+landscape split in a small tile,
+     with a `title` input, a default content slot for the body text and a
+     `[sumiEmptyAction]` slot for a button. The landscape always shows;
+     `companion` draws a small companion in front of it, on the right,
+     without replacing it.
+   - `sumi-error-state`: a full-screen error/not-found scene — same ink
+     scene as `sumi-session-gate` (pattern band, centred landscape,
+     optional `companion`), with a required `title`, a default content
+     slot for the body text and a `[sumiErrorAction]` slot for a button.
+     For "server unreachable", 404 and similar; loading states stay
+     without ink, they're too short-lived.
    - `sumi-hanko`: a vermilion seal stamp. `characters` (one or two, e.g.
      `"合格"`) and `label` (the accessible name) are required; `size`
      defaults to `54` (px). Plays a brief stamp-in animation unless the
      viewer prefers reduced motion.
+   - `sumi-page`: beyond its layout role (see below), it places two more
+     ink spots — a faint pattern band behind the header when it has a
+     `title` (no landscape there), and, below the body, a landscape with
+     an optional small `companion`, shown only once the page actually
+     scrolls (checked with a `ResizeObserver`, never `position: fixed`).
+     Set `inkEnd` to `false` to turn the page-end spot off; `companion`
+     here is an explicit opt-in and does **not** fall back to
+     `SUMI_CONFIG`'s companion.
 
    ### Companions
 
@@ -227,20 +250,22 @@ successfully with `ng build` from a throwaway Angular 22 app):
      unset — the only companion with a fixed vermilion accent, so it reads
      the same regardless of the app's accent colour.
    - Never put a companion on the practice screen itself or behind text
-     (see docs/concept.md#tuschemotive). Three approved placements:
-     - `sumi-session-gate`'s `companion` input shows it above the title.
-     - `sumi-empty-state`'s `companion` input shows it instead of the
-       landscape (the pattern band stays).
-     - `sumi-session-summary`'s existing `[sumiSummaryArt]` slot takes a
-       `sumi-companion` next to `sumi-hanko`, no API change needed:
-       ```html
-       <sumi-session-summary ...>
-         <span sumiSummaryArt style="display:flex; gap:8px; align-items:center">
-           <sumi-companion kind="tsuru" [size]="72" />
-           <sumi-hanko characters="合格" label="Passed, level complete" />
-         </span>
-       </sumi-session-summary>
-       ```
+     (see docs/concept.md#tuschemotive). Approved placements, all an
+     explicit opt-in that never falls back to `SUMI_CONFIG`'s companion
+     on its own:
+     - `sumi-session-gate`'s `companion` input (T1/T2) shows it small,
+       standing on the landscape's ground line, off to the side — not
+       above the title any more.
+     - `sumi-empty-state`'s `companion` input (T3) draws it small in
+       front of the landscape, on the right (the landscape always shows).
+     - `sumi-page`'s `companion` input (T5) shows it next to the
+       page-end landscape, once the page scrolls.
+     - `sumi-error-state`'s `companion` input (T6), same placement as
+       the gate.
+     - `sumi-session-summary`'s existing `[sumiSummaryArt]` slot is for a
+       `sumi-hanko` only now — a companion for the session end belongs on
+       the wrapping `sumi-session-gate` instead (its scene already
+       covers the summary, see "Practice" below).
 
    ### App switcher
 
@@ -661,7 +686,10 @@ successfully with `ng build` from a throwaway Angular 22 app):
    `allowInEditable` — a gate screen has no field to protect typing in).
    `showAction` hides the gate's own button (`Enter` still works) for the
    ended state, where `sumi-session-summary`'s own "Practice again" button
-   is the one actually shown:
+   is the one actually shown. It wraps its content in
+   `sumi-ink-backdrop[layout="full"]` (T1/T2, see "Motifs" above): `motif`
+   and `pattern` override `SUMI_CONFIG` for this instance, and `companion`
+   shows a small companion standing in the scene, off to the side.
 
    ```html
    @if (state() === 'idle') {
@@ -682,9 +710,11 @@ successfully with `ng build` from a throwaway Angular 22 app):
    duration as `m:ss`, an optional signed `delta` (e.g. an Elo change,
    coloured `--sumi-correct`/`--sumi-wrong` by sign) with a `deltaLabel`,
    extra tiles via the default content slot, and a `[sumiSummaryArt]` slot
-   reserved for a hanko/backdrop illustration (left empty until the
-   Tuschemotive follow-up, issue #16). Its own `restart` output drives the
-   "Practice again" button.
+   for a hanko/backdrop illustration, e.g. `<sumi-hanko sumiSummaryArt
+characters="合格" label="Passed" />`. Its own `restart` output drives
+   the "Practice again" button. `levelUp` (T8, e.g. `"Level 4"`) shows a
+   second 昇級 hanko next to the result when a level was reached during the
+   session — omit it (the default) for no change.
 
    **`sumi-furigana`** renders `{ base: string; reading?: string }[]`
    segments as ruby annotations (ported from jp-conversation-practice's
@@ -710,7 +740,7 @@ successfully with `ng build` from a throwaway Angular 22 app):
    `[formField]`. An app that sometimes has to refuse a change (e.g. "the
    last enabled form may not be turned off") cannot do it by reverting
    `value` from a `(valueChange)` handler: once the control has written the
-   new value into its own `value` signal, re-binding the *same* old value
+   new value into its own `value` signal, re-binding the _same_ old value
    from the template is a no-op for Angular's change detection (the bound
    expression evaluates to what it evaluated to before the click, so the
    input is never re-applied) — the control is left showing the rejected
@@ -719,7 +749,7 @@ successfully with `ng build` from a throwaway Angular 22 app):
 
    `canChange`, an optional `(next: T) => boolean` input on both
    `sumi-toggle` and `sumi-segmented-control` (default: always allows),
-   solves this by asking *before* anything is written. A rejection never
+   solves this by asking _before_ anything is written. A rejection never
    touches `value`, so there is nothing to revert and no template
    reference is needed:
 
@@ -738,7 +768,7 @@ successfully with `ng build` from a throwaway Angular 22 app):
    Options never shrink or wrap — a row that does not fit its container
    scrolls horizontally inside its own box (and keeps the selected option
    scrolled into view) rather than squeezing labels until they clip. That
-   makes overflow *safe*, but a segmented control is still meant for a
+   makes overflow _safe_, but a segmented control is still meant for a
    small, fixed set of mutually exclusive options, not a scrollable menu:
 
    - More than about four or five options, or a set whose length varies a
@@ -852,7 +882,7 @@ successfully with `ng build` from a throwaway Angular 22 app):
    along in the cell's `title` ("row / column: 42% · 7/10 correct") and
    the `table` fallback's cell text. `selectable` turns every cell into a
    real, keyboard-reachable `<button>` (its accessible name is the title)
-   and enables `cellSelect` (emitted on click, focus *and* hover — the one
+   and enables `cellSelect` (emitted on click, focus _and_ hover — the one
    event a consumer wires to a readout line below the chart) and
    `selected` (marks the matching cell with a thick inset ring plus
    `aria-pressed="true"`, never colour alone):

@@ -7,6 +7,13 @@
   display: none;
 }
 
+.sumi-session-summary__art {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sumi-space-3);
+}
+
 .sumi-session-summary__headline {
   margin: 0 0 var(--sumi-space-5);
   font-family: var(--sumi-font-display);

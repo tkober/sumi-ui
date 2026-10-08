@@ -1,0 +1,11 @@
+<sumi-ink-backdrop layout="full" [motif]="motif()" [pattern]="pattern()" [companion]="companion()">
+  <div class="sumi-error-state__content">
+    <h1 class="sumi-error-state__title">{{ title() }}</h1>
+    <p class="sumi-error-state__text">
+      <ng-content />
+    </p>
+    <div class="sumi-error-state__action">
+      <ng-content select="[sumiErrorAction]" />
+    </div>
+  </div>
+</sumi-ink-backdrop>
