@@ -877,6 +877,15 @@ successfully with `ng build` from a throwaway Angular 22 app):
    npm install @fontsource/murecho @fontsource/zen-kaku-gothic-new @fontsource/ibm-plex-mono wanakana d3-scale d3-shape d3-hierarchy
    ```
 
+   `d3-scale`, `d3-shape` and `d3-hierarchy` ship without their own type
+   declarations, so also add their `@types` packages as devDependencies —
+   without them, the production build fails as soon as anything imports
+   `sumi-ui/charts`:
+
+   ```bash
+   npm install -D @types/d3-scale @types/d3-shape @types/d3-hierarchy
+   ```
+
 6. Load the fonts as their own, non-blocking stylesheet. `sumi.scss` (step 3) only pulls in tokens and base styles; the actual `@font-face` rules
    live in a separate `sumi-fonts.scss`, deliberately kept out of the
    app's main stylesheet because it is almost nothing but font data (see
