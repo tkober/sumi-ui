@@ -329,3 +329,60 @@ describe('SumiShell', () => {
     expect(shell.focusMode()).toBe(false);
   });
 });
+
+@Component({
+  imports: [SumiAppShell],
+  template: `
+    <sumi-app-shell
+      [brand]="{ glyph: '墨', name: 'Test App' }"
+      [nav]="[]"
+      [keepActionsInFocusMode]="keepActions()"
+    >
+      <div sumiShellActions class="actions-probe">actions</div>
+    </sumi-app-shell>
+  `,
+})
+class ActionsHostComponent {
+  readonly keepActions = signal(false);
+}
+
+describe('SumiAppShell focus mode hides [sumiShellActions] (sumi-ui#36)', () => {
+  async function createActionsHost() {
+    TestBed.configureTestingModule({
+      providers: [provideRouter([{ path: '**', component: DummyPage }])],
+    });
+    const fixture = TestBed.createComponent(ActionsHostComponent);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    return fixture;
+  }
+
+  it('hides the actions slot while focus mode is on, by default', async () => {
+    const fixture = await createActionsHost();
+    const shell = TestBed.inject(SumiShell);
+    expect(fixture.nativeElement.querySelector('.actions-probe')).not.toBeNull();
+
+    shell.enterFocusMode();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(fixture.nativeElement.querySelector('.actions-probe')).toBeNull();
+
+    shell.leaveFocusMode();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(fixture.nativeElement.querySelector('.actions-probe')).not.toBeNull();
+  });
+
+  it('keeps the actions slot visible in focus mode when keepActionsInFocusMode is set', async () => {
+    const fixture = await createActionsHost();
+    fixture.componentInstance.keepActions.set(true);
+    const shell = TestBed.inject(SumiShell);
+
+    shell.enterFocusMode();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(fixture.nativeElement.querySelector('.actions-probe')).not.toBeNull();
+
+    shell.leaveFocusMode();
+  });
+});

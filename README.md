@@ -272,6 +272,19 @@ successfully with `ng build` from a throwaway Angular 22 app):
    rendered only while focus mode is on and nothing has registered a
    template.
 
+   Focus mode also hides the separate `[sumiShellActions]` slot (nav and
+   the app switcher already were hidden) — on a phone it would otherwise
+   overlap the focus-actions area, e.g. a level/Elo pill sitting on top of
+   the session bar (sumi-ui#36). Pass `keepActionsInFocusMode` on
+   `sumi-app-shell` for the rare app that wants its actions slot visible
+   in focus mode anyway:
+
+   ```html
+   <sumi-app-shell [brand]="brand" [nav]="navItems" [keepActionsInFocusMode]="true">
+     <div sumiShellActions>...</div>
+   </sumi-app-shell>
+   ```
+
    ### Hotkeys
 
    `SumiHotkeys` (`sumi-ui/core`) is a single `keydown` listener shared by
