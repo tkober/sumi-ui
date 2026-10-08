@@ -2,8 +2,59 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: var(--sumi-space-3);
+  container-type: inline-size;
+  container-name: sumi-stat-grid;
 }
 
+// Up to 4 tiles: as many columns as tiles once each would be at least
+// 150px wide, otherwise fall back to a column count that still fills
+// every row evenly -- 2 for an even tile count, 1 (a full stack) for an
+// odd one. This is what keeps 4 tiles from ever landing as 3 + 1 at
+// ~640px (sumi-ui#36): the fallback is 2 + 2, never 3 + 1.
+//
+// `:host(:has(> :nth-child(N):last-child))` matches "exactly N projected
+// children" (the host element IS the content's direct parent, `<ng-
+// content>` does not wrap it) -- a CSS-only tile count, no JS needed.
+:host(:has(> :nth-child(1):last-child)) {
+  grid-template-columns: minmax(150px, 1fr);
+}
+
+:host(:has(> :nth-child(2):last-child)) {
+  grid-template-columns: repeat(2, minmax(150px, 1fr));
+}
+
+:host(:has(> :nth-child(3):last-child)) {
+  grid-template-columns: repeat(3, minmax(150px, 1fr));
+}
+
+:host(:has(> :nth-child(4):last-child)) {
+  grid-template-columns: repeat(4, minmax(150px, 1fr));
+}
+
+@container sumi-stat-grid (max-width: 449px) {
+  :host(:has(> :nth-child(3):last-child)) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@container sumi-stat-grid (max-width: 599px) {
+  :host(:has(> :nth-child(4):last-child)) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+// 5 tiles is the one odd count past 4 cheap enough to guard directly: at
+// the narrow 2-column fallback below, 5 tiles would otherwise land as
+// 2 + 2 + 1. A full single-column stack never does.
+@container sumi-stat-grid (max-width: 480px) {
+  :host(:has(> :nth-child(5):last-child)) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+// 5+ tiles otherwise: keep auto-fit (unbounded tile counts can't all be
+// special-cased in pure CSS), but the existing 2-column phone fallback
+// already avoids a widow for any *even* count -- 6 tiles included.
 @media (max-width: 480px) {
   :host {
     grid-template-columns: repeat(2, 1fr);

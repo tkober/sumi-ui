@@ -113,6 +113,11 @@ export class ChartsPage {
     return `${where} — ${this.toPercent(cell.value)} miss rate (${cell.detail ?? ''}).`;
   });
 
+  /** `[0, 1, ..., count - 1]`, for the "never a lone tile" stat-grid demo. */
+  protected countUpTo(count: number): number[] {
+    return Array.from({ length: count }, (_, i) => i);
+  }
+
   protected onConjugationCellSelect(selection: SumiMatrixCellSelection): void {
     this.selectedConjugationCell.set({ row: selection.row, column: selection.column });
     this.selectedConjugationDetail.set(selection);
