@@ -34,3 +34,9 @@
 .sumi-page__actions:empty {
   display: none;
 }
+
+.sumi-page__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sumi-space-4);
+}

@@ -105,3 +105,68 @@ describe('SumiToggle form integration', () => {
     expect(fixture.componentInstance.value).toBe(true);
   });
 });
+
+// Reproduces the jp-conjugation pilot's "last form may not be turned off"
+// case (sumi-ui#36): a plain `[value]`/`(valueChange)` binding (no
+// `[(value)]` two-way sugar), where the parent's own guard refuses the
+// change. Before `canChange`, the parent had no way to express that
+// refusal other than reaching for a template reference and calling
+// `toggleRef.value.set(...)` directly — the switch otherwise stayed
+// visually "off" even though the bound value never changed, because
+// Angular does not re-apply a binding whose expression evaluates to the
+// same value it evaluated to before the click.
+@Component({
+  imports: [SumiToggle],
+  template: `
+    <sumi-toggle [value]="allowed()" [canChange]="canChange" (valueChange)="onChange($event)">
+      Last form
+    </sumi-toggle>
+  `,
+})
+class VetoHostComponent {
+  readonly allowed = signal(true);
+  readonly canChange = (next: boolean) => next; // turning off is always refused here
+  onChange(next: boolean): void {
+    this.allowed.set(next);
+  }
+}
+
+describe('SumiToggle canChange veto', () => {
+  it('snaps back to the old state when the parent guard refuses the change, without a template ref', () => {
+    TestBed.configureTestingModule({ imports: [VetoHostComponent] });
+    const fixture = TestBed.createComponent(VetoHostComponent);
+    fixture.detectChanges();
+    const button: HTMLButtonElement = fixture.nativeElement.querySelector('button[role="switch"]');
+
+    expect(button.getAttribute('aria-checked')).toBe('true');
+    button.click();
+    fixture.detectChanges();
+
+    expect(button.getAttribute('aria-checked')).toBe('true');
+    expect(fixture.componentInstance.allowed()).toBe(true);
+  });
+
+  it('commits normally when canChange allows the change', () => {
+    @Component({
+      imports: [SumiToggle],
+      template: `<sumi-toggle [value]="on()" [canChange]="canChange" (valueChange)="on.set($event)"
+        >T</sumi-toggle
+      >`,
+    })
+    class AllowHostComponent {
+      readonly on = signal(false);
+      readonly canChange = () => true;
+    }
+
+    TestBed.configureTestingModule({ imports: [AllowHostComponent] });
+    const fixture = TestBed.createComponent(AllowHostComponent);
+    fixture.detectChanges();
+    const button: HTMLButtonElement = fixture.nativeElement.querySelector('button[role="switch"]');
+
+    button.click();
+    fixture.detectChanges();
+
+    expect(button.getAttribute('aria-checked')).toBe('true');
+    expect(fixture.componentInstance.on()).toBe(true);
+  });
+});

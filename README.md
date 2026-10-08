@@ -272,6 +272,19 @@ successfully with `ng build` from a throwaway Angular 22 app):
    rendered only while focus mode is on and nothing has registered a
    template.
 
+   Focus mode also hides the separate `[sumiShellActions]` slot (nav and
+   the app switcher already were hidden) — on a phone it would otherwise
+   overlap the focus-actions area, e.g. a level/Elo pill sitting on top of
+   the session bar (sumi-ui#36). Pass `keepActionsInFocusMode` on
+   `sumi-app-shell` for the rare app that wants its actions slot visible
+   in focus mode anyway:
+
+   ```html
+   <sumi-app-shell [brand]="brand" [nav]="navItems" [keepActionsInFocusMode]="true">
+     <div sumiShellActions>...</div>
+   </sumi-app-shell>
+   ```
+
    ### Hotkeys
 
    `SumiHotkeys` (`sumi-ui/core`) is a single `keydown` listener shared by
@@ -641,6 +654,51 @@ successfully with `ng build` from a throwaway Angular 22 app):
    focus-mode round with prompt/verdict/countdown/session-bar → summary
    inside the gate again).
 
+   ### Vetoing a `sumi-toggle` / `sumi-segmented-control` change
+
+   Both controls flip/select optimistically on click, same as any other
+   `model()`-backed control — the simple, common case for `[(value)]` or
+   `[formField]`. An app that sometimes has to refuse a change (e.g. "the
+   last enabled form may not be turned off") cannot do it by reverting
+   `value` from a `(valueChange)` handler: once the control has written the
+   new value into its own `value` signal, re-binding the *same* old value
+   from the template is a no-op for Angular's change detection (the bound
+   expression evaluates to what it evaluated to before the click, so the
+   input is never re-applied) — the control is left showing the rejected
+   state with no way back short of a template reference and an imperative
+   `.set()` call.
+
+   `canChange`, an optional `(next: T) => boolean` input on both
+   `sumi-toggle` and `sumi-segmented-control` (default: always allows),
+   solves this by asking *before* anything is written. A rejection never
+   touches `value`, so there is nothing to revert and no template
+   reference is needed:
+
+   ```html
+   <sumi-toggle [value]="isOn()" [canChange]="canToggle" (valueChange)="onToggle($event)">
+     Last form
+   </sumi-toggle>
+   ```
+
+   ```ts
+   protected readonly canToggle = (next: boolean) => next || this.othersStillOn();
+   ```
+
+   ### `sumi-segmented-control`: when not to use it
+
+   Options never shrink or wrap — a row that does not fit its container
+   scrolls horizontally inside its own box (and keeps the selected option
+   scrolled into view) rather than squeezing labels until they clip. That
+   makes overflow *safe*, but a segmented control is still meant for a
+   small, fixed set of mutually exclusive options, not a scrollable menu:
+
+   - More than about four or five options, or a set whose length varies a
+     lot at runtime → use a `<select>` instead.
+   - Multiple selection, or options that come and go (tags, filters) →
+     use a row of chips instead.
+   - Navigating between distinct screens/routes, not picking a setting →
+     use tabs or links, not a segmented control.
+
    ### Charts
 
    `sumi-ui/charts` (`SUMI_CHARTS`, see docs/concept.md#statistik-komponenten)
@@ -830,6 +888,15 @@ successfully with `ng build` from a throwaway Angular 22 app):
 
    ```bash
    npm install @fontsource/murecho @fontsource/zen-kaku-gothic-new @fontsource/ibm-plex-mono wanakana d3-scale d3-shape d3-hierarchy
+   ```
+
+   `d3-scale`, `d3-shape` and `d3-hierarchy` ship without their own type
+   declarations, so also add their `@types` packages as devDependencies —
+   without them, the production build fails as soon as anything imports
+   `sumi-ui/charts`:
+
+   ```bash
+   npm install -D @types/d3-scale @types/d3-shape @types/d3-hierarchy
    ```
 
 6. Load the fonts as their own, non-blocking stylesheet. `sumi.scss` (step 3) only pulls in tokens and base styles; the actual `@font-face` rules

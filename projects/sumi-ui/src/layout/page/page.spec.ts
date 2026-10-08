@@ -51,6 +51,16 @@ describe('SumiPage', () => {
     expect(fixture.nativeElement.textContent).toContain('Actions');
   });
 
+  it('wraps the projected content in a body element that carries the spacing', () => {
+    const fixture = create();
+    const page: HTMLElement = fixture.nativeElement.querySelector('sumi-page');
+    const body = page.querySelector('.sumi-page__body');
+    expect(body).not.toBeNull();
+    expect(body?.textContent).toContain('Body');
+    // Actions live outside the body, next to the title.
+    expect(body?.textContent).not.toContain('Actions');
+  });
+
   it.each<[SumiPageWidth, string]>([
     ['narrow', 'sumi-page--narrow'],
     ['default', ''],

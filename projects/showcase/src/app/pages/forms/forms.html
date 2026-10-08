@@ -103,6 +103,26 @@
         >ngModel value: <code>{{ ngModelMode }}</code></span
       >
     </div>
+    <div class="row">
+      <sumi-segmented-control
+        [options]="rangeOptions"
+        [value]="vetoedRange()"
+        [canChange]="canChangeRange"
+        (valueChange)="vetoedRange.set($event)"
+      />
+      <span>
+        "latin" is refused (<code>canChange</code>); current:
+        <code>{{ vetoedRange() }}</code>
+      </span>
+    </div>
+    <div class="row">
+      <sumi-segmented-control
+        class="demo__narrow-box"
+        [options]="manyOptions"
+        [(value)]="manyOptionsValue"
+      />
+      <span>too many options for the box — scrolls instead of squeezing (sumi-ui#36)</span>
+    </div>
   </section>
 
   <section>
@@ -120,6 +140,15 @@
       <span
         >value: <code>{{ ngModelDarkMode }}</code></span
       >
+    </div>
+    <div class="row">
+      <sumi-toggle
+        [value]="lastFormOn()"
+        [canChange]="canChangeLastForm"
+        (valueChange)="lastFormOn.set($event)"
+        >Last form (cannot be turned off)</sumi-toggle
+      >
+      <span>stays on — see sumi-ui#36 (<code>canChange</code> vetoes it)</span>
     </div>
   </section>
 </sumi-page>

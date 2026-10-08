@@ -1,6 +1,7 @@
 import { Component, computed, signal } from '@angular/core';
 import {
   SUMI_CHARTS,
+  SumiTableCellTemplate,
   type SumiBar,
   type SumiCalendarDay,
   type SumiDonutSegment,
@@ -8,6 +9,8 @@ import {
   type SumiMatrixCellSelection,
   type SumiStackedRow,
   type SumiSunburstNode,
+  type SumiTableColumn,
+  type SumiTableRow,
 } from 'sumi-ui/charts';
 import { SumiPage } from 'sumi-ui/layout';
 
@@ -22,7 +25,7 @@ import { SumiPage } from 'sumi-ui/layout';
   selector: 'app-charts-page',
   templateUrl: './charts.html',
   styleUrl: './charts.scss',
-  imports: [SumiPage, ...SUMI_CHARTS],
+  imports: [SumiPage, SumiTableCellTemplate, ...SUMI_CHARTS],
 })
 export class ChartsPage {
   // --- KPI tiles, modelled on kanji-trainer's dashboard --------------------
@@ -110,6 +113,11 @@ export class ChartsPage {
     return `${where} — ${this.toPercent(cell.value)} miss rate (${cell.detail ?? ''}).`;
   });
 
+  /** `[0, 1, ..., count - 1]`, for the "never a lone tile" stat-grid demo. */
+  protected countUpTo(count: number): number[] {
+    return Array.from({ length: count }, (_, i) => i);
+  }
+
   protected onConjugationCellSelect(selection: SumiMatrixCellSelection): void {
     this.selectedConjugationCell.set({ row: selection.row, column: selection.column });
     this.selectedConjugationDetail.set(selection);
@@ -150,6 +158,43 @@ export class ChartsPage {
       { label: 'Burned', value: 52 },
     ],
   };
+
+  // --- Conjugation review table, sumi-ui#36's cell-template example -------
+  // The three tables jp-conjugation kept as bespoke `<table>`s: tone by
+  // correctness ("Result", via `toneKey` — no template needed), "given →
+  // expected" and a kanji plus its reading in one cell (both via
+  // `sumiTableCell` templates).
+  protected readonly conjugationTableColumns: SumiTableColumn[] = [
+    { key: 'word', label: 'Word' },
+    { key: 'given', label: 'Given' },
+    { key: 'result', label: 'Result', toneKey: 'tone' },
+  ];
+  protected readonly conjugationTableRows: SumiTableRow[] = [
+    {
+      word: '食べる',
+      reading: 'たべる',
+      given: 'たべます',
+      expected: 'たべます',
+      result: 'Correct',
+      tone: 'correct',
+    },
+    {
+      word: '飲む',
+      reading: 'のむ',
+      given: 'のみます',
+      expected: 'のみます',
+      result: 'Correct',
+      tone: 'correct',
+    },
+    {
+      word: '話す',
+      reading: 'はなす',
+      given: 'はなします',
+      expected: 'はなせます',
+      result: 'Wrong',
+      tone: 'wrong',
+    },
+  ];
 }
 
 /** A fixed pseudo-random walk, same recipe as `buildEloHistory` above — a

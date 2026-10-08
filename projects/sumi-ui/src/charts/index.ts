@@ -72,6 +72,7 @@ export {
 export { SumiLegend, type SumiLegendItem } from './legend/legend';
 export { SumiRampLegend } from './ramp-legend/ramp-legend';
 export { SumiDataTable, type SumiTableColumn, type SumiTableRow } from './data-table/data-table';
+export { SumiTableCellTemplate } from './data-table/table-cell-template.directive';
 export { SumiCalendarHeatmap } from './calendar-heatmap/calendar-heatmap';
 export { SumiMatrixHeatmap, type SumiMatrixCellSelection } from './matrix-heatmap/matrix-heatmap';
 export { SumiDonut } from './donut/donut';
@@ -85,6 +86,7 @@ import { SumiBarChart } from './bar-chart/bar-chart';
 import { SumiLegend } from './legend/legend';
 import { SumiRampLegend } from './ramp-legend/ramp-legend';
 import { SumiDataTable } from './data-table/data-table';
+import { SumiTableCellTemplate } from './data-table/table-cell-template.directive';
 import { SumiCalendarHeatmap } from './calendar-heatmap/calendar-heatmap';
 import { SumiMatrixHeatmap } from './matrix-heatmap/matrix-heatmap';
 import { SumiDonut } from './donut/donut';
@@ -100,6 +102,7 @@ export const SUMI_CHARTS = [
   SumiLegend,
   SumiRampLegend,
   SumiDataTable,
+  SumiTableCellTemplate,
   SumiCalendarHeatmap,
   SumiMatrixHeatmap,
   SumiDonut,

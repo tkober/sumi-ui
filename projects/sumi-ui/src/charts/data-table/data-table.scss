@@ -43,3 +43,11 @@ tbody tr:not(:last-child) td {
 .sumi-data-table__cell--end {
   text-align: right;
 }
+
+td[data-tone='correct'] {
+  color: var(--sumi-correct);
+}
+
+td[data-tone='wrong'] {
+  color: var(--sumi-wrong);
+}

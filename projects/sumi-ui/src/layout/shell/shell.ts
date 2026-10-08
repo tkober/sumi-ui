@@ -56,6 +56,11 @@ const VISIBLE_TAB_ITEMS = 4;
  * `SumiShellFocusActionsDirective`), falling back to content projected
  * into the `[sumiShellFocusActions]` slot above when nothing is
  * registered.
+ *
+ * Focus mode also hides the `[sumiShellActions]` slot, same as nav and
+ * the app switcher — on a phone it would otherwise overlap the
+ * focus-actions area (e.g. a session bar). Pass `keepActionsInFocusMode`
+ * for the rare app that wants its actions visible there anyway.
  */
 @Component({
   selector: 'sumi-app-shell',
@@ -73,6 +78,12 @@ export class SumiAppShell {
 
   readonly brand = input.required<SumiAppShellBrand>();
   readonly nav = input<SumiNavItem[]>([]);
+
+  /**
+   * Keeps the `[sumiShellActions]` slot visible while focus mode is on,
+   * opting out of the default (hidden, same as nav and the switcher).
+   */
+  readonly keepActionsInFocusMode = input(false);
 
   /** Fixed id so the skip link can target `<main>` without app-level wiring. */
   protected readonly mainId = 'sumi-app-shell-main';

@@ -41,9 +41,11 @@
     </div>
   }
 
-  <div class="sumi-app-shell__actions">
-    <ng-content select="[sumiShellActions]" />
-  </div>
+  @if (!shell.focusMode() || keepActionsInFocusMode()) {
+    <div class="sumi-app-shell__actions">
+      <ng-content select="[sumiShellActions]" />
+    </div>
+  }
 
   @if (!shell.focusMode()) {
     <div class="sumi-app-shell__switcher">
