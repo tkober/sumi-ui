@@ -172,3 +172,50 @@ describe('SumiSegmentedControl form integration', () => {
     expect(fixture.componentInstance.value).toBe('b');
   });
 });
+
+@Component({
+  imports: [SumiSegmentedControl],
+  template: `<sumi-segmented-control
+    [options]="options"
+    [value]="value()"
+    [canChange]="canChange"
+    (valueChange)="onChange($event)"
+  />`,
+})
+class VetoHostComponent {
+  readonly options = OPTIONS;
+  readonly value = signal('b');
+  readonly canChange = (next: string) => next !== 'c'; // 'c' is always refused
+  onChange(next: string): void {
+    this.value.set(next);
+  }
+}
+
+describe('SumiSegmentedControl canChange veto', () => {
+  it('snaps back to the old selection when canChange refuses it, without a template ref', () => {
+    TestBed.configureTestingModule({ imports: [VetoHostComponent] });
+    const fixture = TestBed.createComponent(VetoHostComponent);
+    fixture.detectChanges();
+    const buttons = optionButtons(fixture);
+
+    buttons[2].click(); // 'c', refused
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.value()).toBe('b');
+    expect(buttons[1].getAttribute('aria-checked')).toBe('true');
+    expect(buttons[2].getAttribute('aria-checked')).toBe('false');
+  });
+
+  it('commits normally when canChange allows the change', () => {
+    TestBed.configureTestingModule({ imports: [VetoHostComponent] });
+    const fixture = TestBed.createComponent(VetoHostComponent);
+    fixture.detectChanges();
+    const buttons = optionButtons(fixture);
+
+    buttons[0].click(); // 'a', allowed
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.value()).toBe('a');
+    expect(buttons[0].getAttribute('aria-checked')).toBe('true');
+  });
+});

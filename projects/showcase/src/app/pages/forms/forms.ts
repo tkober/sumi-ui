@@ -36,4 +36,14 @@ export class FormsPage {
   protected onSubmitOnEnter(value: string): void {
     this.lastSubmitted = value;
   }
+
+  // sumi-ui#36: `canChange` lets a parent veto a change without a
+  // template reference. These two controls always refuse the same
+  // request, demonstrating that the control snaps back to its old state
+  // on its own.
+  protected readonly vetoedRange = signal('kana');
+  protected readonly canChangeRange = (next: string) => next !== 'latin';
+
+  protected readonly lastFormOn = signal(true);
+  protected readonly canChangeLastForm = (next: boolean) => next;
 }

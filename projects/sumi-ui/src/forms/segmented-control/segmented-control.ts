@@ -30,6 +30,14 @@ export interface SumiSegmentedOption<T> {
  * selected yet) is in the tab order. Arrow Left/Up moves to the previous
  * option, Arrow Right/Down to the next, both wrapping around; Home/End jump
  * to the first/last option. Moving also selects, per the ARIA pattern.
+ *
+ * Like `sumi-toggle` (see its doc comment for why), vetoing a selection
+ * from a `(valueChange)` handler cannot work by reverting `value` after
+ * the fact — Angular never re-applies a `[value]` binding whose expression
+ * evaluates to the same option it evaluated to before the click. Use the
+ * optional `canChange` input (`(next: T) => boolean`, default always
+ * allows) instead: a click/arrow move only commits when it returns `true`,
+ * so a rejection never writes `value` and there is nothing to revert.
  */
 @Component({
   selector: 'sumi-segmented-control',
@@ -58,6 +66,14 @@ export class SumiSegmentedControl<T> implements FormValueControl<T>, ControlValu
   // here fabricates a value of type `T`.
   readonly value = model<T>(undefined as unknown as T);
 
+  /**
+   * Called with the requested option's value before a click or arrow move
+   * commits it. Returning `false` vetoes the selection — `value` is left
+   * untouched and `valueChange` does not fire. Defaults to always
+   * allowing the change.
+   */
+  readonly canChange = input<(next: T) => boolean>(() => true);
+
   @ViewChildren('optionRef')
   private readonly optionRefs?: QueryList<ElementRef<HTMLButtonElement>>;
 
@@ -82,6 +98,9 @@ export class SumiSegmentedControl<T> implements FormValueControl<T>, ControlValu
 
   protected select(optionValue: T): void {
     if (this.isDisabled()) {
+      return;
+    }
+    if (!this.canChange()(optionValue)) {
       return;
     }
     this.value.set(optionValue);

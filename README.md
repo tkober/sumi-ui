@@ -641,6 +641,36 @@ successfully with `ng build` from a throwaway Angular 22 app):
    focus-mode round with prompt/verdict/countdown/session-bar → summary
    inside the gate again).
 
+   ### Vetoing a `sumi-toggle` / `sumi-segmented-control` change
+
+   Both controls flip/select optimistically on click, same as any other
+   `model()`-backed control — the simple, common case for `[(value)]` or
+   `[formField]`. An app that sometimes has to refuse a change (e.g. "the
+   last enabled form may not be turned off") cannot do it by reverting
+   `value` from a `(valueChange)` handler: once the control has written the
+   new value into its own `value` signal, re-binding the *same* old value
+   from the template is a no-op for Angular's change detection (the bound
+   expression evaluates to what it evaluated to before the click, so the
+   input is never re-applied) — the control is left showing the rejected
+   state with no way back short of a template reference and an imperative
+   `.set()` call.
+
+   `canChange`, an optional `(next: T) => boolean` input on both
+   `sumi-toggle` and `sumi-segmented-control` (default: always allows),
+   solves this by asking *before* anything is written. A rejection never
+   touches `value`, so there is nothing to revert and no template
+   reference is needed:
+
+   ```html
+   <sumi-toggle [value]="isOn()" [canChange]="canToggle" (valueChange)="onToggle($event)">
+     Last form
+   </sumi-toggle>
+   ```
+
+   ```ts
+   protected readonly canToggle = (next: boolean) => next || this.othersStillOn();
+   ```
+
    ### Charts
 
    `sumi-ui/charts` (`SUMI_CHARTS`, see docs/concept.md#statistik-komponenten)
