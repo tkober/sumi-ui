@@ -33,7 +33,7 @@ import { SumiInkBackdrop } from 'sumi-ui/layout';
  *
  * The gate is T1/T2 of docs/concept.md#tuschemotive (sumi-ui#42): it wraps
  * its content in `sumi-ink-backdrop` with `layout="full"` — a pattern band
- * fading out at the top, a landscape over the full width at the bottom,
+ * fading out at the top, a centred landscape at the bottom,
  * the title/text/button (or the projected `sumi-session-summary`) centred
  * in the free space between them. `motif`/`pattern` override `SUMI_CONFIG`
  * for this instance, same as `sumi-ink-backdrop` itself.

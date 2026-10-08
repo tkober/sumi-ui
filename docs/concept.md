@@ -276,7 +276,7 @@ Bibliothek fest:
 
 - **T1 Start-Gate** (`sumi-session-gate`): umschließt sein Inhalt mit
   `sumi-ink-backdrop[layout="full"]` — Musterband oben (Maske nach unten),
-  Landschaft über die volle Breite unten, Titel/Text/Button frei in der
+  Landschaft zentriert unten (eigenes 3:1-Format, höchstens 540 px breit, nie beschnitten), Titel/Text/Button frei in der
   Mitte mit genug Bodenabstand, dass die Szene nie unter Text oder Button
   liegt, auch bei 360 px Breite. `companion` steht klein (56 px) auf dem
   Boden der Landschaft, seitlich vom Inhalt (rechtes Drittel) — nicht mehr

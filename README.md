@@ -189,17 +189,16 @@ successfully with `ng build` from a throwaway Angular 22 app):
      bottom-right corner on cards at least 640px wide and below the
      content on narrower ones; with `layout="full"` (used internally by
      `sumi-session-gate` and `sumi-error-state`) there is no card chrome,
-     the landscape stretches the full width and an optional `companion`
+     the landscape stands centred at the bottom (at most 540px wide) and an optional `companion`
      stands small (56px) on its ground line, off to the side. The
-     landscape keeps its 3:1 ratio outside `layout="full"` and is never
-     cropped.
+     landscape always keeps its 3:1 ratio and is never cropped.
    - `sumi-empty-state`: the same band+landscape split in a small tile,
      with a `title` input, a default content slot for the body text and a
      `[sumiEmptyAction]` slot for a button. The landscape always shows;
      `companion` draws a small companion in front of it, on the right,
      without replacing it.
    - `sumi-error-state`: a full-screen error/not-found scene — same ink
-     scene as `sumi-session-gate` (pattern band, full-width landscape,
+     scene as `sumi-session-gate` (pattern band, centred landscape,
      optional `companion`), with a required `title`, a default content
      slot for the body text and a `[sumiErrorAction]` slot for a button.
      For "server unreachable", 404 and similar; loading states stay

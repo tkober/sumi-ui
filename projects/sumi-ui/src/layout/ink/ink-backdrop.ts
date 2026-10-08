@@ -22,10 +22,9 @@ import { SumiPattern as SumiPatternComponent } from './pattern';
  * bottom-right corner once the card is at least 640px wide, and below the
  * content on narrower cards. With `layout="full"` (`sumi-session-gate`'s
  * T1/T2 scene and `sumi-error-state`'s T6 scene) the card chrome
- * disappears, the landscape stretches the full width at the bottom and
+ * disappears, the landscape stands centred at the bottom (at most 540px wide) and
  * the content centres in the free space between band and landscape. The
- * landscape always keeps its 3:1 ratio outside `layout="full"`, so it is
- * never cropped.
+ * landscape always keeps its 3:1 ratio, so it is never cropped.
  *
  * `companion` only ever renders with `layout="full"` — a small (56px)
  * brush-style animal standing on the landscape's ground line, off to the

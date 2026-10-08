@@ -10,7 +10,7 @@ import { SumiInkBackdrop } from './ink-backdrop';
  * A full-screen error/not-found scene: a title, a text slot and an action
  * slot, with the same ink scene as `sumi-session-gate` (T6 of
  * docs/concept.md#tuschemotive, sumi-ui#42) — a pattern band fading out
- * at the top, a landscape over the full width at the bottom, content
+ * at the top, a centred landscape at the bottom, content
  * centred in between. Meant for "server unreachable", 404 and similar
  * states; loading states stay without ink (they are too short-lived).
  *
