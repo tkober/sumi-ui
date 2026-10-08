@@ -177,8 +177,8 @@
     <h2>Conjugation review (data table with cell templates)</h2>
     <p class="demo__note">
       jp-conjugation's three hand-rolled tables (sumi-ui#36): tone by correctness, "given →
-      expected", and kanji plus reading in one cell — each a `sumiTableCell` template instead of a
-      bespoke `&lt;table&gt;`.
+      expected", and kanji plus reading in one cell — each a <code>sumiTableCell</code> template
+      instead of a bespoke <code>&lt;table&gt;</code>.
     </p>
     <sumi-data-table [columns]="conjugationTableColumns" [rows]="conjugationTableRows">
       <ng-template sumiTableCell="word" let-row>
@@ -186,7 +186,10 @@
         <div class="demo__table-reading">{{ row.reading }}</div>
       </ng-template>
       <ng-template sumiTableCell="given" let-row>
-        {{ row.given }} <span class="demo__table-arrow">→</span> {{ row.expected }}
+        <span lang="ja">{{ row.given }}</span>
+        @if (row.tone === 'wrong') {
+          <span class="demo__table-arrow">→</span> <span lang="ja">{{ row.expected }}</span>
+        }
       </ng-template>
     </sumi-data-table>
     <p class="demo__note">
