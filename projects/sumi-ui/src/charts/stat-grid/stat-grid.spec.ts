@@ -50,7 +50,7 @@ describe('SumiStatGrid tile-count columns (sumi-ui#36)', () => {
     const fixture = TestBed.createComponent(CountedHostComponent);
     fixture.componentInstance.tiles = Array.from({ length: count }, (_, i) => `tile-${i}`);
     fixture.detectChanges();
-    const spans = fixture.nativeElement.querySelectorAll('sumi-stat-grid > span');
+    const spans = fixture.nativeElement.querySelectorAll('sumi-stat-grid span');
     expect(spans.length).toBe(count);
   });
 
@@ -62,14 +62,34 @@ describe('SumiStatGrid tile-count columns (sumi-ui#36)', () => {
     }
   });
 
-  it('forces the 4-tile layout back to 2 columns under the narrow container query', () => {
+  it('only grows the 4-tile layout to 4 columns once there is room, skipping 3', () => {
     TestBed.configureTestingModule({ imports: [HostComponent] });
     TestBed.createComponent(HostComponent).detectChanges();
     const sheet = stylesheetContaining(':nth-child(4):last-child');
     const rules = Array.from(sheet!.cssRules);
-    const containerRule = rules.find(
-      (rule) => rule.cssText?.includes('@container') && rule.cssText?.includes('599px'),
+    const fourColumnRule = rules.find(
+      (rule) => rule.cssText?.includes('@container') && rule.cssText?.includes('repeat(4, 1fr)'),
     );
-    expect(containerRule?.cssText).toContain('repeat(2, 1fr)');
+    expect(fourColumnRule?.cssText).toContain('636px');
+    // 3 columns (the "3 + 1" split the issue reports) never appears in
+    // any rule targeting exactly 4 tiles.
+    const fourTileBlocks = rules.filter((rule) =>
+      rule.cssText?.includes(':nth-child(4):last-child'),
+    );
+    expect(fourTileBlocks.length).toBeGreaterThan(0);
+    for (const block of fourTileBlocks) {
+      expect(block.cssText).not.toContain('repeat(3,');
+    }
+  });
+
+  it('only grows the 6-tile layout to 6 columns once there is room, skipping 4 and 5', () => {
+    TestBed.configureTestingModule({ imports: [HostComponent] });
+    TestBed.createComponent(HostComponent).detectChanges();
+    const sheet = stylesheetContaining(':nth-child(6):last-child');
+    const rules = Array.from(sheet!.cssRules);
+    const sixColumnRule = rules.find(
+      (rule) => rule.cssText?.includes('@container') && rule.cssText?.includes('repeat(6, 1fr)'),
+    );
+    expect(sixColumnRule?.cssText).toContain('960px');
   });
 });
