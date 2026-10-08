@@ -29,6 +29,7 @@ export class App {
     { preset: 'yamabuki', label: 'Yamabuki' },
     { preset: 'asagi', label: 'Asagi' },
     { preset: 'fuji', label: 'Fuji' },
+    { preset: 'beni', label: 'Beni' },
   ];
 
   protected selectedAccent: SumiAccentPreset = 'ai';

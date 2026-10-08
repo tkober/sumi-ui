@@ -96,7 +96,12 @@
   --sumi-radius-sm: 8px;
   --sumi-radius-pill: 999px;
   --sumi-shadow: 0 1px 2px light-dark(rgb(16 24 40 / 6%), rgb(0 0 0 / 40%));
-  --sumi-focus-ring: 0 0 0 3px color-mix(in oklab, var(--sumi-accent) 45%, transparent);
+  // Base colour for the focus ring. Defaults to the accent; `SumiAccent.set`
+  // (see provide-sumi.ts) overrides this with a preset's `focusRing` colours
+  // when it has one — `beni`'s neutral ink, so the ring never reads red (see
+  // docs/concept.md#tokens, "Ausnahme: beni").
+  --sumi-focus-ring-base: var(--sumi-accent);
+  --sumi-focus-ring: 0 0 0 3px color-mix(in oklab, var(--sumi-focus-ring-base) 45%, transparent);
 
   // Multiplier on every ink motif's base opacity (see
   // docs/concept.md#tuschemotive and `sumi-landscape`/`sumi-pattern`'s

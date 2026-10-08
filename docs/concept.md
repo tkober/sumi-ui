@@ -13,27 +13,27 @@ Apps. Jede App behält eine eigene Akzentfarbe und ein eigenes Tuschemotiv.
 
 ## Entscheidungen
 
-| # | Thema | Entscheidung |
-|---|-------|--------------|
-| 1 | Name | **Sumi UI**, Komponenten-Präfix `sumi-`, Repo `tkober/sumi-ui` |
-| 2 | UI-Sprache | Alle Apps und die Bibliothek auf **Englisch**. jp-conversation-practice wird übersetzt. |
-| 3 | Akzent und Motiv | Wie unten beschrieben. Beides ist ein Parameter von `provideSumi()`, damit es später leicht zu ändern ist. |
-| 4 | Einbindung | **Quellcode per Git-Submodule**, kein npm-Paket |
-| 5 | Theme | Standardmäßig nach System, manuell umschaltbar (light / dark / system), Wahl pro Gerät gespeichert |
-| 6 | Hotkeys | Siehe [Hotkeys](#hotkeys). „I know this“ (`Alt K`) gibt es nur im kanji-trainer. |
-| 7 | App-Umschalter | Ja. Einzige Quelle für die App-Liste ist kanazawa-dashboard. |
-| 8 | Überschriften-Schrift | **Murecho** statt Shippori Mincho: modern und klar, Mincho wirkte zu klassisch. UI und Prompt bleiben Zen Kaku Gothic New. |
+| #   | Thema                 | Entscheidung                                                                                                               |
+| --- | --------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Name                  | **Sumi UI**, Komponenten-Präfix `sumi-`, Repo `tkober/sumi-ui`                                                             |
+| 2   | UI-Sprache            | Alle Apps und die Bibliothek auf **Englisch**. jp-conversation-practice wird übersetzt.                                    |
+| 3   | Akzent und Motiv      | Wie unten beschrieben. Beides ist ein Parameter von `provideSumi()`, damit es später leicht zu ändern ist.                 |
+| 4   | Einbindung            | **Quellcode per Git-Submodule**, kein npm-Paket                                                                            |
+| 5   | Theme                 | Standardmäßig nach System, manuell umschaltbar (light / dark / system), Wahl pro Gerät gespeichert                         |
+| 6   | Hotkeys               | Siehe [Hotkeys](#hotkeys). „I know this“ (`Alt K`) gibt es nur im kanji-trainer.                                           |
+| 7   | App-Umschalter        | Ja. Einzige Quelle für die App-Liste ist kanazawa-dashboard.                                                               |
+| 8   | Überschriften-Schrift | **Murecho** statt Shippori Mincho: modern und klar, Mincho wirkte zu klassisch. UI und Prompt bleiben Zen Kaku Gothic New. |
 
 ## Bestandsaufnahme (Oktober 2026)
 
-| | kanji-trainer | katakana-reading | jp-conversation-practice | jp-conjugation |
-|---|---|---|---|---|
-| Angular | 22, zoneless | **20 + zone.js** | 22, zoneless | **20 + zone.js** |
-| Styles | SCSS, globale Tokens | Inline-Styles in den Komponenten | SCSS, Inter | CSS-Tokens mit `light-dark()` |
-| Theme | Light/Dark nach System | Light/Dark nach System | nur Dark | System + Umschalter |
-| Eingabe | Romaji→Kana (wanakana IME-Modus, `absorbInput`), Feld verliert nie den Fokus | Romaji als Antwort, Feld nach der Antwort `readonly` (Tastatur klappt mobil weg) | Sprache, わからない-Button | Romaji→Kana (`wanakana.bind`), Fokus per `mousedown` gehalten |
-| Statistik | Kacheln, SVG-Forecast mit Tabellen-Fallback | Heatmap, Abdeckungsbalken | Verlauf, Kosten | Fehlerquoten-Heatmap, Sparkline |
-| UI-Sprache | Englisch | Englisch | Deutsch | Englisch |
+|            | kanji-trainer                                                                | katakana-reading                                                                 | jp-conversation-practice   | jp-conjugation                                                |
+| ---------- | ---------------------------------------------------------------------------- | -------------------------------------------------------------------------------- | -------------------------- | ------------------------------------------------------------- |
+| Angular    | 22, zoneless                                                                 | **20 + zone.js**                                                                 | 22, zoneless               | **20 + zone.js**                                              |
+| Styles     | SCSS, globale Tokens                                                         | Inline-Styles in den Komponenten                                                 | SCSS, Inter                | CSS-Tokens mit `light-dark()`                                 |
+| Theme      | Light/Dark nach System                                                       | Light/Dark nach System                                                           | nur Dark                   | System + Umschalter                                           |
+| Eingabe    | Romaji→Kana (wanakana IME-Modus, `absorbInput`), Feld verliert nie den Fokus | Romaji als Antwort, Feld nach der Antwort `readonly` (Tastatur klappt mobil weg) | Sprache, わからない-Button | Romaji→Kana (`wanakana.bind`), Fokus per `mousedown` gehalten |
+| Statistik  | Kacheln, SVG-Forecast mit Tabellen-Fallback                                  | Heatmap, Abdeckungsbalken                                                        | Verlauf, Kosten            | Fehlerquoten-Heatmap, Sparkline                               |
+| UI-Sprache | Englisch                                                                     | Englisch                                                                         | Deutsch                    | Englisch                                                      |
 
 Schon doppelt gebaut: Countdown-Ring, Heatmap, Session-Summary-Kacheln,
 Romaji→Kana-Logik (zwei Varianten), JP-Font-Stack.
@@ -67,29 +67,29 @@ mit `light-dark()` definiert, wie heute in jp-conjugation. `color-scheme` auf
 `:root` steuert das Theme: `light dark` für System, `[data-theme='light'|'dark']`
 für die manuelle Wahl.
 
-| Token | Light | Dark | Rolle |
-|---|---|---|---|
-| `--sumi-bg` | `#f3f2ee` | `#151513` | Seitengrund (Washi) |
-| `--sumi-surface` | `#fbfaf7` | `#1d1d1a` | Karten, Felder |
-| `--sumi-sunken` | `#e9e7e1` | `#262622` | eingelassene Flächen, Tabellenköpfe |
-| `--sumi-line` | `#d7d4cc` | `#36352f` | Rahmen, Raster |
-| `--sumi-text` | `#1e1d1b` | `#ecebe6` | Text (Sumi) |
-| `--sumi-text-2` | `#4c4a45` | `#c2c0b8` | Sekundärtext |
-| `--sumi-muted` | `#7b7870` | `#8f8c83` | Labels, Achsen |
-| `--sumi-correct` / `-soft` | `#2f6b3a` / `#e1ecdf` | `#8cc694` / `#1f3322` | richtig (松葉) |
-| `--sumi-wrong` / `-soft` | `#b3261e` / `#f6e0dd` | `#f08a80` / `#3d201d` | falsch (紅) |
-| `--sumi-retry` / `-soft` | `#9a6a10` / `#f4ead2` | `#e0b45a` / `#3a2f17` | angehalten, gilt nicht (黄土) |
+| Token                      | Light                 | Dark                  | Rolle                               |
+| -------------------------- | --------------------- | --------------------- | ----------------------------------- |
+| `--sumi-bg`                | `#f3f2ee`             | `#151513`             | Seitengrund (Washi)                 |
+| `--sumi-surface`           | `#fbfaf7`             | `#1d1d1a`             | Karten, Felder                      |
+| `--sumi-sunken`            | `#e9e7e1`             | `#262622`             | eingelassene Flächen, Tabellenköpfe |
+| `--sumi-line`              | `#d7d4cc`             | `#36352f`             | Rahmen, Raster                      |
+| `--sumi-text`              | `#1e1d1b`             | `#ecebe6`             | Text (Sumi)                         |
+| `--sumi-text-2`            | `#4c4a45`             | `#c2c0b8`             | Sekundärtext                        |
+| `--sumi-muted`             | `#7b7870`             | `#8f8c83`             | Labels, Achsen                      |
+| `--sumi-correct` / `-soft` | `#2f6b3a` / `#e1ecdf` | `#8cc694` / `#1f3322` | richtig (松葉)                      |
+| `--sumi-wrong` / `-soft`   | `#b3261e` / `#f6e0dd` | `#f08a80` / `#3d201d` | falsch (紅)                         |
+| `--sumi-retry` / `-soft`   | `#9a6a10` / `#f4ead2` | `#e0b45a` / `#3a2f17` | angehalten, gilt nicht (黄土)       |
 
 Akzente: `--sumi-accent`, `--sumi-accent-soft`, `--sumi-on-accent`. Die
 Bibliothek liefert die vier Akzente als benannte Presets. Eine App kann statt
 eines Presets auch eigene Werte übergeben.
 
-| App | Preset | Light | Dark | Motiv |
-|---|---|---|---|---|
-| kanji-trainer | `ai` 藍 Indigo | `#2b4c7e` | `#8fa9d6` | `mountains` 山 |
-| katakana-reading | `yamabuki` 山吹 Goldgelb | `#c98a0b` | `#e4b24a` | `waves` 波 |
-| jp-conversation-practice | `asagi` 浅葱 Blaugrün | `#1f7a80` | `#5fbcc1` | `clouds` 雲 |
-| jp-conjugation | `fuji` 藤 Glyzinie | `#6b4f96` | `#b69ae0` | `bamboo` 竹 |
+| App                      | Preset                   | Light     | Dark      | Motiv          |
+| ------------------------ | ------------------------ | --------- | --------- | -------------- |
+| kanji-trainer            | `ai` 藍 Indigo           | `#2b4c7e` | `#8fa9d6` | `mountains` 山 |
+| katakana-reading         | `yamabuki` 山吹 Goldgelb | `#c98a0b` | `#e4b24a` | `waves` 波     |
+| jp-conversation-practice | `asagi` 浅葱 Blaugrün    | `#1f7a80` | `#5fbcc1` | `clouds` 雲    |
+| jp-conjugation           | `beni` 紅 Scharlachrot   | `#c62828` | `#ef5350` | `bamboo` 竹    |
 
 Die Motiv-Spalte ist vorläufig: `clouds` gibt es unter den in sumi-ui#16
 umgesetzten Landschaften (siehe [Tuschemotive](#tuschemotive)) nicht mehr.
@@ -97,7 +97,26 @@ Die endgültige Zuordnung von Landschaft und Muster pro App folgt in
 sumi-ui#25.
 
 Die Akzente liegen bewusst weit weg von Rot und Grün. Rot und Grün bedeuten nur
-„falsch“ und „richtig“. jp-conjugation verliert damit sein bisheriges Rot.
+„falsch“ und „richtig“.
+
+**Ausnahme: `beni`.** jp-conjugation bekommt auf Wunsch sein ursprüngliches
+Rot zurück, obwohl `--sumi-wrong` (`#b3261e`) fast auf demselben Farbton
+liegt. Das ist eine bewusste Abweichung von der obigen Regel, an drei
+Bedingungen geknüpft:
+
+- Richtig und falsch tragen immer Symbol und Text, nie nur die Farbe — „Nie
+  nur Farbe“ gilt für `beni` genauso wie für jeden anderen Akzent.
+- Der Fokusring ist bei `beni` nicht rot. Ein roter Ring um ein grünes
+  „richtig“-Feld wirkt widersprüchlich, genau wie es die alte App vermieden
+  hat. `SumiAccentColors` erlaubt dafür ein optionales `focusRing { light,
+dark }`; `beni` setzt es auf ein neutrales Blaugrau (`#546e7a` /
+  `#90a4ae`), das `SumiAccent` statt des Akzents in `--sumi-focus-ring-base`
+  schreibt. Dieselbe Basis färbt den Rahmen des Eingabefelds beim Tippen,
+  sonst sähe ein noch unbeantwortetes Feld schon „falsch“ aus. Jedes andere
+  Preset bleibt beim akzentfarbenen Ring und Rahmen.
+- Die Chart-Rampe `--sumi-seq-*` wird bei `beni` rot, weil sie vom Akzent
+  abgeleitet ist. Das ist für jp-conjugation gewollt: eine Fehlerquoten-Matrix
+  (siehe `sumi-matrix-heatmap`), bei der „mehr Rot“ zu „mehr falsch“ passt.
 
 Für Charts gibt es eine sequentielle Rampe `--sumi-seq-0` bis `--sumi-seq-5`,
 abgeleitet vom Akzent. In Dark läuft sie umgekehrt, also „mehr“ wird heller.
@@ -109,11 +128,11 @@ einem 4-px-Raster.
 
 ## Schrift
 
-| Rolle | Schrift | Einsatz |
-|---|---|---|
-| Display | Murecho | Überschriften, Marke, Session-Ende |
-| UI und Lernstoff | Zen Kaku Gothic New | alles andere, auch Prompts |
-| Daten | IBM Plex Mono | Tabellen, `kbd`, Zahlen |
+| Rolle            | Schrift             | Einsatz                            |
+| ---------------- | ------------------- | ---------------------------------- |
+| Display          | Murecho             | Überschriften, Marke, Session-Ende |
+| UI und Lernstoff | Zen Kaku Gothic New | alles andere, auch Prompts         |
+| Daten            | IBM Plex Mono       | Tabellen, `kbd`, Zahlen            |
 
 Selbst gehostet über `@fontsource`, keine Abhängigkeit von Google zur Laufzeit.
 Japanischer Text bekommt `lang="ja"`, damit nie chinesische Glyphvarianten
@@ -131,14 +150,14 @@ gilt danach für alle Tipp-Apps.
 
 **Zustände**
 
-| Zustand | Auslöser | Darstellung |
-|---|---|---|
-| `typing` | Standard | Akzentrahmen |
-| `incomplete` | Enter bei unfertiger Silbe (`kan` → かn) | Hinweis, nichts wird gesendet, Schütteln |
-| `held` | App meldet „wahrscheinlich falsch“ | Retry-Farbe, „Sure?“. `Enter` bestätigt, `Esc` markiert den Text zum Korrigieren |
-| `retry` | richtige, aber nicht gefragte Antwort | Retry-Farbe, „Doesn't count“, Feld bleibt offen |
-| `correct` | richtig, ggf. mit Tippfehler oder Nebenantwort | Grün, ✓, Text |
-| `wrong` | falsch | Rot, ✕, erwartete Antwort, kurzes Schütteln |
+| Zustand      | Auslöser                                       | Darstellung                                                                      |
+| ------------ | ---------------------------------------------- | -------------------------------------------------------------------------------- |
+| `typing`     | Standard                                       | Akzentrahmen                                                                     |
+| `incomplete` | Enter bei unfertiger Silbe (`kan` → かn)       | Hinweis, nichts wird gesendet, Schütteln                                         |
+| `held`       | App meldet „wahrscheinlich falsch“             | Retry-Farbe, „Sure?“. `Enter` bestätigt, `Esc` markiert den Text zum Korrigieren |
+| `retry`      | richtige, aber nicht gefragte Antwort          | Retry-Farbe, „Doesn't count“, Feld bleibt offen                                  |
+| `correct`    | richtig, ggf. mit Tippfehler oder Nebenantwort | Grün, ✓, Text                                                                    |
+| `wrong`      | falsch                                         | Rot, ✕, erwartete Antwort, kurzes Schütteln                                      |
 
 Die Bewertung macht die App bzw. ihr Backend. Das Feld bekommt das Ergebnis
 als Input und kümmert sich nur um Darstellung und Ablauf.
@@ -169,16 +188,16 @@ Einzeltasten wirken erst, wenn die Rückmeldung zu sehen ist. Vorher gibt es nur
 `event.key`, weil macOS bei `Option K` sonst „˚“ liefert. Bei `isComposing`
 wird nichts ausgelöst.
 
-| Taste | Wirkung | Gilt in |
-|---|---|---|
-| `Enter` | Prüfen, danach weiter. Auf Start- und Ende-Screens: Session starten. | alle Tipp-Apps |
-| `Shift Enter` | Neue Zeile in mehrzeiligen Feldern (`Enter` sendet) | wo es mehrzeilige Felder gibt |
-| `Esc` | Angehaltene Antwort korrigieren, sonst offenes Panel schließen | alle |
-| `Alt K` | „I know this“ | **nur kanji-trainer** |
-| `Alt H` | „I don't know“: Antwort aufdecken, zählt als falsch. In jp-conversation-practice: わからない (nächste Hilfestufe) | alle |
-| `Alt M` | Mikrofon stumm/an | jp-conversation-practice |
-| `F` | Details zum Item auf/zu (nach der Antwort) | Apps mit Detailansicht |
-| `?` | Hotkey-Übersicht (nach der Antwort und auf Seiten ohne Feld); auf Touch-Geräten ausgeblendet | alle |
+| Taste         | Wirkung                                                                                                           | Gilt in                       |
+| ------------- | ----------------------------------------------------------------------------------------------------------------- | ----------------------------- |
+| `Enter`       | Prüfen, danach weiter. Auf Start- und Ende-Screens: Session starten.                                              | alle Tipp-Apps                |
+| `Shift Enter` | Neue Zeile in mehrzeiligen Feldern (`Enter` sendet)                                                               | wo es mehrzeilige Felder gibt |
+| `Esc`         | Angehaltene Antwort korrigieren, sonst offenes Panel schließen                                                    | alle                          |
+| `Alt K`       | „I know this“                                                                                                     | **nur kanji-trainer**         |
+| `Alt H`       | „I don't know“: Antwort aufdecken, zählt als falsch. In jp-conversation-practice: わからない (nächste Hilfestufe) | alle                          |
+| `Alt M`       | Mikrofon stumm/an                                                                                                 | jp-conversation-practice      |
+| `F`           | Details zum Item auf/zu (nach der Antwort)                                                                        | Apps mit Detailansicht        |
+| `?`           | Hotkey-Übersicht (nach der Antwort und auf Seiten ohne Feld); auf Touch-Geräten ausgeblendet                      | alle                          |
 
 Bewusst nicht vorgesehen:
 

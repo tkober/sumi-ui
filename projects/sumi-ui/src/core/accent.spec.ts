@@ -12,8 +12,12 @@ const BG_DARK = '#151513';
 const SURFACE_DARK = '#1d1d1a';
 
 const MIN_CONTRAST = 4.5;
+// WCAG 2.2 SC 2.4.11 (focus appearance): a non-text focus indicator needs
+// only 3:1 against the adjacent colours, not the 4.5:1 text-contrast bar
+// above.
+const MIN_FOCUS_CONTRAST = 3;
 
-const PRESET_NAMES: SumiAccentPreset[] = ['ai', 'yamabuki', 'asagi', 'fuji'];
+const PRESET_NAMES: SumiAccentPreset[] = ['ai', 'yamabuki', 'asagi', 'fuji', 'beni'];
 
 describe('SUMI_ACCENT_PRESETS', () => {
   it.each(PRESET_NAMES)(
@@ -53,6 +57,35 @@ describe('SUMI_ACCENT_PRESETS', () => {
     expect(
       contrastRatio(SUMI_ACCENT_PRESETS.yamabuki.light.onAccent, accent),
     ).toBeGreaterThanOrEqual(MIN_CONTRAST);
+  });
+
+  it('beni dark needs the dark ink too: white fails 4.5:1 on its pale red fill', () => {
+    const { accent } = SUMI_ACCENT_PRESETS.beni.dark;
+    expect(contrastRatio('#ffffff', accent)).toBeLessThan(MIN_CONTRAST);
+    expect(contrastRatio(SUMI_ACCENT_PRESETS.beni.dark.onAccent, accent)).toBeGreaterThanOrEqual(
+      MIN_CONTRAST,
+    );
+  });
+
+  it('beni is the only preset with a focusRing override', () => {
+    for (const name of PRESET_NAMES) {
+      if (name === 'beni') {
+        expect(SUMI_ACCENT_PRESETS[name].focusRing).toBeDefined();
+      } else {
+        expect(SUMI_ACCENT_PRESETS[name].focusRing).toBeUndefined();
+      }
+    }
+  });
+
+  it("beni's focusRing reaches 3:1 on --sumi-bg and --sumi-surface, in both themes", () => {
+    const { focusRing } = SUMI_ACCENT_PRESETS.beni;
+    expect(focusRing).toBeDefined();
+    expect(contrastRatio(focusRing!.light, BG_LIGHT)).toBeGreaterThanOrEqual(MIN_FOCUS_CONTRAST);
+    expect(contrastRatio(focusRing!.light, SURFACE_LIGHT)).toBeGreaterThanOrEqual(
+      MIN_FOCUS_CONTRAST,
+    );
+    expect(contrastRatio(focusRing!.dark, BG_DARK)).toBeGreaterThanOrEqual(MIN_FOCUS_CONTRAST);
+    expect(contrastRatio(focusRing!.dark, SURFACE_DARK)).toBeGreaterThanOrEqual(MIN_FOCUS_CONTRAST);
   });
 });
 
