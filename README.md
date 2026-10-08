@@ -151,8 +151,8 @@ successfully with `ng build` from a throwaway Angular 22 app):
    ```
 
    `accent` is one of the named presets (`'ai'`, `'yamabuki'`, `'asagi'`,
-   `'fuji'`, see docs/concept.md#tokens) or custom `{ light, dark }` colour
-   values. `motif`, `pattern` and `dashboardPort` are optional; see
+   `'fuji'`, `'beni'`, see docs/concept.md#tokens) or custom `{ light, dark }`
+   colour values. `motif`, `pattern` and `dashboardPort` are optional; see
    `provideSumi`'s JSDoc in `projects/sumi-ui/src/core/provide-sumi.ts`
    for defaults.
 

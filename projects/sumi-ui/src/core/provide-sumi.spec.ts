@@ -15,6 +15,7 @@ describe('provideSumi', () => {
     document.documentElement.style.removeProperty('--sumi-accent');
     document.documentElement.style.removeProperty('--sumi-on-accent');
     document.documentElement.style.removeProperty('--sumi-accent-ink');
+    document.documentElement.style.removeProperty('--sumi-focus-ring-base');
   });
 
   it('provides SUMI_CONFIG with the default accent, motif, pattern and dashboard port', () => {
@@ -58,6 +59,9 @@ describe('provideSumi', () => {
     expect(style.getPropertyValue('--sumi-accent-ink')).toBe(
       `light-dark(${preset.light.accentInk}, ${preset.dark.accentInk})`,
     );
+    expect(style.getPropertyValue('--sumi-focus-ring-base')).toBe(
+      `light-dark(${preset.light.accent}, ${preset.dark.accent})`,
+    );
   });
 });
 
@@ -81,5 +85,27 @@ describe('SumiAccent', () => {
     accent.set(custom);
     const style = document.documentElement.style;
     expect(style.getPropertyValue('--sumi-accent')).toBe('light-dark(#112233, #445566)');
+  });
+
+  it('falls back to the accent for --sumi-focus-ring-base when the preset has no focusRing', () => {
+    const accent = TestBed.inject(SumiAccent);
+    accent.set('asagi');
+    const preset = SUMI_ACCENT_PRESETS.asagi;
+    const style = document.documentElement.style;
+    expect(style.getPropertyValue('--sumi-focus-ring-base')).toBe(
+      `light-dark(${preset.light.accent}, ${preset.dark.accent})`,
+    );
+  });
+
+  it("uses beni's neutral focusRing for --sumi-focus-ring-base instead of its red accent", () => {
+    const accent = TestBed.inject(SumiAccent);
+    accent.set('beni');
+    const preset = SUMI_ACCENT_PRESETS.beni;
+    const style = document.documentElement.style;
+    expect(preset.focusRing).toBeDefined();
+    expect(style.getPropertyValue('--sumi-focus-ring-base')).toBe(
+      `light-dark(${preset.focusRing!.light}, ${preset.focusRing!.dark})`,
+    );
+    expect(style.getPropertyValue('--sumi-focus-ring-base')).not.toContain(preset.light.accent);
   });
 });

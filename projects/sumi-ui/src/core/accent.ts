@@ -19,10 +19,19 @@ export interface SumiAccentThemeColors {
 export interface SumiAccentColors {
   light: SumiAccentThemeColors;
   dark: SumiAccentThemeColors;
+  /**
+   * Overrides `--sumi-focus-ring`'s base colour, in place of the accent.
+   * Every preset's focus ring is accent-coloured by default (see
+   * `SumiAccent.set` in `provide-sumi.ts`); `beni` is the one exception —
+   * a red ring around a green "correct" field reads as a contradiction, so
+   * it uses a neutral ink instead (see docs/concept.md#tokens, "Ausnahme:
+   * beni"). Omit this to keep the default accent-coloured ring.
+   */
+  focusRing?: { light: string; dark: string };
 }
 
 /** Named accent presets, one per app (see docs/concept.md#tokens). */
-export type SumiAccentPreset = 'ai' | 'yamabuki' | 'asagi' | 'fuji';
+export type SumiAccentPreset = 'ai' | 'yamabuki' | 'asagi' | 'fuji' | 'beni';
 
 /**
  * Preset accent values. `onAccent` picks whichever of white or the theme's
@@ -49,6 +58,16 @@ export const SUMI_ACCENT_PRESETS: Record<SumiAccentPreset, SumiAccentColors> = {
   fuji: {
     light: { accent: '#6b4f96', onAccent: '#ffffff', accentInk: '#6b4f96' },
     dark: { accent: '#b69ae0', onAccent: '#151513', accentInk: '#b69ae0' },
+  },
+  // jp-conjugation's original red (#c62828 / #ef5350), kept despite sitting
+  // close to `--sumi-wrong` — see docs/concept.md#tokens, "Ausnahme: beni",
+  // for the rules this preset is held to. The neutral `focusRing` below is
+  // part of that exception: a red ring around a green "correct" field would
+  // read as a contradiction.
+  beni: {
+    light: { accent: '#c62828', onAccent: '#ffffff', accentInk: '#c62828' },
+    dark: { accent: '#ef5350', onAccent: '#151513', accentInk: '#ef5350' },
+    focusRing: { light: '#546e7a', dark: '#8fa1b3' },
   },
 };
 

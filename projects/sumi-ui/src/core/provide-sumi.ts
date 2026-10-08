@@ -72,6 +72,13 @@ export const SUMI_CONFIG = new InjectionToken<SumiConfig>('SUMI_CONFIG');
  * `light-dark(<light>, <dark>)` so the existing theme machinery in
  * _tokens.scss (and `SumiTheme`) keeps resolving them per theme. A no-op
  * outside the browser (SSR, tests without a DOM).
+ *
+ * Also sets `--sumi-focus-ring-base`, the colour `--sumi-focus-ring` mixes
+ * into transparency: the accent by default, or a preset's own `focusRing`
+ * colours when it has one (`beni`'s neutral ink — see
+ * docs/concept.md#tokens, "Ausnahme: beni" — so the ring never reads red
+ * around a correct/wrong field). Every other preset's ring stays exactly
+ * the accent-coloured ring it always was.
  */
 @Injectable({ providedIn: 'root' })
 export class SumiAccent {
@@ -94,6 +101,13 @@ export class SumiAccent {
     root.style.setProperty(
       '--sumi-accent-ink',
       `light-dark(${resolved.light.accentInk}, ${resolved.dark.accentInk})`,
+    );
+    const focusRing = resolved.focusRing;
+    root.style.setProperty(
+      '--sumi-focus-ring-base',
+      focusRing
+        ? `light-dark(${focusRing.light}, ${focusRing.dark})`
+        : `light-dark(${resolved.light.accent}, ${resolved.dark.accent})`,
     );
   }
 }

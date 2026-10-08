@@ -89,7 +89,7 @@ eines Presets auch eigene Werte übergeben.
 | kanji-trainer | `ai` 藍 Indigo | `#2b4c7e` | `#8fa9d6` | `mountains` 山 |
 | katakana-reading | `yamabuki` 山吹 Goldgelb | `#c98a0b` | `#e4b24a` | `waves` 波 |
 | jp-conversation-practice | `asagi` 浅葱 Blaugrün | `#1f7a80` | `#5fbcc1` | `clouds` 雲 |
-| jp-conjugation | `fuji` 藤 Glyzinie | `#6b4f96` | `#b69ae0` | `bamboo` 竹 |
+| jp-conjugation | `beni` 紅 Scharlachrot | `#c62828` | `#ef5350` | `bamboo` 竹 |
 
 Die Motiv-Spalte ist vorläufig: `clouds` gibt es unter den in sumi-ui#16
 umgesetzten Landschaften (siehe [Tuschemotive](#tuschemotive)) nicht mehr.
@@ -97,7 +97,24 @@ Die endgültige Zuordnung von Landschaft und Muster pro App folgt in
 sumi-ui#25.
 
 Die Akzente liegen bewusst weit weg von Rot und Grün. Rot und Grün bedeuten nur
-„falsch“ und „richtig“. jp-conjugation verliert damit sein bisheriges Rot.
+„falsch“ und „richtig“.
+
+**Ausnahme: `beni`.** jp-conjugation bekommt auf Wunsch sein ursprüngliches
+Rot zurück, obwohl `--sumi-wrong` (`#b3261e`) fast auf demselben Farbton
+liegt. Das ist eine bewusste Abweichung von der obigen Regel, an drei
+Bedingungen geknüpft:
+
+- Richtig und falsch tragen immer Symbol und Text, nie nur die Farbe — „Nie
+  nur Farbe“ gilt für `beni` genauso wie für jeden anderen Akzent.
+- Der Fokusring ist bei `beni` nicht rot. Ein roter Ring um ein grünes
+  „richtig“-Feld wirkt widersprüchlich, genau wie es die alte App vermieden
+  hat. `SumiAccentColors` erlaubt dafür ein optionales `focusRing { light,
+  dark }`; `beni` setzt es auf ein neutrales Blaugrau (`#546e7a` /
+  `#8fa1b3`), das `SumiAccent` statt des Akzents in `--sumi-focus-ring-base`
+  schreibt. Jedes andere Preset bleibt beim akzentfarbenen Ring.
+- Die Chart-Rampe `--sumi-seq-*` wird bei `beni` rot, weil sie vom Akzent
+  abgeleitet ist. Das ist für jp-conjugation gewollt: eine Fehlerquoten-Matrix
+  (siehe `sumi-matrix-heatmap`), bei der „mehr Rot“ zu „mehr falsch“ passt.
 
 Für Charts gibt es eine sequentielle Rampe `--sumi-seq-0` bis `--sumi-seq-5`,
 abgeleitet vom Akzent. In Dark läuft sie umgekehrt, also „mehr“ wird heller.
