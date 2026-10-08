@@ -98,6 +98,10 @@
 
   <section class="demo">
     <h2>Conjugation miss rate</h2>
+    <p class="demo__note">
+      Each cell also carries how many answers it rests on — tap, hover or Tab onto one to see it
+      below the chart, exactly as jp-conjugation's own "Where it still slips" card will.
+    </p>
     <sumi-matrix-heatmap
       ariaLabel="Conjugation miss rate, by form and word type"
       [rows]="conjugationRows"
@@ -106,8 +110,12 @@
       [domain]="[0, 1]"
       [format]="toPercent"
       [table]="true"
+      [selectable]="true"
+      [selected]="selectedConjugationCell()"
+      (cellSelect)="onConjugationCellSelect($event)"
       noDataLabel="Not practised yet"
     />
+    <p class="demo__readout">{{ conjugationReadout() }}</p>
   </section>
 
   <section class="demo">

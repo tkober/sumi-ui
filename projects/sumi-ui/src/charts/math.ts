@@ -600,11 +600,16 @@ export function calendarGeometry(
 }
 
 /** One cell of `sumi-matrix-heatmap`'s `cells` input; a `(row, column)` pair
- *  missing from the array is equivalent to `value: null`. */
+ *  missing from the array is equivalent to `value: null`. `detail` is a
+ *  short free-text explanation of what the value rests on (e.g. "7/10
+ *  correct", or "not practised yet" on a cell present with `value: null`)
+ *  — it rides along in the cell's `title` and the table fallback, and in
+ *  the `cellSelect` payload when `selectable` is on. */
 export interface SumiMatrixCellInput {
   row: string;
   column: string;
   value: number | null;
+  detail?: string;
 }
 
 /** One rendered cell of `sumi-matrix-heatmap`'s grid. */
@@ -617,6 +622,7 @@ export interface MatrixCellGeometry {
   /** `format(value)`, or `null` when there is no data to show. */
   label: string | null;
   title: string;
+  detail?: string;
 }
 
 function matrixKey(row: string, column: string): string {
@@ -664,12 +670,14 @@ export function matrixCellGeometry(
   domain: readonly [number, number] | undefined,
   format: (value: number) => string,
 ): MatrixCellGeometry[] {
-  const byKey = new Map(cells.map((c) => [matrixKey(c.row, c.column), c.value]));
+  const byKey = new Map(cells.map((c) => [matrixKey(c.row, c.column), c]));
   const resolvedDomain = domain ?? matrixDomain(cells);
   const out: MatrixCellGeometry[] = [];
   for (const row of rows) {
     for (const column of columns) {
-      const value = byKey.get(matrixKey(row, column)) ?? null;
+      const input = byKey.get(matrixKey(row, column));
+      const value = input?.value ?? null;
+      const detail = input?.detail;
       if (value === null) {
         out.push({
           row,
@@ -677,7 +685,8 @@ export function matrixCellGeometry(
           value: null,
           bucket: -1,
           label: null,
-          title: `${row} / ${column}: no data`,
+          title: detail ? `${row} / ${column}: no data · ${detail}` : `${row} / ${column}: no data`,
+          detail,
         });
         continue;
       }
@@ -688,7 +697,8 @@ export function matrixCellGeometry(
         value,
         bucket: matrixBucket(value, resolvedDomain),
         label,
-        title: `${row} / ${column}: ${label}`,
+        title: detail ? `${row} / ${column}: ${label} · ${detail}` : `${row} / ${column}: ${label}`,
+        detail,
       });
     }
   }

@@ -73,7 +73,7 @@ export { SumiLegend, type SumiLegendItem } from './legend/legend';
 export { SumiRampLegend } from './ramp-legend/ramp-legend';
 export { SumiDataTable, type SumiTableColumn, type SumiTableRow } from './data-table/data-table';
 export { SumiCalendarHeatmap } from './calendar-heatmap/calendar-heatmap';
-export { SumiMatrixHeatmap } from './matrix-heatmap/matrix-heatmap';
+export { SumiMatrixHeatmap, type SumiMatrixCellSelection } from './matrix-heatmap/matrix-heatmap';
 export { SumiDonut } from './donut/donut';
 export { SumiSunburst } from './sunburst/sunburst';
 

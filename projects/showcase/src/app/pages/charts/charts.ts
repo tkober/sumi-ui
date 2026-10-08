@@ -1,10 +1,11 @@
-import { Component } from '@angular/core';
+import { Component, computed, signal } from '@angular/core';
 import {
   SUMI_CHARTS,
   type SumiBar,
   type SumiCalendarDay,
   type SumiDonutSegment,
   type SumiMatrixCellInput,
+  type SumiMatrixCellSelection,
   type SumiStackedRow,
   type SumiSunburstNode,
 } from 'sumi-ui/charts';
@@ -91,6 +92,28 @@ export class ChartsPage {
   ];
   protected readonly conjugationColumns = ['Ichidan', 'Godan', 'Suru', 'Kuru'];
   protected readonly conjugationCells: SumiMatrixCellInput[] = buildMissRateMatrix();
+  // The chart owns no state itself (`selectable` is stateless) — the
+  // consumer's `selected` cell lives here and feeds both the ring back
+  // into the chart and the readout line below it, same split as
+  // jp-conjugation's `MissRateHeatmapComponent` will use.
+  protected readonly selectedConjugationCell = signal<{ row: string; column: string } | null>(null);
+  protected readonly selectedConjugationDetail = signal<SumiMatrixCellSelection | null>(null);
+  protected readonly conjugationReadout = computed(() => {
+    const cell = this.selectedConjugationDetail();
+    if (!cell) {
+      return 'Pick a cell to see its numbers.';
+    }
+    const where = `${cell.row} · ${cell.column}`;
+    if (cell.value === null) {
+      return `${where} — ${cell.detail ?? 'not practised yet'}.`;
+    }
+    return `${where} — ${this.toPercent(cell.value)} miss rate (${cell.detail ?? ''}).`;
+  });
+
+  protected onConjugationCellSelect(selection: SumiMatrixCellSelection): void {
+    this.selectedConjugationCell.set({ row: selection.row, column: selection.column });
+    this.selectedConjugationDetail.set(selection);
+  }
 
   // --- Katakana reading outcomes, a donut with the total in the centre ----
   protected readonly readingOutcomes: SumiDonutSegment[] = [
@@ -201,11 +224,17 @@ function buildMissRateMatrix(): SumiMatrixCellInput[] {
   for (const row of rows) {
     for (const column of columns) {
       if (neverPractised.has(`${row}/${column}`)) {
-        cells.push({ row, column, value: null });
+        cells.push({ row, column, value: null, detail: 'not practised yet' });
         continue;
       }
       const value = Math.max(0, Math.min(1, rng() * 0.6));
-      cells.push({ row, column, value });
+      // A cell with few attempts and the same miss rate as one with many
+      // is not equally trustworthy — `detail` carries the attempt count
+      // so a tap/hover can tell them apart (see the issue this answers).
+      const attempts = 4 + Math.round(rng() * 20);
+      const misses = Math.round(value * attempts);
+      const correct = attempts - misses;
+      cells.push({ row, column, value, detail: `${correct}/${attempts} correct` });
     }
   }
   return cells;

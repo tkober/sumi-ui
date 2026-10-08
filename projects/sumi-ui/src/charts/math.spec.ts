@@ -444,6 +444,42 @@ describe('matrixCellGeometry', () => {
     expect(geo[0].bucket).toBe(5);
     expect(geo[0].title).toBe('a / ka: 90%');
   });
+
+  it('appends detail to the title after the formatted value', () => {
+    const geo = matrixCellGeometry(
+      ['a'],
+      ['ka'],
+      [{ row: 'a', column: 'ka', value: 90, detail: '9/10 correct' }],
+      [0, 100],
+      format,
+    );
+    expect(geo[0].title).toBe('a / ka: 90% · 9/10 correct');
+    expect(geo[0].detail).toBe('9/10 correct');
+  });
+
+  it('appends detail to a "no data" title for a cell explicitly present with value null', () => {
+    const geo = matrixCellGeometry(
+      ['a'],
+      ['ka'],
+      [{ row: 'a', column: 'ka', value: null, detail: 'not practised yet' }],
+      [0, 100],
+      format,
+    );
+    expect(geo[0].title).toBe('a / ka: no data · not practised yet');
+    expect(geo[0].bucket).toBe(-1);
+  });
+
+  it('leaves the title unchanged when no detail is given', () => {
+    const geo = matrixCellGeometry(
+      ['a'],
+      ['ka'],
+      [{ row: 'a', column: 'ka', value: 90 }],
+      [0, 100],
+      format,
+    );
+    expect(geo[0].title).toBe('a / ka: 90%');
+    expect(geo[0].detail).toBeUndefined();
+  });
 });
 
 describe('heatmapCellColor / heatmapTextColor', () => {
