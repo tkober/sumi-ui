@@ -26,6 +26,25 @@ describe('SumiCard', () => {
     expect(fixture.nativeElement.textContent).toContain('Footer');
   });
 
+  it('zeroes the margin-bottom of the header slot last child so the gap to the body is exactly the body padding', () => {
+    TestBed.configureTestingModule({ imports: [HostComponent] });
+    const fixture = TestBed.createComponent(HostComponent);
+    fixture.detectChanges();
+    const header: HTMLElement = fixture.nativeElement.querySelector('[sumiCardHeader]');
+    // The rule targets `[sumiCardHeader] > *:last-child`; the header
+    // element projected here has no further children, so it is its own
+    // last child and must pick up the override via `::ng-deep`.
+    const sheet = Array.from(document.styleSheets).find((s) =>
+      Array.from(s.cssRules ?? []).some((r) => r.cssText?.includes('sumiCardHeader')),
+    );
+    expect(sheet).toBeDefined();
+    const rule = Array.from(sheet!.cssRules).find(
+      (r) => r.cssText?.includes('sumiCardHeader') && r.cssText?.includes('margin-bottom'),
+    ) as CSSStyleRule | undefined;
+    expect(rule?.style.marginBottom).toBe('0px');
+    expect(header).not.toBeNull();
+  });
+
   it('adds the interactive modifier class only when requested', () => {
     TestBed.configureTestingModule({ imports: [HostComponent] });
     const fixture = TestBed.createComponent(HostComponent);

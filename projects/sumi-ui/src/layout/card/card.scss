@@ -27,6 +27,14 @@
 ::ng-deep [sumiCardHeader] {
   display: block;
   padding: var(--sumi-space-4) var(--sumi-space-4) 0;
+
+  // The gap below the header must equal the body's own top padding,
+  // regardless of the projected element's own bottom margin (e.g. an `h2`
+  // or `p`'s user-agent margin) — otherwise the two stack and the card
+  // shows a double gap. Zero it on whatever ends up last inside the slot.
+  > *:last-child {
+    margin-bottom: 0;
+  }
 }
 
 ::ng-deep [sumiCardFooter] {
