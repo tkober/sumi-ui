@@ -67,7 +67,7 @@ export const SUMI_ACCENT_PRESETS: Record<SumiAccentPreset, SumiAccentColors> = {
   beni: {
     light: { accent: '#c62828', onAccent: '#ffffff', accentInk: '#c62828' },
     dark: { accent: '#ef5350', onAccent: '#151513', accentInk: '#ef5350' },
-    focusRing: { light: '#546e7a', dark: '#8fa1b3' },
+    focusRing: { light: '#546e7a', dark: '#90a4ae' },
   },
 };
 

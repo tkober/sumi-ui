@@ -64,7 +64,11 @@
 // match their own host, so every one of them would silently do nothing.
 :host(.sumi-answer-field--typing) .sumi-answer-field__input:focus-visible {
   outline: none;
-  border-color: var(--sumi-accent);
+  // Same base as the focus ring, not the accent itself: with a red accent
+  // (`beni`) a red border on a field nobody has answered yet would read as
+  // "wrong" before the verdict exists. Other presets: unchanged (the base
+  // defaults to the accent).
+  border-color: var(--sumi-focus-ring-base);
   box-shadow: var(--sumi-focus-ring);
 }
 
