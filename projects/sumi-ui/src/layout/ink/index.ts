@@ -23,6 +23,7 @@ export { SumiLandscape } from './landscape';
 export { SumiPattern } from './pattern';
 export { SumiInkBackdrop } from './ink-backdrop';
 export { SumiEmptyState } from './empty-state';
+export { SumiErrorState } from './error-state';
 export { SumiHanko, type SumiHankoSize } from './hanko';
 export {
   SUMI_COMPANIONS,

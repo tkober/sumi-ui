@@ -75,12 +75,12 @@ describe('SumiEmptyState with a companion', () => {
     });
   });
 
-  it('shows the companion instead of the landscape, keeping the pattern', () => {
+  it('shows the companion in front of the landscape, keeping both it and the pattern', () => {
     const fixture = TestBed.createComponent(CompanionHostComponent);
     fixture.detectChanges();
     const host = fixture.nativeElement as HTMLElement;
     expect(host.querySelector('sumi-companion')).toBeTruthy();
-    expect(host.querySelector('sumi-landscape')).toBeNull();
+    expect(host.querySelector('sumi-landscape')).toBeTruthy();
     expect(host.querySelector('sumi-pattern')).toBeTruthy();
   });
 });

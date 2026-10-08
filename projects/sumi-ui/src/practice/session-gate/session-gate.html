@@ -1,19 +1,18 @@
-<div class="sumi-session-gate__content">
-  @if (companion(); as c) {
-    <sumi-companion class="sumi-session-gate__companion" [kind]="c" [size]="96" />
-  }
-  @if (title(); as t) {
-    <h1 class="sumi-session-gate__title">{{ t }}</h1>
-  }
-  @if (text(); as t) {
-    <p class="sumi-session-gate__text">{{ t }}</p>
-  }
+<sumi-ink-backdrop layout="full" [motif]="motif()" [pattern]="pattern()" [companion]="companion()">
+  <div class="sumi-session-gate__content">
+    @if (title(); as t) {
+      <h1 class="sumi-session-gate__title">{{ t }}</h1>
+    }
+    @if (text(); as t) {
+      <p class="sumi-session-gate__text">{{ t }}</p>
+    }
 
-  <ng-content />
+    <ng-content />
 
-  @if (showAction()) {
-    <button type="button" sumiButton variant="primary" (click)="start.emit()">
-      {{ actionLabel() }}
-    </button>
-  }
-</div>
+    @if (showAction()) {
+      <button type="button" sumiButton variant="primary" (click)="start.emit()">
+        {{ actionLabel() }}
+      </button>
+    }
+  </div>
+</sumi-ink-backdrop>

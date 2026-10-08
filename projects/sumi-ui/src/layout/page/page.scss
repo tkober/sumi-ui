@@ -14,12 +14,32 @@
 }
 
 .sumi-page__header {
+  position: relative;
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   flex-wrap: wrap;
   gap: var(--sumi-space-3);
   margin-bottom: var(--sumi-space-6);
+}
+
+// T4 (docs/concept.md#tuschemotive): a faint pattern band behind the
+// title, fading downward. No landscape here — a header is not a scene.
+.sumi-page__headband {
+  position: absolute;
+  inset: calc(-1 * var(--sumi-space-3)) calc(-1 * var(--sumi-space-4)) auto
+    calc(-1 * var(--sumi-space-4));
+  height: 64px;
+  -webkit-mask-image: linear-gradient(180deg, #000 15%, transparent);
+  mask-image: linear-gradient(180deg, #000 15%, transparent);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.sumi-page__heading,
+.sumi-page__actions {
+  position: relative;
+  z-index: 1;
 }
 
 .sumi-page__heading h1 {
@@ -39,4 +59,28 @@
   display: flex;
   flex-direction: column;
   gap: var(--sumi-space-4);
+}
+
+// T5 (docs/concept.md#tuschemotive): a landscape with a small companion
+// below the body, only rendered once the page actually scrolls — never
+// `position: fixed`, so it sits in normal flow and is only found by
+// scrolling to the end of a long page.
+.sumi-page__end {
+  position: relative;
+  margin-top: var(--sumi-space-6);
+  height: 110px;
+  overflow: hidden;
+  border-radius: var(--sumi-radius);
+}
+
+.sumi-page__end-scene {
+  position: absolute;
+  inset: 0;
+}
+
+.sumi-page__end-companion {
+  position: absolute;
+  right: 12%;
+  bottom: 4px;
+  pointer-events: none;
 }

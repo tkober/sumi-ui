@@ -1,5 +1,6 @@
 import { Component, computed, input, output } from '@angular/core';
 import { SumiButtonDirective } from 'sumi-ui/forms';
+import { SumiHanko } from 'sumi-ui/layout';
 
 /** `ms` as `m:ss`, e.g. `125000` → `"2:05"`. Never negative. */
 function formatDuration(ms: number): string {
@@ -14,8 +15,15 @@ function formatDuration(ms: number): string {
  * signed `delta` (e.g. an Elo change) and a "Practice again" button. Meant
  * to sit inside `sumi-session-gate`'s content for the ended state.
  *
- * `[sumiSummaryArt]` is a reserved slot for a hanko/backdrop illustration,
- * left empty for now (see the Tuschemotive follow-up, issue #16).
+ * `[sumiSummaryArt]` is a slot for a hanko/backdrop illustration, e.g. a
+ * 合格 ("passed") seal (see docs/concept.md#tuschemotive and sumi-ui#16).
+ *
+ * Set `levelUp` (T8 of docs/concept.md#tuschemotive, sumi-ui#42) to show a
+ * second 昇級 ("level up") hanko next to the result when a level was
+ * reached during the session — `levelUp` is used as that second hanko's
+ * accessible label, e.g. `"Level 4"`. Omit it (the default) for no
+ * change: a session end without a level-up only ever shows the one hanko
+ * an app put in `[sumiSummaryArt]`.
  *
  * ```html
  * <sumi-session-gate title="Session complete" actionLabel="Practice again" (start)="restart()">
@@ -25,8 +33,11 @@ function formatDuration(ms: number): string {
  *     [durationMs]="durationMs()"
  *     [delta]="eloDelta()"
  *     deltaLabel="Elo"
+ *     [levelUp]="newLevel() ? 'Level ' + newLevel() : undefined"
  *     (restart)="restart()"
- *   />
+ *   >
+ *     <sumi-hanko sumiSummaryArt characters="合格" label="Passed" />
+ *   </sumi-session-summary>
  * </sumi-session-gate>
  * ```
  */
@@ -34,7 +45,7 @@ function formatDuration(ms: number): string {
   selector: 'sumi-session-summary',
   templateUrl: './session-summary.html',
   styleUrl: './session-summary.scss',
-  imports: [SumiButtonDirective],
+  imports: [SumiButtonDirective, SumiHanko],
   host: { class: 'sumi-session-summary' },
 })
 export class SumiSessionSummary {
@@ -44,6 +55,8 @@ export class SumiSessionSummary {
   /** e.g. an Elo change. Shown with a leading sign and correct/wrong colouring. */
   readonly delta = input<number>();
   readonly deltaLabel = input<string>();
+  /** Shows a second 昇級 hanko, labelled with this level. Omit for none (default). */
+  readonly levelUp = input<string>();
 
   readonly restart = output<void>();
 

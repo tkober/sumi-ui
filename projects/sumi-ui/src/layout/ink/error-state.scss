@@ -2,7 +2,7 @@
   display: block;
 }
 
-.sumi-session-gate__content {
+.sumi-error-state__content {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -11,13 +11,21 @@
   text-align: center;
 }
 
-.sumi-session-gate__title {
+.sumi-error-state__title {
   margin: 0;
   font-family: var(--sumi-font-display);
   font-size: var(--sumi-text-3xl);
 }
 
-.sumi-session-gate__text {
+.sumi-error-state__text {
   margin: 0;
   color: var(--sumi-text-2);
+}
+
+.sumi-error-state__text:empty {
+  display: none;
+}
+
+.sumi-error-state__action:empty {
+  display: none;
 }

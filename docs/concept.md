@@ -253,15 +253,79 @@ Umgesetzt in sumi-ui#16, `projects/sumi-ui/src/layout/ink/`.
 - `--sumi-ink-strength` (Token, Standard `1`) ist ein Multiplikator auf alle
   Deckkraftwerte, damit Apps die Intensität feinjustieren können.
 - `provideSumi({ motif, pattern })`: jede App wählt eine Landschaft und ein
-  Muster (beide optional, mit Standardwert und `none`-Option).
+  Muster (beide optional, mit `none`-Option).
+- **Muster ohne stillen Standard** (sumi-ui#42): Ohne `pattern` in
+  `provideSumi()` ist der Standard `'none'`, nicht mehr `'seigaiha'`. Anders
+  als bei `motif` (Standard `mountains`) und `companion` (Standard `tsuru`,
+  siehe unten) ist ein Muster so dicht (es kachelt das ganze Band), dass ein
+  unbemerkter Standard hieß: jede App bekommt Seigaiha, ohne es gewählt zu
+  haben. Eine App, die ein Muster will, sagt das jetzt ausdrücklich in
+  `provideSumi({ pattern })`.
 - Muster und Landschaft liegen nie übereinander: das Muster läuft als Band
-  oben aus (Maske nach unten), die Landschaft steht unten. Nur im
-  Dashboard-Kopf (`sumi-ink-backdrop`), in Leerzuständen (`sumi-empty-state`)
-  und am Session-Ende, nie hinter Prompt oder Eingabe.
+  oben aus (Maske nach unten), die Landschaft steht unten.
 - `sumi-hanko`: Zinnoberrot-Stempel mit ein bis zwei Zeichen (z. B. 合格),
   als wiederkehrendes Zeichen, z. B. für „Level geschafft“.
 - Die Zuordnung von Landschaft/Muster pro App wird später festgelegt
   (sumi-ui#25).
+
+### Orte (sumi-ui#42)
+
+Sieben Komponenten-Bausteine, acht Orte (T1 bis T8), identisch für alle vier
+Apps — die App wählt nur Motive in `provideSumi()`, die Orte legt die
+Bibliothek fest:
+
+- **T1 Start-Gate** (`sumi-session-gate`): umschließt sein Inhalt mit
+  `sumi-ink-backdrop[layout="full"]` — Musterband oben (Maske nach unten),
+  Landschaft über die volle Breite unten, Titel/Text/Button frei in der
+  Mitte mit genug Bodenabstand, dass die Szene nie unter Text oder Button
+  liegt, auch bei 360 px Breite. `companion` steht klein (56 px) auf dem
+  Boden der Landschaft, seitlich vom Inhalt (rechtes Drittel) — nicht mehr
+  groß über dem Titel. `motif`/`pattern` überschreiben `SUMI_CONFIG` wie bei
+  `sumi-ink-backdrop`.
+- **T2 Session-Ende**: dieselbe Szene wie T1 — Apps betten
+  `sumi-session-summary` in `sumi-session-gate [showAction]="false"`, dann
+  deckt T1s Szene den Hintergrund ab. Der Hanko bleibt im
+  `[sumiSummaryArt]`-Slot, der Begleiter wandert mit dem Gate in die Szene.
+- **T3 Leerzustand** (`sumi-empty-state`): zeigt immer Musterband und
+  Landschaft. `companion` zeichnet zusätzlich einen kleinen Begleiter vor
+  der Landschaft, rechts, statt sie zu ersetzen.
+- **T4 Seitenkopf** (`sumi-page` mit `title`): ein blasses Musterband hinter
+  dem Titel, das nach unten ausläuft. Keine Landschaft — ein Kopf ist keine
+  Szene.
+- **T5 Seitenende** (`sumi-page`): eine Landschaft mit optionalem kleinen
+  Begleiter unter dem Seiteninhalt, aber nur, wenn die Seite tatsächlich
+  scrollt (das Dokument ist höher als das Sichtfenster, per
+  `ResizeObserver` erkannt, no-op ohne einen). Steht im normalen Fluss, nie
+  `position: fixed` — wer nicht runterscrollt, sieht sie nicht. `inkEnd`
+  schaltet sie pro Seite ab; `companion` ist, wie bei T1/T3, ein expliziter
+  Opt-in und übernimmt **nicht** `SUMI_CONFIG`s Begleiter, damit nicht jede
+  Seite ungefragt ein Tier am Ende bekommt.
+- **T6 Fehler und Nicht-gefunden** (`sumi-error-state`): dieselbe Szene wie
+  T1/T2 (ein dünner Wrapper um `sumi-ink-backdrop[layout="full"]`), mit
+  Titel, Text-Slot und Aktions-Slot. Eigene Komponente statt einer
+  `sumi-empty-state`-Variante, weil der Ort bildschirmfüllend ist wie das
+  Gate, nicht eine kleine Karte wie der Leerzustand. Ladezustände bleiben
+  ohne Tusche, sie sind zu kurzlebig.
+- **T7 Übungsrunde, Urteil, Tabellen, Formulare, Regeln**: keine Änderung,
+  nur als Regel festgehalten — bleiben ohne Tusche, auch nicht blass.
+- **T8 Level-Aufstieg** (`sumi-session-summary`): `levelUp` zeigt einen
+  zweiten Stempel 昇級 neben dem Ergebnis, mit `levelUp`s Wert als
+  zugänglichem Label (z. B. „Level 4“). Ohne `levelUp` ändert sich nichts.
+
+Regeln, die für alle Orte gelten:
+
+- **Nie neben Lernstoff.** Übungsrunde, Antwortfeld, Urteil, Tabellen,
+  Formulare und Regel-Erklärungen (T7) bleiben ohne Tusche.
+- **Ein Ort, eine Schicht.** Muster nur oben als auslaufendes Band,
+  Landschaft nur unten. Beides überlappt nie mit Text oder Bedienelementen.
+- **Höchstens ein Begleiter pro Bildschirm**, etwa 48 bis 64 px, auf dem
+  Boden der Landschaft — groß nur im Motiv-Showcase.
+- **Hanko nur für Ergebnisse**: Session-Ende, Level-Aufstieg. Nie als Deko.
+- **Eine Stärke für alle**: `--sumi-ink-strength` regelt alle Deckkraftwerte
+  gemeinsam.
+- **Die App wählt Motive, die Bibliothek entscheidet die Orte.**
+  `provideSumi({ motif, pattern, companion })` ist alles, was eine App
+  selbst festlegt.
 
 ### Begleiter (sumi-ui#38)
 
@@ -291,14 +355,21 @@ Neun Tierfiguren im Pinsel-Stil (nicht die verworfenen „detailliert“- und
 - **IDs:** Filter- und Verlaufs-IDs sind pro `sumi-companion`-Instanz
   eindeutig (ein Zähler pro Komponente), damit zwei Begleiter derselben Art
   auf einer Seite sich nicht gegenseitig überschreiben.
-- Nie auf dem Übungsscreen selbst (nur Gate, Leerzustand, Session-Ende), nie
-  hinter Text, genau ein Akzent-Element, Pinselstil in `--sumi-text`.
+- Nie auf dem Übungsscreen selbst (nur Gate, Leerzustand, Seitenende,
+  Fehlerzustand), nie hinter Text, genau ein Akzent-Element, Pinselstil in
+  `--sumi-text`.
 - `provideSumi({ companion })`, Standard `tsuru` (das einzige Tier mit festem
-  Zinnober-Akzent, liest also in jedem App-Akzent gleich).
-- Platzierungen: `sumi-session-gate`'s `companion`-Input (über dem Titel),
-  `sumi-empty-state`'s `companion`-Input (ersetzt die Landschaft, das Muster
-  bleibt), und `sumi-session-summary`'s bestehender `[sumiSummaryArt]`-Slot
-  (Begleiter neben `sumi-hanko`, keine API-Änderung nötig).
+  Zinnober-Akzent, liest also in jedem App-Akzent gleich). Dieser Standard
+  gilt nur für `sumi-companion` direkt — die Orte T1/T3/T5/T6 (siehe oben)
+  zeigen einen Begleiter nur, wenn ihr eigener `companion`-Input gesetzt
+  ist, nie unbemerkt aus `SUMI_CONFIG`.
+- Platzierungen (siehe „Orte“ oben): `sumi-session-gate`'s `companion`-Input
+  (T1/T2, klein auf dem Boden der Landschaft, seitlich vom Inhalt),
+  `sumi-empty-state`'s `companion`-Input (T3, klein vor der Landschaft,
+  ersetzt sie nicht mehr), `sumi-page`'s `companion`-Input (T5, am
+  Seitenende), `sumi-error-state`'s `companion`-Input (T6), sowie
+  `sumi-session-summary`'s bestehender `[sumiSummaryArt]`-Slot (Hanko, kein
+  Begleiter mehr nötig, da der jetzt in der Gate-Szene steht).
 
 ## App-Umschalter
 

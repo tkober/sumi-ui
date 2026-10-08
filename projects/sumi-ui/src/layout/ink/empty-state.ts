@@ -20,10 +20,12 @@ import { SumiCompanion } from './companion';
  * </sumi-empty-state>
  * ```
  *
- * Set `companion` (see docs/concept.md#tuschemotive and sumi-ui#38) to
- * show a brush-style companion animal instead of the landscape — the
- * pattern band stays either way. Omit it (the default) for the landscape,
- * unchanged from before.
+ * The pattern band and the landscape always show (T3 of
+ * docs/concept.md#tuschemotive, sumi-ui#42) — unlike the old behaviour,
+ * the landscape is never replaced. Set `companion` (see
+ * docs/concept.md#tuschemotive and sumi-ui#38) to draw a small
+ * brush-style companion animal in front of the landscape, on its right
+ * side, in addition to it. Omit it (the default) for just the landscape.
  *
  * ```html
  * <sumi-empty-state title="No reviews due" companion="usagi">
@@ -44,6 +46,6 @@ export class SumiEmptyState {
   readonly motif = input<SumiMotif>();
   /** Overrides `SUMI_CONFIG`'s `pattern` for this instance. */
   readonly pattern = input<SumiPattern>();
-  /** Shows a companion animal instead of the landscape. Omit for the landscape (default). */
+  /** Draws a companion animal in front of the landscape. Omit for none (default). */
   readonly companion = input<SumiCompanionId>();
 }

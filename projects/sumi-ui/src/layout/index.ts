@@ -30,6 +30,7 @@ export {
   SumiPattern,
   SumiInkBackdrop,
   SumiEmptyState,
+  SumiErrorState,
   SumiHanko,
   SUMI_COMPANIONS,
   findCompanion,
@@ -58,6 +59,7 @@ import {
   SumiPattern,
   SumiInkBackdrop,
   SumiEmptyState,
+  SumiErrorState,
   SumiHanko,
   SumiCompanion,
 } from './ink';
@@ -77,6 +79,7 @@ export const SUMI_LAYOUT = [
   SumiPattern,
   SumiInkBackdrop,
   SumiEmptyState,
+  SumiErrorState,
   SumiHanko,
   SumiCompanion,
 ] as const;

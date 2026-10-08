@@ -66,3 +66,62 @@ describe('SumiInkBackdrop', () => {
     );
   });
 });
+
+@Component({
+  imports: [SumiInkBackdrop],
+  template: `
+    <sumi-ink-backdrop layout="full" motif="torii" pattern="asanoha" companion="tsuru">
+      <h1>Ready to practice?</h1>
+    </sumi-ink-backdrop>
+  `,
+})
+class FullHostComponent {}
+
+describe('SumiInkBackdrop with layout="full"', () => {
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      imports: [FullHostComponent],
+      providers: [
+        {
+          provide: SUMI_CONFIG,
+          useValue: {
+            accent: SUMI_ACCENT_PRESETS.ai,
+            motif: 'mountains',
+            pattern: 'seigaiha',
+            companion: 'tsuru',
+            dashboardPort: 8087,
+          },
+        },
+      ],
+    });
+  });
+
+  it('applies the full-layout class and drops the card chrome', () => {
+    const fixture = TestBed.createComponent(FullHostComponent);
+    fixture.detectChanges();
+    const backdrop = (fixture.nativeElement as HTMLElement).querySelector('sumi-ink-backdrop')!;
+    expect(backdrop.classList).toContain('sumi-ink-backdrop--full');
+  });
+
+  it('renders the companion only with layout="full"', () => {
+    const fixture = TestBed.createComponent(FullHostComponent);
+    fixture.detectChanges();
+    const host = fixture.nativeElement as HTMLElement;
+    expect(host.querySelector('sumi-companion')).toBeTruthy();
+  });
+});
+
+@Component({
+  imports: [SumiInkBackdrop],
+  template: `<sumi-ink-backdrop layout="full"><h1>Ready?</h1></sumi-ink-backdrop>`,
+})
+class FullNoCompanionHostComponent {}
+
+describe('SumiInkBackdrop with layout="full" and no companion', () => {
+  it('renders no companion when none is given', () => {
+    TestBed.configureTestingModule({ imports: [FullNoCompanionHostComponent] });
+    const fixture = TestBed.createComponent(FullNoCompanionHostComponent);
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).querySelector('sumi-companion')).toBeNull();
+  });
+});

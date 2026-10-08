@@ -1,5 +1,13 @@
 <div class="sumi-session-summary__art">
   <ng-content select="[sumiSummaryArt]" />
+  @if (levelUp(); as lvl) {
+    <sumi-hanko
+      class="sumi-session-summary__level-hanko"
+      characters="昇級"
+      [label]="'Level up: ' + lvl"
+      [size]="40"
+    />
+  }
 </div>
 
 <h2 class="sumi-session-summary__headline">Session complete</h2>

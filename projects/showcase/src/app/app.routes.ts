@@ -31,6 +31,10 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/companions/companions').then((m) => m.CompanionsPage),
   },
   {
+    path: 'places',
+    loadComponent: () => import('./pages/places/places').then((m) => m.PlacesPage),
+  },
+  {
     path: 'about',
     loadComponent: () => import('./pages/about/about').then((m) => m.AboutPage),
   },

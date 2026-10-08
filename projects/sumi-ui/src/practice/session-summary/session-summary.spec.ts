@@ -7,6 +7,7 @@ function render(inputs: {
   durationMs: number;
   delta?: number;
   deltaLabel?: string;
+  levelUp?: string;
 }) {
   TestBed.configureTestingModule({ imports: [SumiSessionSummary] });
   const fixture = TestBed.createComponent(SumiSessionSummary);
@@ -18,6 +19,9 @@ function render(inputs: {
   }
   if (inputs.deltaLabel != null) {
     fixture.componentRef.setInput('deltaLabel', inputs.deltaLabel);
+  }
+  if (inputs.levelUp != null) {
+    fixture.componentRef.setInput('levelUp', inputs.levelUp);
   }
   fixture.detectChanges();
   return fixture;
@@ -89,6 +93,19 @@ describe('SumiSessionSummary', () => {
     expect(dd.textContent?.trim()).toBe('0');
     expect(dd.classList.contains('sumi-session-summary__tile-value--up')).toBe(false);
     expect(dd.classList.contains('sumi-session-summary__tile-value--down')).toBe(false);
+  });
+
+  it('shows no second hanko when levelUp is not given', () => {
+    const fixture = render({ answered: 5, correct: 5, durationMs: 1000 });
+    expect(host(fixture).querySelector('.sumi-session-summary__level-hanko')).toBeNull();
+  });
+
+  it('shows a 昇級 hanko labelled with the level when levelUp is given', () => {
+    const fixture = render({ answered: 5, correct: 5, durationMs: 1000, levelUp: 'Level 4' });
+    const hanko = host(fixture).querySelector('.sumi-session-summary__level-hanko');
+    expect(hanko).toBeTruthy();
+    expect(hanko?.textContent).toContain('昇級');
+    expect(hanko?.querySelector('svg')?.getAttribute('aria-label')).toBe('Level up: Level 4');
   });
 
   it('emits restart() when "Practice again" is clicked', () => {

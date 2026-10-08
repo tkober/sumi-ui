@@ -24,6 +24,14 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideRouter(routes),
-    provideSumi({ accent: 'ai', motif: 'mountains', dashboardPort: devDashboardPort() }),
+    // `pattern` is now explicit (sumi-ui#42): the default stopped being a
+    // silent Seigaiha, so the showcase picks one itself to keep showing a
+    // pattern band wherever the library places one.
+    provideSumi({
+      accent: 'ai',
+      motif: 'mountains',
+      pattern: 'seigaiha',
+      dashboardPort: devDashboardPort(),
+    }),
   ],
 };

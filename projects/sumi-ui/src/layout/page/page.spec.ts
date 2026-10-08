@@ -1,5 +1,6 @@
 import { Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { SumiPage, SumiPageWidth } from './page';
 
 // Host state is held in signals rather than plain fields: this harness's
@@ -8,7 +9,13 @@ import { SumiPage, SumiPageWidth } from './page';
 @Component({
   imports: [SumiPage],
   template: `
-    <sumi-page [width]="width()" [title]="title()" [subtitle]="subtitle()">
+    <sumi-page
+      [width]="width()"
+      [title]="title()"
+      [subtitle]="subtitle()"
+      [inkEnd]="inkEnd()"
+      [companion]="companion()"
+    >
       <div sumiPageActions>Actions</div>
       Body
     </sumi-page>
@@ -18,6 +25,8 @@ class HostComponent {
   width = signal<SumiPageWidth>('default');
   title = signal<string | undefined>('Title');
   subtitle = signal<string | undefined>(undefined);
+  inkEnd = signal(true);
+  companion = signal<'tsuru' | undefined>(undefined);
 }
 
 describe('SumiPage', () => {
@@ -59,6 +68,62 @@ describe('SumiPage', () => {
     expect(body?.textContent).toContain('Body');
     // Actions live outside the body, next to the title.
     expect(body?.textContent).not.toContain('Actions');
+  });
+
+  it('shows a pattern band behind the header only when there is a title', () => {
+    const fixture = create();
+    let page: HTMLElement = fixture.nativeElement.querySelector('sumi-page');
+    expect(page.querySelector('.sumi-page__headband')).toBeTruthy();
+
+    fixture.componentInstance.title.set(undefined);
+    fixture.detectChanges();
+    page = fixture.nativeElement.querySelector('sumi-page');
+    expect(page.querySelector('.sumi-page__headband')).toBeNull();
+  });
+
+  /** Forces the private "does the document scroll" signal for a deterministic test. */
+  function forceScrollable(fixture: ReturnType<typeof create>, value: boolean): void {
+    const sumiPage = fixture.debugElement.query(By.directive(SumiPage))
+      .componentInstance as unknown as { scrollable: { set: (v: boolean) => void } };
+    sumiPage.scrollable.set(value);
+    fixture.detectChanges();
+  }
+
+  it('shows no page-end landscape while the page does not scroll', () => {
+    const fixture = create();
+    forceScrollable(fixture, false);
+    const page: HTMLElement = fixture.nativeElement.querySelector('sumi-page');
+    expect(page.querySelector('.sumi-page__end')).toBeNull();
+  });
+
+  it('shows the page-end landscape once the page scrolls', () => {
+    const fixture = create();
+    forceScrollable(fixture, true);
+    const page: HTMLElement = fixture.nativeElement.querySelector('sumi-page');
+    expect(page.querySelector('.sumi-page__end sumi-landscape')).toBeTruthy();
+  });
+
+  it('inkEnd=false hides the page-end landscape even when the page scrolls', () => {
+    const fixture = create();
+    fixture.componentInstance.inkEnd.set(false);
+    forceScrollable(fixture, true);
+    const page: HTMLElement = fixture.nativeElement.querySelector('sumi-page');
+    expect(page.querySelector('.sumi-page__end')).toBeNull();
+  });
+
+  it('does not show a companion in the page-end scene unless one is given', () => {
+    const fixture = create();
+    forceScrollable(fixture, true);
+    const page: HTMLElement = fixture.nativeElement.querySelector('sumi-page');
+    expect(page.querySelector('.sumi-page__end sumi-companion')).toBeNull();
+  });
+
+  it('shows the given companion in the page-end scene once the page scrolls', () => {
+    const fixture = create();
+    fixture.componentInstance.companion.set('tsuru');
+    forceScrollable(fixture, true);
+    const page: HTMLElement = fixture.nativeElement.querySelector('sumi-page');
+    expect(page.querySelector('.sumi-page__end sumi-companion')).toBeTruthy();
   });
 
   it.each<[SumiPageWidth, string]>([

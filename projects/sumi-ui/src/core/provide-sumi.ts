@@ -50,8 +50,15 @@ export const SUMI_DEFAULT_DASHBOARD_PORT = 8087;
 /** Default motif, used when `provideSumi()` is called without `motif`. */
 export const SUMI_DEFAULT_MOTIF: SumiMotif = 'mountains';
 
-/** Default pattern, used when `provideSumi()` is called without `pattern`. */
-export const SUMI_DEFAULT_PATTERN: SumiPattern = 'seigaiha';
+/**
+ * Default pattern, used when `provideSumi()` is called without `pattern`.
+ * Deliberately `'none'` (see docs/concept.md#tuschemotive, "Muster ohne
+ * stillen Standard" and sumi-ui#42) — unlike `motif`/`companion`, a pattern
+ * is dense enough (it tiles the whole band) that a silent default used to
+ * mean every app got Seigaiha without choosing it. An app that wants a
+ * pattern now says so explicitly in `provideSumi({ pattern })`.
+ */
+export const SUMI_DEFAULT_PATTERN: SumiPattern = 'none';
 
 /**
  * Default companion, used when `provideSumi()` is called without
