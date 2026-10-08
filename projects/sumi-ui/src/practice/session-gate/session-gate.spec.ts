@@ -84,4 +84,28 @@ describe('SumiSessionGate', () => {
 
     expect(host.querySelector('.sumi-session-gate__title')).toBeNull();
   });
+
+  it('renders no companion by default', () => {
+    const { host } = create();
+    expect(host.querySelector('sumi-companion')).toBeNull();
+  });
+});
+
+@Component({
+  imports: [SumiSessionGate],
+  template: `<sumi-session-gate title="Ready?" [companion]="companion()" (start)="noop()" />`,
+})
+class CompanionHostComponent {
+  companion = signal<'tsuru' | undefined>('tsuru');
+  noop(): void {}
+}
+
+describe('SumiSessionGate with a companion', () => {
+  it('renders the companion above the title when [companion] is set', () => {
+    TestBed.configureTestingModule({ imports: [CompanionHostComponent] });
+    const fixture = TestBed.createComponent(CompanionHostComponent);
+    fixture.detectChanges();
+    const host = fixture.nativeElement as HTMLElement;
+    expect(host.querySelector('sumi-companion')).toBeTruthy();
+  });
 });

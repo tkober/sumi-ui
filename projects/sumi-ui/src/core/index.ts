@@ -28,12 +28,14 @@ export {
 } from './keyboard-visibility';
 export {
   SUMI_CONFIG,
+  SUMI_DEFAULT_COMPANION,
   SUMI_DEFAULT_DASHBOARD_PORT,
   SUMI_DEFAULT_MOTIF,
   SUMI_DEFAULT_PATTERN,
   SumiAccent,
   provideSumi,
   type ProvideSumiOptions,
+  type SumiCompanion,
   type SumiConfig,
   type SumiMotif,
   type SumiPattern,

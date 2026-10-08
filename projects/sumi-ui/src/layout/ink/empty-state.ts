@@ -1,7 +1,12 @@
 import { Component, input } from '@angular/core';
-import type { SumiMotif, SumiPattern } from '../../core/provide-sumi';
+import type {
+  SumiCompanion as SumiCompanionId,
+  SumiMotif,
+  SumiPattern,
+} from '../../core/provide-sumi';
 import { SumiLandscape } from './landscape';
 import { SumiPattern as SumiPatternComponent } from './pattern';
+import { SumiCompanion } from './companion';
 
 /**
  * A small empty-state tile with the same ink split as `sumi-ink-backdrop`
@@ -14,12 +19,23 @@ import { SumiPattern as SumiPatternComponent } from './pattern';
  *   <button sumiEmptyAction sumiButton variant="primary">Go to lessons</button>
  * </sumi-empty-state>
  * ```
+ *
+ * Set `companion` (see docs/concept.md#tuschemotive and sumi-ui#38) to
+ * show a brush-style companion animal instead of the landscape — the
+ * pattern band stays either way. Omit it (the default) for the landscape,
+ * unchanged from before.
+ *
+ * ```html
+ * <sumi-empty-state title="No reviews due" companion="usagi">
+ *   The next item comes back at 14:00.
+ * </sumi-empty-state>
+ * ```
  */
 @Component({
   selector: 'sumi-empty-state',
   templateUrl: './empty-state.html',
   styleUrl: './empty-state.scss',
-  imports: [SumiLandscape, SumiPatternComponent],
+  imports: [SumiLandscape, SumiPatternComponent, SumiCompanion],
   host: { class: 'sumi-empty-state' },
 })
 export class SumiEmptyState {
@@ -28,4 +44,6 @@ export class SumiEmptyState {
   readonly motif = input<SumiMotif>();
   /** Overrides `SUMI_CONFIG`'s `pattern` for this instance. */
   readonly pattern = input<SumiPattern>();
+  /** Shows a companion animal instead of the landscape. Omit for the landscape (default). */
+  readonly companion = input<SumiCompanionId>();
 }

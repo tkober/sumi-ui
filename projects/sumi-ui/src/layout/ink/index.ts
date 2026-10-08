@@ -24,3 +24,10 @@ export { SumiPattern } from './pattern';
 export { SumiInkBackdrop } from './ink-backdrop';
 export { SumiEmptyState } from './empty-state';
 export { SumiHanko, type SumiHankoSize } from './hanko';
+export {
+  SUMI_COMPANIONS,
+  findCompanion,
+  type SumiCompanionDef,
+  type SumiCompanionId,
+} from './companions';
+export { SumiCompanion } from './companion';

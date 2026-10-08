@@ -1,0 +1,13 @@
+:host {
+  display: inline-block;
+  width: var(--sumi-companion-size, 104px);
+  height: var(--sumi-companion-size, 104px);
+  flex: none;
+  color: var(--sumi-text);
+}
+
+.sumi-companion__svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}

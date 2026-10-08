@@ -1,6 +1,7 @@
 import { Component, input, output } from '@angular/core';
-import { SUMI_KEYS, injectHotkey } from 'sumi-ui/core';
+import { SUMI_KEYS, injectHotkey, type SumiCompanion as SumiCompanionId } from 'sumi-ui/core';
 import { SumiButtonDirective } from 'sumi-ui/forms';
+import { SumiCompanion } from 'sumi-ui/layout';
 
 /**
  * The start/end screen container for a practice session: a title, text
@@ -24,6 +25,11 @@ import { SumiButtonDirective } from 'sumi-ui/forms';
  * `title` is optional for exactly that reason — the ended state typically
  * omits it and lets its projected content carry the heading instead.
  *
+ * `companion` (see docs/concept.md#tuschemotive and sumi-ui#38) shows a
+ * brush-style companion animal above the title — a gate screen is idle
+ * or ended, never the practice screen itself, so this is one of the
+ * approved placements. Omit it (the default) for no change in behaviour.
+ *
  * Unlike the field-level `Enter` registrations in `sumi-answer-field`,
  * this one is **not** `allowInEditable` — a gate screen has no field to
  * protect typing in, and the concept's ground rule only grants that
@@ -33,7 +39,7 @@ import { SumiButtonDirective } from 'sumi-ui/forms';
   selector: 'sumi-session-gate',
   templateUrl: './session-gate.html',
   styleUrl: './session-gate.scss',
-  imports: [SumiButtonDirective],
+  imports: [SumiButtonDirective, SumiCompanion],
   host: { class: 'sumi-session-gate' },
 })
 export class SumiSessionGate {
@@ -41,6 +47,8 @@ export class SumiSessionGate {
   readonly title = input<string>();
   readonly text = input<string>();
   readonly actionLabel = input('Start session');
+  /** Shows a brush-style companion animal above the title. Omit for none (default). */
+  readonly companion = input<SumiCompanionId>();
   /**
    * Set to `false` when the projected content already supplies its own
    * button (e.g. `sumi-session-summary`'s "Practice again") — `Enter`
