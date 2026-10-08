@@ -4,13 +4,21 @@
 
 :host {
   display: inline-flex;
+  max-width: 100%;
 
   > div {
-    display: inline-flex;
+    display: flex;
     gap: 2px;
     padding: 2px;
     border-radius: var(--sumi-radius-sm);
     background: var(--sumi-sunken);
+    max-width: 100%;
+    // Too many options to fit the container's width scroll horizontally
+    // inside this box instead of squeezing or clipping option labels
+    // (sumi-ui#36) — options themselves never shrink, see
+    // `.sumi-segmented-control__option` below.
+    overflow-x: auto;
+    scrollbar-width: thin;
   }
 }
 
@@ -18,6 +26,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  flex: none;
   min-width: 2.5rem;
   height: 2.5rem;
   padding: 0 var(--sumi-space-3);
@@ -27,6 +36,7 @@
   color: var(--sumi-text-2);
   font-family: var(--sumi-font-ui);
   font-size: var(--sumi-text-md);
+  white-space: nowrap;
   cursor: pointer;
   transition:
     background-color 120ms ease,
@@ -57,7 +67,9 @@
   }
 }
 
-// Full width on narrow screens, per docs/concept.md's "Daumen zuerst".
+// Full width on narrow screens, per docs/concept.md's "Daumen zuerst" —
+// the row itself stretches, but options still never shrink (see above),
+// so a row too wide for 100% scrolls instead of squeezing every option.
 @media (max-width: 480px) {
   :host {
     display: flex;
@@ -66,9 +78,5 @@
     > div {
       width: 100%;
     }
-  }
-
-  .sumi-segmented-control__option {
-    flex: 1;
   }
 }

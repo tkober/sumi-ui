@@ -671,6 +671,21 @@ successfully with `ng build` from a throwaway Angular 22 app):
    protected readonly canToggle = (next: boolean) => next || this.othersStillOn();
    ```
 
+   ### `sumi-segmented-control`: when not to use it
+
+   Options never shrink or wrap — a row that does not fit its container
+   scrolls horizontally inside its own box (and keeps the selected option
+   scrolled into view) rather than squeezing labels until they clip. That
+   makes overflow *safe*, but a segmented control is still meant for a
+   small, fixed set of mutually exclusive options, not a scrollable menu:
+
+   - More than about four or five options, or a set whose length varies a
+     lot at runtime → use a `<select>` instead.
+   - Multiple selection, or options that come and go (tags, filters) →
+     use a row of chips instead.
+   - Navigating between distinct screens/routes, not picking a setting →
+     use tabs or links, not a segmented control.
+
    ### Charts
 
    `sumi-ui/charts` (`SUMI_CHARTS`, see docs/concept.md#statistik-komponenten)

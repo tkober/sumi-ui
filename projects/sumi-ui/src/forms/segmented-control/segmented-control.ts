@@ -3,6 +3,7 @@ import {
   ElementRef,
   QueryList,
   ViewChildren,
+  afterRenderEffect,
   forwardRef,
   input,
   model,
@@ -38,6 +39,15 @@ export interface SumiSegmentedOption<T> {
  * optional `canChange` input (`(next: T) => boolean`, default always
  * allows) instead: a click/arrow move only commits when it returns `true`,
  * so a rejection never writes `value` and there is nothing to revert.
+ *
+ * Options never shrink or wrap (`flex: none`, `white-space: nowrap`): a
+ * row that does not fit its container scrolls horizontally inside its own
+ * box instead of squeezing or clipping labels, and the selected option is
+ * scrolled into view whenever `value` changes. This is still a control
+ * for a *small* fixed set of mutually exclusive options — past about
+ * four or five, or when the options are really navigation rather than a
+ * setting, reach for `<select>` (many options) or a row of chips
+ * (multi-select, or options that come and go) instead; see the README.
  */
 @Component({
   selector: 'sumi-segmented-control',
@@ -82,6 +92,20 @@ export class SumiSegmentedControl<T> implements FormValueControl<T>, ControlValu
 
   private onChange: (value: T) => void = () => {};
   private onTouched: () => void = () => {};
+
+  constructor() {
+    // Keeps the selected option visible when the row scrolls horizontally
+    // (too many options for the container's width) — runs after render so
+    // `optionRefs` reflects the option just selected.
+    afterRenderEffect(() => {
+      const options = this.options();
+      const index = options.findIndex((option) => this.isSelected(option.value));
+      if (index < 0) {
+        return;
+      }
+      this.optionRefs?.get(index)?.nativeElement.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    });
+  }
 
   protected isSelected(optionValue: T): boolean {
     return this.value() === optionValue;

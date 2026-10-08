@@ -2,6 +2,7 @@ import { Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
 import { form, FormField } from '@angular/forms/signals';
+import { vi } from 'vitest';
 import { SumiSegmentedControl, SumiSegmentedOption } from './segmented-control';
 
 const OPTIONS: SumiSegmentedOption<string>[] = [
@@ -217,5 +218,32 @@ describe('SumiSegmentedControl canChange veto', () => {
 
     expect(fixture.componentInstance.value()).toBe('a');
     expect(buttons[0].getAttribute('aria-checked')).toBe('true');
+  });
+});
+
+describe('SumiSegmentedControl overflow scrolling', () => {
+  it('scrolls the selected option into view when the selection changes', () => {
+    TestBed.configureTestingModule({ imports: [KeyboardHostComponent] });
+    const fixture = TestBed.createComponent(KeyboardHostComponent);
+    fixture.detectChanges();
+    const buttons = optionButtons(fixture);
+    const scrollSpies = buttons.map((button) => {
+      const spy = vi.fn();
+      button.scrollIntoView = spy;
+      return spy;
+    });
+
+    fixture.componentInstance.value.set('c');
+    fixture.detectChanges();
+
+    expect(scrollSpies[2]).toHaveBeenCalledWith({ block: 'nearest', inline: 'nearest' });
+  });
+
+  it('never shrinks an option below its content (flex: none, no wrapping)', () => {
+    TestBed.configureTestingModule({ imports: [KeyboardHostComponent] });
+    const fixture = TestBed.createComponent(KeyboardHostComponent);
+    fixture.detectChanges();
+    const button = optionButtons(fixture)[0];
+    expect(getComputedStyle(button).flexShrink).not.toBe('1');
   });
 });

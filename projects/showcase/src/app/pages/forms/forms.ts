@@ -46,4 +46,18 @@ export class FormsPage {
 
   protected readonly lastFormOn = signal(true);
   protected readonly canChangeLastForm = (next: boolean) => next;
+
+  // sumi-ui#36: more options than fit a narrow box — scrolls instead of
+  // squeezing every label.
+  protected readonly manyOptions: SumiSegmentedOption<string>[] = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+  ].map((label) => ({ value: label, label }));
+  protected readonly manyOptionsValue = signal('Jan');
 }

@@ -115,6 +115,14 @@
         <code>{{ vetoedRange() }}</code>
       </span>
     </div>
+    <div class="row">
+      <sumi-segmented-control
+        class="demo__narrow-box"
+        [options]="manyOptions"
+        [(value)]="manyOptionsValue"
+      />
+      <span>too many options for the box — scrolls instead of squeezing (sumi-ui#36)</span>
+    </div>
   </section>
 
   <section>
