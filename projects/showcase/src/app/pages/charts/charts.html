@@ -24,11 +24,13 @@
   <section class="demo">
     <h2>Stat grid: never a lone tile (sumi-ui#36)</h2>
     <p class="demo__note">
-      3, 4, 5 and 6 tiles, each in its own grid — resize the window (or compare the 1280px and
-      390px screenshots) to see that none of them ever leaves a single tile alone in the last row.
+      3, 4, 5 and 6 tiles, each in its own grid — resize the window (or compare the 1280px and 390px
+      screenshots) to see that none of them ever leaves a single tile alone in the last row.
     </p>
     @for (count of [3, 4, 5, 6]; track count) {
-      <p class="demo__note"><strong>{{ count }} tiles</strong></p>
+      <p class="demo__note">
+        <strong>{{ count }} tiles</strong>
+      </p>
       <sumi-stat-grid>
         @for (i of countUpTo(count); track i) {
           <sumi-stat-tile [value]="(i + 1) * 7" [label]="'tile ' + (i + 1)" />
@@ -188,8 +190,8 @@
       </ng-template>
     </sumi-data-table>
     <p class="demo__note">
-      The "Result" column uses <code>toneKey</code> instead of a template — it just colours the
-      cell by the row's own <code>tone</code> field.
+      The "Result" column uses <code>toneKey</code> instead of a template — it just colours the cell
+      by the row's own <code>tone</code> field.
     </p>
   </section>
 </sumi-page>

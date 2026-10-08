@@ -142,7 +142,10 @@
       >
     </div>
     <div class="row">
-      <sumi-toggle [value]="lastFormOn()" [canChange]="canChangeLastForm" (valueChange)="lastFormOn.set($event)"
+      <sumi-toggle
+        [value]="lastFormOn()"
+        [canChange]="canChangeLastForm"
+        (valueChange)="lastFormOn.set($event)"
         >Last form (cannot be turned off)</sumi-toggle
       >
       <span>stays on — see sumi-ui#36 (<code>canChange</code> vetoes it)</span>

@@ -103,7 +103,9 @@ export class SumiSegmentedControl<T> implements FormValueControl<T>, ControlValu
       if (index < 0) {
         return;
       }
-      this.optionRefs?.get(index)?.nativeElement.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+      this.optionRefs
+        ?.get(index)
+        ?.nativeElement.scrollIntoView({ block: 'nearest', inline: 'nearest' });
     });
   }
 

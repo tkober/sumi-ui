@@ -149,7 +149,9 @@ describe('SumiToggle canChange veto', () => {
   it('commits normally when canChange allows the change', () => {
     @Component({
       imports: [SumiToggle],
-      template: `<sumi-toggle [value]="on()" [canChange]="canChange" (valueChange)="on.set($event)">T</sumi-toggle>`,
+      template: `<sumi-toggle [value]="on()" [canChange]="canChange" (valueChange)="on.set($event)"
+        >T</sumi-toggle
+      >`,
     })
     class AllowHostComponent {
       readonly on = signal(false);
