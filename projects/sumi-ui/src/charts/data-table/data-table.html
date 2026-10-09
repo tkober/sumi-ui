@@ -9,14 +9,45 @@
     }
     <thead>
       <tr>
+        @if (selectable()) {
+          <th class="sumi-data-table__select-cell">
+            <label class="sumi-data-table__select-hit">
+              <input
+                type="checkbox"
+                sumiCheckbox
+                aria-label="Select all rows"
+                [checked]="allSelected()"
+                [indeterminate]="someSelected()"
+                (change)="toggleAll($event.target.checked)"
+              />
+            </label>
+          </th>
+        }
         @for (column of columns(); track column.key) {
           <th [class.sumi-data-table__cell--end]="column.align === 'end'">{{ column.label }}</th>
         }
       </tr>
     </thead>
     <tbody>
-      @for (row of rows(); track $index) {
-        <tr>
+      @for (row of rows(); track $index; let i = $index) {
+        <tr
+          [class.sumi-data-table__row--selected]="selectable() && isRowSelected(row, i)"
+          [class.sumi-data-table__row--activatable]="activatable()"
+          (click)="onRowClick(row, $event)"
+        >
+          @if (selectable()) {
+            <td class="sumi-data-table__select-cell">
+              <label class="sumi-data-table__select-hit">
+                <input
+                  type="checkbox"
+                  sumiCheckbox
+                  [attr.aria-label]="rowLabelFor(row, i)"
+                  [checked]="isRowSelected(row, i)"
+                  (change)="toggleRow(row, i, $event.target.checked)"
+                />
+              </label>
+            </td>
+          }
           @for (column of columns(); track column.key) {
             <td
               class="sumi-tabular"

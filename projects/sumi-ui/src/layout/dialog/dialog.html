@@ -1,0 +1,33 @@
+<dialog
+  #dialogEl
+  class="sumi-dialog"
+  [class.sumi-dialog--wide]="width() === 'wide'"
+  (cancel)="onDialogClosed()"
+  (close)="onDialogClosed()"
+  (pointerdown)="onPointerDown($event)"
+  (click)="onBackdropClick($event)"
+>
+  <div class="sumi-dialog__header">
+    <div class="sumi-dialog__header-content">
+      <ng-content select="[sumiDialogHeader]"></ng-content>
+      @if (!hasProjectedHeader() && title()) {
+        <h2 class="sumi-dialog__title">{{ title() }}</h2>
+      }
+    </div>
+    <button
+      type="button"
+      sumiButton
+      variant="ghost"
+      size="sm"
+      class="sumi-dialog__close"
+      aria-label="Close"
+      autofocus
+      (click)="close()"
+    >
+      <sumi-icon name="close" />
+    </button>
+  </div>
+  <div class="sumi-dialog__body">
+    <ng-content></ng-content>
+  </div>
+</dialog>

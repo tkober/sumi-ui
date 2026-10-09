@@ -1,0 +1,80 @@
+// `sumi-dialog` is a thin wrapper around a real `<dialog>` — the host
+// itself takes no box of its own, so it never affects the surrounding
+// layout; the `<dialog>` is promoted to the top layer by `showModal()`
+// regardless of where it sits in the DOM.
+:host {
+  display: contents;
+}
+
+.sumi-dialog {
+  box-sizing: border-box;
+  width: min(480px, 100vw - 32px);
+  max-height: min(640px, 100vh - 64px);
+  margin: auto;
+  padding: 0;
+  border: 1px solid var(--sumi-line);
+  border-radius: var(--sumi-radius);
+  background: var(--sumi-surface);
+  color: var(--sumi-text);
+  box-shadow: var(--sumi-shadow);
+
+  // `display` only while `[open]` (`showModal()`'s own reflected attribute)
+  // — the UA stylesheet's `dialog:not([open]) { display: none }` otherwise
+  // gets overridden by this class selector's higher specificity, which
+  // would render the panel (full of its own content) even while closed.
+  &[open] {
+    display: flex;
+    flex-direction: column;
+  }
+
+  // A plain black scrim: `--sumi-text` would turn into a light wash in the
+  // dark theme and brighten the page instead of dimming it.
+  &::backdrop {
+    background: rgb(0 0 0 / 45%);
+  }
+
+  &--wide {
+    width: min(720px, 100vw - 32px);
+  }
+
+  // The dialog itself is the default focus target when `showModal()` finds
+  // no `autofocus` candidate. It always has one here (the close button),
+  // but this stays as a defensive second line: the ring belongs on a
+  // control inside, never on the dialog's own box.
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--sumi-shadow);
+  }
+}
+
+.sumi-dialog__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--sumi-space-3);
+  flex: none;
+  padding: var(--sumi-space-4);
+  border-bottom: 1px solid var(--sumi-line);
+}
+
+.sumi-dialog__header-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.sumi-dialog__title {
+  margin: 0;
+  font-size: var(--sumi-text-lg);
+}
+
+.sumi-dialog__close {
+  flex: none;
+}
+
+// Scrolls on its own; the header (flex: none, above) stays in place.
+.sumi-dialog__body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--sumi-space-4);
+}

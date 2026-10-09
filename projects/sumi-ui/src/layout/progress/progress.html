@@ -1,0 +1,7 @@
+<div class="sumi-progress__track">
+  @if (fillPercent() !== null) {
+    <div class="sumi-progress__fill" [style.width.%]="fillPercent()"></div>
+  } @else {
+    <div class="sumi-progress__fill sumi-progress__fill--indeterminate"></div>
+  }
+</div>

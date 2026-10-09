@@ -50,3 +50,28 @@
 .demo__table-arrow {
   color: var(--sumi-muted);
 }
+
+.demo__item-actions {
+  margin-bottom: var(--sumi-space-3);
+}
+
+.demo__item-dialog-header {
+  display: flex;
+  align-items: center;
+  gap: var(--sumi-space-3);
+
+  h2 {
+    margin: 0;
+    font-size: var(--sumi-text-lg);
+  }
+
+  p {
+    margin: 0;
+    color: var(--sumi-muted);
+  }
+}
+
+.demo__item-dialog-char {
+  font-family: var(--sumi-font-display);
+  font-size: var(--sumi-text-2xl);
+}

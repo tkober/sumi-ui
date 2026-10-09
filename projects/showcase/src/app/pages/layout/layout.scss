@@ -27,3 +27,30 @@ sumi-banner {
   padding-block: var(--sumi-space-3);
   outline: 1px dashed var(--sumi-line);
 }
+
+.demo-label {
+  margin-bottom: var(--sumi-space-2);
+  font-size: var(--sumi-text-sm);
+  color: var(--sumi-text-2);
+}
+
+.dialog-demo__header {
+  display: flex;
+  align-items: center;
+  gap: var(--sumi-space-3);
+
+  h2 {
+    margin: 0;
+    font-size: var(--sumi-text-lg);
+  }
+
+  p {
+    margin: 0;
+    color: var(--sumi-muted);
+  }
+}
+
+.dialog-demo__char {
+  font-family: var(--sumi-font-display);
+  font-size: var(--sumi-text-2xl);
+}

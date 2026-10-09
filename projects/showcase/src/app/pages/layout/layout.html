@@ -1,6 +1,6 @@
 <sumi-page
   title="Layout"
-  subtitle="sumi-card, sumi-banner, sumi-badge, sumi-app-shell and sumi-page."
+  subtitle="sumi-card, sumi-banner, sumi-dialog, sumi-progress, sumi-badge, sumi-app-shell and sumi-page."
 >
   <section>
     <h2>Card</h2>
@@ -112,4 +112,80 @@
       >
     </sumi-page>
   </section>
+
+  <section>
+    <h2>Dialog</h2>
+    <p>
+      Wraps the native <code>&lt;dialog&gt;</code> + <code>showModal()</code>: Esc, a backdrop click
+      and the close button all set <code>open</code> back to <code>false</code>.
+    </p>
+    <div class="row">
+      <button
+        type="button"
+        sumiButton
+        variant="primary"
+        size="sm"
+        (click)="dialogNarrowOpen.set(true)"
+      >
+        Open narrow (default)
+      </button>
+      <button type="button" sumiButton size="sm" (click)="dialogWideOpen.set(true)">
+        Open wide
+      </button>
+      <button type="button" sumiButton size="sm" (click)="dialogHeaderOpen.set(true)">
+        Open with a custom header
+      </button>
+    </div>
+  </section>
+
+  <section>
+    <h2>Progress</h2>
+    <p>
+      <code>role="progressbar"</code> with <code>aria-valuenow/min/max</code>;
+      <code>value: null</code> renders indeterminate (no <code>aria-valuenow</code>, a sweeping
+      animation disabled under <code>prefers-reduced-motion</code>).
+    </p>
+    <p class="demo-label">Importing items: {{ progressValue() }} / {{ progressMax }}</p>
+    <sumi-progress [value]="progressValue()" [max]="progressMax" ariaLabel="Importing items" />
+    <div class="row">
+      <button type="button" sumiButton size="sm" (click)="advanceProgress()">Advance</button>
+      <button type="button" sumiButton size="sm" (click)="resetProgress()">Reset</button>
+    </div>
+    <p class="demo-label">Indeterminate (checking for updates)</p>
+    <sumi-progress [value]="null" ariaLabel="Checking for updates" />
+  </section>
 </sumi-page>
+
+<sumi-dialog [(open)]="dialogNarrowOpen" title="Narrow dialog">
+  <p>Narrow is the default width — a short confirmation or a small detail view.</p>
+  <button
+    type="button"
+    sumiButton
+    variant="primary"
+    size="sm"
+    (click)="dialogNarrowOpen.set(false)"
+  >
+    Done
+  </button>
+</sumi-dialog>
+
+<sumi-dialog [(open)]="dialogWideOpen" title="Wide dialog" width="wide">
+  <p>Wide fits more content — a longer form, or several fields side by side.</p>
+  @for (i of wideDialogParagraphs; track i) {
+    <p>Scrolling body content, paragraph {{ i }} of {{ wideDialogParagraphs.length }}.</p>
+  }
+</sumi-dialog>
+
+<sumi-dialog [(open)]="dialogHeaderOpen">
+  <div sumiDialogHeader class="dialog-demo__header">
+    <span class="dialog-demo__char" lang="ja">大</span>
+    <div>
+      <h2>大 (big)</h2>
+      <p lang="ja">だい・たい・おお</p>
+    </div>
+  </div>
+  <p>
+    A projected <code>[sumiDialogHeader]</code> replaces the plain <code>title</code> heading
+    entirely — this dialog has no <code>title</code> input at all.
+  </p>
+</sumi-dialog>
