@@ -1,5 +1,6 @@
 import { Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { SumiBarChart, type SumiBar, type SumiBarSeries, type SumiStackedRow } from './bar-chart';
 
 @Component({
@@ -38,6 +39,16 @@ function setup() {
   return fixture;
 }
 
+/** Forces the chart's measured-width signal, since jsdom never lays out a
+ *  real viewport for `observeWidth`'s `ResizeObserver` to report (see
+ *  `page.spec.ts`'s analogous `forceScrollable`). */
+function forceMeasuredWidth(fixture: ReturnType<typeof setup>, width: number): void {
+  const barChart = fixture.debugElement.query(By.directive(SumiBarChart))
+    .componentInstance as unknown as { measuredWidth: { set: (v: number) => void } };
+  barChart.measuredWidth.set(width);
+  fixture.detectChanges();
+}
+
 describe('SumiBarChart', () => {
   it('has the required aria-label', () => {
     const fixture = setup();
@@ -66,6 +77,49 @@ describe('SumiBarChart', () => {
     fixture.detectChanges();
     const labels = fixture.nativeElement.querySelectorAll('.sumi-bar-chart__label');
     expect(labels.length).toBe(2); // indices 0 and 2 of 3 bars
+  });
+
+  it('renders every bar without error when labels repeat (tracked by index, not label)', () => {
+    const fixture = setup();
+    // kanji-trainer's 48h forecast: the hour label repeats every 8 columns —
+    // tracking by `label` used to throw NG0955 (duplicate track key).
+    const bars: SumiBar[] = Array.from({ length: 16 }, (_, i) => ({
+      label: `${(i % 8) * 3}:00`,
+      value: i + 1,
+    }));
+    expect(() => {
+      fixture.componentInstance.bars.set(bars);
+      fixture.detectChanges();
+    }).not.toThrow();
+    const rects = fixture.nativeElement.querySelectorAll('rect.sumi-bar-chart__bar');
+    expect(rects.length).toBe(16);
+  });
+
+  it('thins labels further than labelEvery when the measured width is narrow', () => {
+    const fixture = setup();
+    fixture.componentInstance.bars.set(
+      Array.from({ length: 24 }, (_, i) => ({ label: `${i}:00`, value: 1 })),
+    );
+    fixture.detectChanges();
+    forceMeasuredWidth(fixture, 320);
+    const wideLabels = fixture.nativeElement.querySelectorAll('.sumi-bar-chart__label');
+
+    forceMeasuredWidth(fixture, 150);
+    const narrowLabels = fixture.nativeElement.querySelectorAll('.sumi-bar-chart__label');
+
+    expect(narrowLabels.length).toBeLessThan(wideLabels.length);
+  });
+
+  it('never thins below labelEvery when the measured width is wide', () => {
+    const fixture = setup();
+    fixture.componentInstance.bars.set(
+      Array.from({ length: 6 }, (_, i) => ({ label: `${i}:00`, value: 1 })),
+    );
+    fixture.componentInstance.labelEvery.set(3);
+    fixture.detectChanges();
+    forceMeasuredWidth(fixture, 2000);
+    const labels = fixture.nativeElement.querySelectorAll('.sumi-bar-chart__label');
+    expect(labels.length).toBe(2); // indices 0 and 3 of 6 bars, labelEvery still the floor
   });
 
   it('renders stacked segments when rows/series are given instead of bars', () => {

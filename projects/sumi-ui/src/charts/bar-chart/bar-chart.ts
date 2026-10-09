@@ -9,6 +9,7 @@ import {
   signal,
 } from '@angular/core';
 import {
+  axisLabelStep,
   barGeometry,
   rampColor,
   sparseLabelIndices,
@@ -40,6 +41,16 @@ const DEFAULT_HEIGHT = 160;
 /** Fixed padding in real px, reserved for the max-value callout, the
  *  x-axis labels and the baseline — never scaled, see `observeWidth`. */
 const PAD = { top: 20, right: 8, bottom: 20, left: 8 };
+/** Minimum horizontal room (real px) a single x-axis label needs so it
+ *  never collides with its neighbour, at the chart's fixed `--sumi-text-xs`
+ *  (12px) axis font. A typical label is up to ~8 characters ("07:00 AM",
+ *  "15 Thu"); at that size `--sumi-font-ui` averages roughly 7px/character
+ *  (same estimate `LABEL_CHAR_WIDTH` uses in `../math.ts` for donut/sunburst
+ *  labels at the same font size), i.e. ~56px, plus a few px of breathing
+ *  room between adjacent labels. Used to thin labels further than
+ *  `labelEvery` when the chart is measured narrower than that implies —
+ *  see `axisLabelStep` and sumi-ui#61. */
+const MIN_LABEL_SPACING = 60;
 
 /**
  * Vertical bars over time (e.g. a 24h "coming up" forecast, or days). Plain
@@ -132,8 +143,17 @@ export class SumiBarChart {
     return Math.max(0, ...this.singleBars().map((bar) => bar.value));
   });
 
+  /** `labelEvery` thinned further (never less) so labels fit the measured
+   *  width without colliding — see `axisLabelStep`. Reactive to
+   *  `measuredWidth` via `plot()`. */
+  protected readonly labelStep = computed(() => {
+    const plot = this.plot();
+    const plotInnerWidth = plot.width - plot.left - plot.right;
+    return axisLabelStep(this.columns(), this.labelEvery(), plotInnerWidth, MIN_LABEL_SPACING);
+  });
+
   protected readonly labelIndices = computed(
-    () => new Set(sparseLabelIndices(this.columns(), this.labelEvery())),
+    () => new Set(sparseLabelIndices(this.columns(), this.labelStep())),
   );
 
   /** `text-anchor`/x for an x-axis label at `index`: the first and last

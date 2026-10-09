@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   arcLabelRotation,
   arcPath,
+  axisLabelStep,
   barGeometry,
   calendarBucket,
   calendarBucketThresholds,
@@ -246,6 +247,25 @@ describe('sparseLabelIndices', () => {
 
   it('labels every bar when the step is 1', () => {
     expect(sparseLabelIndices(3, 1)).toEqual([0, 1, 2]);
+  });
+});
+
+describe('axisLabelStep', () => {
+  it('keeps labelEvery when every label already fits the width', () => {
+    expect(axisLabelStep(6, 3, 1984, 60)).toBe(3);
+  });
+
+  it('raises the step past labelEvery when the width is too narrow to fit', () => {
+    // 24 columns, 134px of plot width, 60px/label -> only 2 fit -> step 12.
+    expect(axisLabelStep(24, 1, 134, 60)).toBe(12);
+  });
+
+  it('never lowers the step below labelEvery, even with room to spare', () => {
+    expect(axisLabelStep(3, 2, 10_000, 60)).toBe(2);
+  });
+
+  it('falls back to at least labelEvery for a non-positive count', () => {
+    expect(axisLabelStep(0, 4, 320, 60)).toBe(4);
   });
 });
 

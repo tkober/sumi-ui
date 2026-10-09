@@ -339,6 +339,30 @@ export function stackOffsets(values: readonly number[]): number[] {
   return offsets;
 }
 
+/**
+ * The axis label step `sumi-bar-chart` should actually use: `labelEvery` is
+ * a lower bound (the caller's own thinning, e.g. "every 6th hour"), raised
+ * just enough that no more than `plotInnerWidth / minLabelSpacing` labels
+ * are shown — so a chart measured narrower than the caller anticipated
+ * (sumi-ui#61: a 360px "Coming up" card) still never collides two labels,
+ * without the caller having to guess the chart's rendered width itself.
+ * `minLabelSpacing` is the caller's own per-label minimum in real px (see
+ * `sumi-bar-chart`'s `MIN_LABEL_SPACING`).
+ */
+export function axisLabelStep(
+  count: number,
+  labelEvery: number,
+  plotInnerWidth: number,
+  minLabelSpacing: number,
+): number {
+  if (count <= 0) {
+    return Math.max(1, labelEvery);
+  }
+  const maxLabelsThatFit = Math.max(1, Math.floor(plotInnerWidth / minLabelSpacing));
+  const fitStep = Math.ceil(count / maxLabelsThatFit);
+  return Math.max(labelEvery, fitStep);
+}
+
 /** Indices to label on a bar chart's x-axis: every `every`-th bar, always
  *  including the first; never the implicit "0" that `every` alone would
  *  produce for an empty chart. */
