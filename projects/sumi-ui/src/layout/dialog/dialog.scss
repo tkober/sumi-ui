@@ -1,0 +1,71 @@
+// `sumi-dialog` is a thin wrapper around a real `<dialog>` — the host
+// itself takes no box of its own, so it never affects the surrounding
+// layout; the `<dialog>` is promoted to the top layer by `showModal()`
+// regardless of where it sits in the DOM.
+:host {
+  display: contents;
+}
+
+.sumi-dialog {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  width: min(480px, 100vw - 32px);
+  max-height: min(640px, 100vh - 64px);
+  margin: auto;
+  padding: 0;
+  border: 1px solid var(--sumi-line);
+  border-radius: var(--sumi-radius);
+  background: var(--sumi-surface);
+  color: var(--sumi-text);
+  box-shadow: var(--sumi-shadow);
+
+  &::backdrop {
+    background: color-mix(in oklab, var(--sumi-text) 45%, transparent);
+  }
+
+  &--wide {
+    width: min(720px, 100vw - 32px);
+  }
+
+  // The dialog itself is the default focus target when `showModal()` finds
+  // no `autofocus` candidate. It always has one here (the close button),
+  // but this stays as a defensive second line: the ring belongs on a
+  // control inside, never on the dialog's own box.
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--sumi-shadow);
+  }
+}
+
+.sumi-dialog__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--sumi-space-3);
+  flex: none;
+  padding: var(--sumi-space-4);
+  border-bottom: 1px solid var(--sumi-line);
+}
+
+.sumi-dialog__header-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.sumi-dialog__title {
+  margin: 0;
+  font-size: var(--sumi-text-lg);
+}
+
+.sumi-dialog__close {
+  flex: none;
+}
+
+// Scrolls on its own; the header (flex: none, above) stays in place.
+.sumi-dialog__body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--sumi-space-4);
+}

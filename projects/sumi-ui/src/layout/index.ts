@@ -6,6 +6,9 @@
 
 export { SumiCard } from './card/card';
 export { SumiBanner, type SumiBannerTone } from './banner/banner';
+export { SumiDialog, type SumiDialogWidth } from './dialog/dialog';
+export { SumiDialogHeader } from './dialog/dialog-header.directive';
+export { SumiProgress } from './progress/progress';
 export { SumiBadge, type SumiBadgeTone } from './badge/badge';
 export { SumiAppShell, type SumiAppShellBrand, type SumiNavItem } from './shell/shell';
 export { SumiShell } from './shell/shell.service';
@@ -47,6 +50,9 @@ export {
 
 import { SumiCard } from './card/card';
 import { SumiBanner } from './banner/banner';
+import { SumiDialog } from './dialog/dialog';
+import { SumiDialogHeader } from './dialog/dialog-header.directive';
+import { SumiProgress } from './progress/progress';
 import { SumiBadge } from './badge/badge';
 import { SumiAppShell } from './shell/shell';
 import { SumiFocusModeDirective } from './shell/focus-mode.directive';
@@ -68,6 +74,9 @@ import {
 export const SUMI_LAYOUT = [
   SumiCard,
   SumiBanner,
+  SumiDialog,
+  SumiDialogHeader,
+  SumiProgress,
   SumiBadge,
   SumiAppShell,
   SumiFocusModeDirective,

@@ -1,0 +1,45 @@
+:host {
+  display: block;
+}
+
+.sumi-progress__track {
+  position: relative;
+  width: 100%;
+  height: 8px;
+  border-radius: var(--sumi-radius-pill);
+  background: var(--sumi-sunken);
+  overflow: hidden;
+}
+
+.sumi-progress__fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  height: 100%;
+  border-radius: var(--sumi-radius-pill);
+  background: var(--sumi-accent);
+  transition: width 200ms ease;
+}
+
+.sumi-progress__fill--indeterminate {
+  width: 40%;
+  animation: sumi-progress-indeterminate 1.4s ease-in-out infinite;
+}
+
+@keyframes sumi-progress-indeterminate {
+  from {
+    transform: translateX(-100%);
+  }
+
+  to {
+    transform: translateX(250%);
+  }
+}
+
+// The sweep is motion, not just colour, so it is the one part of this
+// component `prefers-reduced-motion` has to turn off; a static half-filled
+// bar still reads as "in progress, duration unknown" without moving.
+@media (prefers-reduced-motion: reduce) {
+  .sumi-progress__fill--indeterminate {
+    animation: none;
+  }
+}
