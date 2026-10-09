@@ -131,6 +131,37 @@ describe('SumiMatrixHeatmap', () => {
     expect(rowCells[1]).toEqual(['カ', '40', 'no data']);
   });
 
+  it('renders a blank cell as a plain, untitled gap: no hatch, no button, empty in the table', () => {
+    const fixture = setup();
+    fixture.componentInstance.cells.set([
+      { row: 'ア', column: 'a', value: 90 },
+      { row: 'ア', column: 'i', value: null, blank: true },
+      { row: 'カ', column: 'a', value: 40 },
+    ]);
+    fixture.componentInstance.selectable.set(true);
+    fixture.componentInstance.table.set(true);
+    fixture.detectChanges();
+
+    const cells = [
+      ...fixture.nativeElement.querySelectorAll('.sumi-matrix-heatmap__cell'),
+    ] as Element[];
+    const gap = cells[1];
+    expect(gap.tagName).toBe('DIV');
+    expect(gap.classList.contains('sumi-matrix-heatmap__cell--blank')).toBe(true);
+    expect(gap.classList.contains('sumi-matrix-heatmap__cell--no-data')).toBe(false);
+    expect(gap.hasAttribute('title')).toBe(false);
+    expect(gap.getAttribute('aria-hidden')).toBe('true');
+    // The other cells stay selectable buttons; カ/i is still "no data".
+    expect(cells.filter((el) => el.tagName === 'BUTTON').length).toBe(3);
+
+    const firstRow = [...fixture.nativeElement.querySelectorAll('tbody tr')][0] as Element;
+    expect([...firstRow.querySelectorAll('td')].map((td) => td.textContent?.trim())).toEqual([
+      'ア',
+      '90',
+      '',
+    ]);
+  });
+
   it('switches the grid wrapper role from img to group when selectable, so AT reaches the buttons', () => {
     const fixture = setup();
     fixture.componentInstance.selectable.set(true);

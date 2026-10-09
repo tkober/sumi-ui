@@ -236,15 +236,20 @@ function buildKanaConfidence(): SumiMatrixCellInput[] {
   const rows = ['ア', 'カ', 'サ', 'タ', 'ナ', 'ハ', 'マ', 'ヤ', 'ラ', 'ワ'];
   const columns = ['a', 'i', 'u', 'e', 'o'];
   // ヤ has no yi/ye kana, ワ only keeps wa/wo in modern use — those slots
-  // stay null ("not practised" has no meaning for a kana that does not
-  // exist, same visual state either way).
+  // are `blank` gaps, not "no data" (sumi-ui#50). ヌ and ヘ were never
+  // practised yet: those are real "no data" cells.
   const missing = new Set(['ヤ/i', 'ヤ/e', 'ワ/i', 'ワ/u', 'ワ/e']);
+  const neverPractised = new Set(['ナ/u', 'ハ/e']);
   const rng = makeRng(29);
   const cells: SumiMatrixCellInput[] = [];
   for (const row of rows) {
     for (const column of columns) {
       if (missing.has(`${row}/${column}`)) {
-        cells.push({ row, column, value: null });
+        cells.push({ row, column, value: null, blank: true });
+        continue;
+      }
+      if (neverPractised.has(`${row}/${column}`)) {
+        cells.push({ row, column, value: null, detail: 'not practised yet' });
         continue;
       }
       // Earlier rows (closer to ア) are the ones practised longest, so

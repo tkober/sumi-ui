@@ -432,6 +432,16 @@ describe('matrixCellGeometry', () => {
     expect(geo[1]).toMatchObject({ value: null, bucket: -1, label: null });
   });
 
+  it('marks a blank pair as a gap, not "no data", and leaves it out of the domain', () => {
+    const cells = [
+      { row: 'ヤ', column: 'a', value: 0.5 },
+      { row: 'ヤ', column: 'i', value: 99, blank: true },
+    ];
+    const geo = matrixCellGeometry(['ヤ'], ['a', 'i'], cells, undefined, format);
+    expect(geo[1]).toMatchObject({ blank: true, value: null, label: null, title: '' });
+    expect(matrixDomain(cells)).toEqual([0.5, 0.5]);
+  });
+
   it('formats the label and resolves the bucket from the given domain', () => {
     const geo = matrixCellGeometry(
       ['a'],

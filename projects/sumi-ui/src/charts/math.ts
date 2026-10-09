@@ -604,12 +604,18 @@ export function calendarGeometry(
  *  short free-text explanation of what the value rests on (e.g. "7/10
  *  correct", or "not practised yet" on a cell present with `value: null`)
  *  — it rides along in the cell's `title` and the table fallback, and in
- *  the `cellSelect` payload when `selectable` is on. */
+ *  the `cellSelect` payload when `selectable` is on.
+ *
+ *  `blank: true` marks a slot that does not exist at all (sumi-ui#50), e.g.
+ *  the ヤ row's i/e in a gojūon grid: an empty gap in the grid, not "no
+ *  data" — no fill, no hatch, no title, never selectable, an empty cell in
+ *  the table fallback. Its `value` is ignored. */
 export interface SumiMatrixCellInput {
   row: string;
   column: string;
   value: number | null;
   detail?: string;
+  blank?: boolean;
 }
 
 /** One rendered cell of `sumi-matrix-heatmap`'s grid. */
@@ -623,6 +629,8 @@ export interface MatrixCellGeometry {
   label: string | null;
   title: string;
   detail?: string;
+  /** A slot that does not exist (`SumiMatrixCellInput.blank`). */
+  blank?: boolean;
 }
 
 function matrixKey(row: string, column: string): string {
@@ -632,8 +640,11 @@ function matrixKey(row: string, column: string): string {
 /** `[min, max]` across the cells that have a value; `[0, 1]` when none do
  *  (an empty or entirely "no data" matrix), so `matrixBucket` never divides
  *  by a `NaN` span. */
-export function matrixDomain(cells: readonly { value: number | null }[]): [number, number] {
+export function matrixDomain(
+  cells: readonly { value: number | null; blank?: boolean }[],
+): [number, number] {
   const values = cells
+    .filter((c) => !c.blank)
     .map((c) => c.value)
     .filter((value): value is number => value !== null && !Number.isNaN(value));
   if (values.length === 0) {
@@ -662,7 +673,8 @@ export function matrixBucket(value: number, domain: readonly [number, number]): 
 
 /** Builds one `MatrixCellGeometry` per `(row, column)` pair, in row-major
  *  order. A pair missing from `cells`, or present with `value: null`, both
- *  render as "no data" (bucket -1). */
+ *  render as "no data" (bucket -1); a `blank` pair is a gap (`blank: true`,
+ *  empty title). */
 export function matrixCellGeometry(
   rows: readonly string[],
   columns: readonly string[],
@@ -676,6 +688,10 @@ export function matrixCellGeometry(
   for (const row of rows) {
     for (const column of columns) {
       const input = byKey.get(matrixKey(row, column));
+      if (input?.blank) {
+        out.push({ row, column, value: null, bucket: -1, label: null, title: '', blank: true });
+        continue;
+      }
       const value = input?.value ?? null;
       const detail = input?.detail;
       if (value === null) {
