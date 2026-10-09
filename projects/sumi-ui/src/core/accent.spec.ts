@@ -106,3 +106,21 @@ describe('resolveAccent', () => {
     expect(resolveAccent(custom)).toBe(custom);
   });
 });
+
+describe('--sumi-on-wrong', () => {
+  // Literal values from _tokens.scss, duplicated for the same reason as the
+  // bg/surface constants above.
+  const WRONG = { light: '#b3261e', dark: '#f08a80' };
+  const ON_WRONG = { light: '#ffffff', dark: '#151513' };
+
+  it('reaches 4.5:1 on the --sumi-wrong fill, in both themes', () => {
+    expect(contrastRatio(ON_WRONG.light, WRONG.light)).toBeGreaterThanOrEqual(MIN_CONTRAST);
+    expect(contrastRatio(ON_WRONG.dark, WRONG.dark)).toBeGreaterThanOrEqual(MIN_CONTRAST);
+  });
+
+  it("is needed because an accent's onAccent can fail on the red (yamabuki light, #44)", () => {
+    expect(contrastRatio(SUMI_ACCENT_PRESETS.yamabuki.light.onAccent, WRONG.light)).toBeLessThan(
+      MIN_CONTRAST,
+    );
+  });
+});

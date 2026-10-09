@@ -78,6 +78,7 @@ für die manuelle Wahl.
 | `--sumi-muted`             | `#7b7870`             | `#8f8c83`             | Labels, Achsen                      |
 | `--sumi-correct` / `-soft` | `#2f6b3a` / `#e1ecdf` | `#8cc694` / `#1f3322` | richtig (松葉)                      |
 | `--sumi-wrong` / `-soft`   | `#b3261e` / `#f6e0dd` | `#f08a80` / `#3d201d` | falsch (紅)                         |
+| `--sumi-on-wrong`          | `#ffffff`             | `#151513`             | Schrift auf `--sumi-wrong` (Danger) |
 | `--sumi-retry` / `-soft`   | `#9a6a10` / `#f4ead2` | `#e0b45a` / `#3a2f17` | angehalten, gilt nicht (黄土)       |
 
 Akzente: `--sumi-accent`, `--sumi-accent-soft`, `--sumi-on-accent`. Die

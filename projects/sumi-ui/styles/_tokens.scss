@@ -26,6 +26,10 @@
   --sumi-correct-soft: light-dark(#e1ecdf, #1f3322);
   --sumi-wrong: light-dark(#b3261e, #f08a80);
   --sumi-wrong-soft: light-dark(#f6e0dd, #3d201d);
+  // Text/icons on a `--sumi-wrong` fill (danger button hover). Deliberately
+  // not `--sumi-on-accent`: that one follows the app's accent preset, and
+  // yamabuki's dark light-theme ink only reaches 2.6:1 on this red (#44).
+  --sumi-on-wrong: light-dark(#ffffff, #151513);
   --sumi-retry: light-dark(#9a6a10, #e0b45a);
   --sumi-retry-soft: light-dark(#f4ead2, #3a2f17);
 
