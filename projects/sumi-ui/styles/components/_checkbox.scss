@@ -23,7 +23,10 @@
   // tuned for full-size controls (buttons, inputs) and reads as an almost
   // round blob on a box this small.
   border-radius: 4px;
-  border: 1.5px solid var(--sumi-line);
+  // `--sumi-muted`, not `--sumi-line`: the border is the only thing that
+  // shows an unchecked box exists, so it needs the 3:1 non-text contrast
+  // (WCAG 1.4.11) that the hairline colour does not reach on `--sumi-surface`.
+  border: 1.5px solid var(--sumi-muted);
   background: var(--sumi-surface);
   vertical-align: -0.2em;
   cursor: pointer;
