@@ -71,6 +71,19 @@ const CARDS: Card[] = [
   },
 ];
 
+/**
+ * Stands in for a WaniKani radical that has no Unicode character, only
+ * `character_image_url` (see sumi-ui#46) — drawn locally, black on
+ * transparent, so the showcase needs no external image host.
+ */
+const RADICAL_IMAGE_SVG = `
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+    <path d="M32 6 L54 30 L44 30 L44 58 L20 58 L20 30 L10 30 Z" fill="#000" />
+  </svg>
+`.trim();
+
+const RADICAL_IMAGE_URL = `data:image/svg+xml;utf8,${encodeURIComponent(RADICAL_IMAGE_SVG)}`;
+
 const FURIGANA_SAMPLE: SumiFuriganaSegment[] = [
   { base: '日本語', reading: 'にほんご' },
   { base: 'を' },
@@ -134,6 +147,7 @@ export class PracticePage {
 
   protected readonly cards = CARDS;
   protected readonly furiganaSample = FURIGANA_SAMPLE;
+  protected readonly radicalImageUrl = RADICAL_IMAGE_URL;
 
   protected readonly sessionState = signal<SessionState>('idle');
   protected readonly index = signal(0);

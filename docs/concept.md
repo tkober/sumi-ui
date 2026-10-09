@@ -127,6 +127,16 @@ Radikal, Kanji und Vokabel im kanji-trainer.
 Radius 10 px für Karten und Felder, 8 px für Buttons und Kacheln. Abstände in
 einem 4-px-Raster.
 
+`--sumi-ink-image-filter` ist die eine Ausnahme von „einmal mit
+`light-dark()` definiert“: `filter` kennt `light-dark()` nicht, also wird der
+Wert genauso pro Theme umgeschaltet wie `color-scheme` selbst
+(`@media (prefers-color-scheme: dark)` + `:root:not([data-theme='light'])`,
+plus `:root[data-theme='dark']`) — `brightness(0)` hell, `brightness(0)
+invert(1)` dunkel. `sumi-prompt-card`s `[sumiPromptVisual]="ink"` nutzt ihn,
+um ein einfarbiges Schwarz-auf-transparent-Bild (z. B. WaniKani-Radikale) in
+beiden Themes in der Textfarbe zu zeigen, ohne dass jede App den
+Filter-Dreh selbst nachbaut.
+
 ## Schrift
 
 | Rolle            | Schrift             | Einsatz                            |
@@ -233,7 +243,10 @@ Tabellen-Fallback (siehe kanji-trainer Forecast).
 - Das Eingabefeld klebt über der Tastatur. Die Position kommt aus der
   `visualViewport`-API. Der Prompt schrumpft, wenn die Tastatur offen ist. Die
   Glyphengröße richtet sich nach der Zeichenanzahl (wie heute `--glyphs` im
-  kanji-trainer).
+  kanji-trainer). `text` ist optional: Radikale ohne Unicode-Zeichen (nur
+  `character_image_url`, WaniKani) zeigen statt Text ein Bild im Slot
+  `[sumiPromptVisual]`, mit einer Tinten-Variante für einfarbige
+  Schwarz-auf-transparent-Quellen (sumi-ui#46).
 - Touch-Ziele mindestens 44 px, Safe-Area-Abstände für iOS.
 
 ## Tuschemotive

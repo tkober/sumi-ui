@@ -147,5 +147,22 @@
         </sumi-verdict>
       }
     </div>
+
+    <h3>Image prompt (no text)</h3>
+    <p>
+      Some WaniKani radicals have no Unicode character, only a
+      <code>character_image_url</code> — <code>text</code> is left unset and the image is
+      projected into <code>[sumiPromptVisual]</code> instead. <code>ink</code> keeps a
+      black-on-transparent source in the card's text colour in both themes.
+    </p>
+    <div class="demo__row">
+      <sumi-prompt-card kind="Meaning" [meta]="['Radical', 'Level 3']">
+        <img
+          sumiPromptVisual="ink"
+          [src]="radicalImageUrl"
+          alt="A WaniKani radical with no Unicode character"
+        />
+      </sumi-prompt-card>
+    </div>
   </section>
 </sumi-page>

@@ -113,6 +113,20 @@
   // set this lower to fade motifs out further, or higher to make them more
   // present, without touching the shapes themselves.
   --sumi-ink-strength: 1;
+
+  // `filter` for a monochrome black-on-transparent image shown in the text
+  // colour (`sumi-prompt-card`'s `[sumiPromptVisual]="ink"`, e.g. WaniKani
+  // radical images with no Unicode character). `filter` cannot take
+  // `light-dark()`, so this token is the one exception to "defined once
+  // with `light-dark()`" above: it is redefined per theme the same way
+  // `color-scheme` itself is pinned below, just for a non-colour value.
+  --sumi-ink-image-filter: brightness(0);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --sumi-ink-image-filter: brightness(0) invert(1);
+  }
 }
 
 // The viewer's explicit choice wins over the system in both directions. No
@@ -124,4 +138,5 @@
 
 :root[data-theme='dark'] {
   color-scheme: dark;
+  --sumi-ink-image-filter: brightness(0) invert(1);
 }

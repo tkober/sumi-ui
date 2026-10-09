@@ -2,6 +2,7 @@ import { Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { SumiKeyboardVisibility } from 'sumi-ui/core';
 import { SumiPromptCard } from './prompt-card';
+import { SumiPromptVisualDirective } from './prompt-visual.directive';
 
 @Component({
   imports: [SumiPromptCard],
@@ -14,11 +15,24 @@ import { SumiPromptCard } from './prompt-card';
   `,
 })
 class HostComponent {
-  text = signal('食べる');
+  text = signal<string | undefined>('食べる');
   kind = signal<string | undefined>(undefined);
   meta = signal<string[] | undefined>(undefined);
   tone = signal<string | undefined>(undefined);
   extra = signal(false);
+}
+
+@Component({
+  imports: [SumiPromptCard, SumiPromptVisualDirective],
+  template: `
+    <sumi-prompt-card [text]="text()">
+      <img [sumiPromptVisual]="variant()" src="radical.png" alt="" />
+    </sumi-prompt-card>
+  `,
+})
+class VisualHostComponent {
+  text = signal<string | undefined>(undefined);
+  variant = signal<'' | 'ink'>('');
 }
 
 describe('SumiPromptCard', () => {
@@ -119,5 +133,58 @@ describe('SumiPromptCard', () => {
     fixture.detectChanges();
     const cardHost = host.querySelector('sumi-prompt-card') as HTMLElement;
     expect(cardHost.style.getPropertyValue('--sumi-prompt-tone')).toBe('#2b4c7e');
+  });
+
+  it('renders no text element when text is unset', () => {
+    const { fixture, text } = create();
+    fixture.componentInstance.text.set(undefined);
+    fixture.detectChanges();
+    expect(text()).toBeNull();
+  });
+
+  it('renders no text element when text is empty', () => {
+    const { fixture, text } = create();
+    fixture.componentInstance.text.set('');
+    fixture.detectChanges();
+    expect(text()).toBeNull();
+  });
+
+  describe('[sumiPromptVisual]', () => {
+    function createVisual() {
+      TestBed.configureTestingModule({ imports: [VisualHostComponent] });
+      const fixture = TestBed.createComponent(VisualHostComponent);
+      fixture.detectChanges();
+      const host = fixture.nativeElement as HTMLElement;
+      const visual = (): HTMLElement => host.querySelector('.sumi-prompt-card__visual')!;
+      const text = (): HTMLElement | null => host.querySelector('.sumi-prompt-card__text');
+      return { fixture, host, visual, text };
+    }
+
+    it('projects the visual slot content in place of the text', () => {
+      const { visual, text } = createVisual();
+      expect(visual()).toBeTruthy();
+      expect(visual().tagName).toBe('IMG');
+      expect(text()).toBeNull();
+    });
+
+    it('has no ink class by default', () => {
+      const { visual } = createVisual();
+      expect(visual().classList.contains('sumi-prompt-card__visual--ink')).toBe(false);
+    });
+
+    it('gets the ink class for the ink variant', () => {
+      const { fixture, visual } = createVisual();
+      fixture.componentInstance.variant.set('ink');
+      fixture.detectChanges();
+      expect(visual().classList.contains('sumi-prompt-card__visual--ink')).toBe(true);
+    });
+
+    it('still shows text alongside a visual when both are given', () => {
+      const { fixture, text, visual } = createVisual();
+      fixture.componentInstance.text.set('森');
+      fixture.detectChanges();
+      expect(visual()).toBeTruthy();
+      expect(text()).toBeTruthy();
+    });
   });
 });
