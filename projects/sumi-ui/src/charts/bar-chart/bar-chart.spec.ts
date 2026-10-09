@@ -122,6 +122,83 @@ describe('SumiBarChart', () => {
     expect(labels.length).toBe(2); // indices 0 and 3 of 6 bars, labelEvery still the floor
   });
 
+  // sumi-ui#63: the fixed 60px minimum spacing from #61 under-estimated a
+  // real label's width ("07:00 AM" measured 46px wide) and, since the
+  // first/last labels are edge-anchored (`labelAnchor`: `start`/`end`) and
+  // so extend their *full* width toward their neighbour rather than half of
+  // it, two labels could overlap even though the fixed spacing "fit". These
+  // specs check the actual rendered geometry (x / text-anchor) rather than
+  // just a label count, since a correct count with colliding positions
+  // would still be a bug.
+  describe('x-axis label geometry (sumi-ui#63)', () => {
+    // Mirrors `AXIS_LABEL_CHAR_WIDTH` in `../math.ts` (`axisMinLabelSpacing`'s
+    // calibration), so this spec checks the chart's real rendered extent
+    // with the same estimate the component itself thins labels by.
+    const AXIS_LABEL_CHAR_WIDTH = 6;
+
+    function hourLabels(count: number): { label: string; value: number }[] {
+      return Array.from({ length: count }, (_, i) => {
+        const hour = i % 12 === 0 ? 12 : i % 12;
+        const period = i % 24 < 12 ? 'AM' : 'PM';
+        return { label: `${String(hour).padStart(2, '0')}:00 ${period}`, value: 1 };
+      });
+    }
+
+    /** Each rendered label's horizontal extent `[left, right]`, computed
+     *  from its actual `x` and `text-anchor` (`labelAnchor`'s edge anchors
+     *  extend a full width toward their neighbour, not half) and the same
+     *  width estimate `axisMinLabelSpacing` uses. */
+    function labelExtents(fixture: ReturnType<typeof setup>): [number, number][] {
+      const texts = [
+        ...fixture.nativeElement.querySelectorAll('.sumi-bar-chart__label'),
+      ] as SVGTextElement[];
+      return texts.map((text) => {
+        const x = Number(text.getAttribute('x'));
+        const anchor = text.getAttribute('text-anchor');
+        const width = (text.textContent ?? '').trim().length * AXIS_LABEL_CHAR_WIDTH;
+        if (anchor === 'start') {
+          return [x, x + width];
+        }
+        if (anchor === 'end') {
+          return [x - width, x];
+        }
+        return [x - width / 2, x + width / 2];
+      });
+    }
+
+    it('keeps edge-anchored labels from overlapping their neighbour on a narrow (~262px plot) chart', () => {
+      const fixture = setup();
+      fixture.componentInstance.bars.set(hourLabels(24));
+      fixture.componentInstance.labelEvery.set(6);
+      fixture.detectChanges();
+      // measuredWidth 278 - PAD.left(8) - PAD.right(8) = a 262px plot, the
+      // width the issue's "Coming up" card was measured at.
+      forceMeasuredWidth(fixture, 278);
+
+      const extents = labelExtents(fixture);
+      expect(extents.length).toBeGreaterThan(1);
+      for (let i = 1; i < extents.length; i++) {
+        expect(extents[i][0]).toBeGreaterThanOrEqual(extents[i - 1][1]);
+      }
+    });
+
+    it('still renders every labelEvery-th label (4 of 24) once the chart is wide enough', () => {
+      const fixture = setup();
+      fixture.componentInstance.bars.set(hourLabels(24));
+      fixture.componentInstance.labelEvery.set(6);
+      fixture.detectChanges();
+      forceMeasuredWidth(fixture, 600);
+
+      const labels = fixture.nativeElement.querySelectorAll('.sumi-bar-chart__label');
+      expect(labels.length).toBe(4); // indices 0, 6, 12, 18 of 24 bars
+
+      const extents = labelExtents(fixture);
+      for (let i = 1; i < extents.length; i++) {
+        expect(extents[i][0]).toBeGreaterThanOrEqual(extents[i - 1][1]);
+      }
+    });
+  });
+
   it('renders stacked segments when rows/series are given instead of bars', () => {
     const fixture = setup();
     fixture.componentInstance.bars.set(undefined);

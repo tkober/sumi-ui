@@ -10,6 +10,7 @@ import {
 } from '@angular/core';
 import {
   axisLabelStep,
+  axisMinLabelSpacing,
   barGeometry,
   rampColor,
   sparseLabelIndices,
@@ -41,16 +42,6 @@ const DEFAULT_HEIGHT = 160;
 /** Fixed padding in real px, reserved for the max-value callout, the
  *  x-axis labels and the baseline — never scaled, see `observeWidth`. */
 const PAD = { top: 20, right: 8, bottom: 20, left: 8 };
-/** Minimum horizontal room (real px) a single x-axis label needs so it
- *  never collides with its neighbour, at the chart's fixed `--sumi-text-xs`
- *  (12px) axis font. A typical label is up to ~8 characters ("07:00 AM",
- *  "15 Thu"); at that size `--sumi-font-ui` averages roughly 7px/character
- *  (same estimate `LABEL_CHAR_WIDTH` uses in `../math.ts` for donut/sunburst
- *  labels at the same font size), i.e. ~56px, plus a few px of breathing
- *  room between adjacent labels. Used to thin labels further than
- *  `labelEvery` when the chart is measured narrower than that implies —
- *  see `axisLabelStep` and sumi-ui#61. */
-const MIN_LABEL_SPACING = 60;
 
 /**
  * Vertical bars over time (e.g. a 24h "coming up" forecast, or days). Plain
@@ -143,13 +134,25 @@ export class SumiBarChart {
     return Math.max(0, ...this.singleBars().map((bar) => bar.value));
   });
 
+  /** The labels actually being thinned/placed on the x-axis: `bars`' own
+   *  labels in single-series mode, `rows`' in stacked mode — the input
+   *  `axisMinLabelSpacing` estimates the minimum label spacing from (see
+   *  `labelStep`). */
+  protected readonly axisLabels = computed(() =>
+    this.stacked()
+      ? (this.rows() ?? []).map((row) => row.label)
+      : (this.bars() ?? []).map((bar) => bar.label),
+  );
+
   /** `labelEvery` thinned further (never less) so labels fit the measured
    *  width without colliding — see `axisLabelStep`. Reactive to
-   *  `measuredWidth` via `plot()`. */
+   *  `measuredWidth` via `plot()` and to the labels themselves via
+   *  `axisLabels()`. */
   protected readonly labelStep = computed(() => {
     const plot = this.plot();
     const plotInnerWidth = plot.width - plot.left - plot.right;
-    return axisLabelStep(this.columns(), this.labelEvery(), plotInnerWidth, MIN_LABEL_SPACING);
+    const minLabelSpacing = axisMinLabelSpacing(this.axisLabels());
+    return axisLabelStep(this.columns(), this.labelEvery(), plotInnerWidth, minLabelSpacing);
   });
 
   protected readonly labelIndices = computed(

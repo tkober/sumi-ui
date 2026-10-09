@@ -3,6 +3,7 @@ import {
   arcLabelRotation,
   arcPath,
   axisLabelStep,
+  axisMinLabelSpacing,
   barGeometry,
   calendarBucket,
   calendarBucketThresholds,
@@ -266,6 +267,27 @@ describe('axisLabelStep', () => {
 
   it('falls back to at least labelEvery for a non-positive count', () => {
     expect(axisLabelStep(0, 4, 320, 60)).toBe(4);
+  });
+});
+
+describe('axisMinLabelSpacing', () => {
+  it('derives spacing from the longest label, not a fixed number', () => {
+    // "07:00 AM" is 8 characters; at 6px/char that's a 48px estimated
+    // width, so 1.5x that plus the 8px gap is 80px — well past the old
+    // fixed 60px that let it overlap its neighbour (sumi-ui#63).
+    expect(axisMinLabelSpacing(['07:00 AM', '01:00 PM'])).toBe(80);
+  });
+
+  it('grows with the longest label among several, ignoring shorter ones', () => {
+    const short = axisMinLabelSpacing(['Mon', 'Tue']);
+    const long = axisMinLabelSpacing(['Mon', 'Wednesday']);
+    expect(long).toBeGreaterThan(short);
+    expect(axisMinLabelSpacing(['Mon', 'Wednesday'])).toBe(axisMinLabelSpacing(['Wednesday']));
+  });
+
+  it('is just the gap for empty or all-empty labels', () => {
+    expect(axisMinLabelSpacing([])).toBe(8);
+    expect(axisMinLabelSpacing(['', ''])).toBe(8);
   });
 });
 
