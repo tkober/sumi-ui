@@ -11,6 +11,7 @@ export { SumiInputDirective } from './input';
 export { SumiSelectDirective } from './select';
 export { SumiTextareaDirective } from './textarea';
 export { SumiSliderDirective } from './slider';
+export { SumiCheckboxDirective } from './checkbox';
 export { SumiKbdDirective } from './kbd';
 export { SumiSubmitOnEnterDirective } from './submit-on-enter';
 export {
@@ -24,6 +25,7 @@ import { SumiInputDirective } from './input';
 import { SumiSelectDirective } from './select';
 import { SumiTextareaDirective } from './textarea';
 import { SumiSliderDirective } from './slider';
+import { SumiCheckboxDirective } from './checkbox';
 import { SumiKbdDirective } from './kbd';
 import { SumiSubmitOnEnterDirective } from './submit-on-enter';
 import { SumiSegmentedControl } from './segmented-control/segmented-control';
@@ -36,6 +38,7 @@ export const SUMI_FORMS = [
   SumiSelectDirective,
   SumiTextareaDirective,
   SumiSliderDirective,
+  SumiCheckboxDirective,
   SumiKbdDirective,
   SumiSubmitOnEnterDirective,
   SumiSegmentedControl,

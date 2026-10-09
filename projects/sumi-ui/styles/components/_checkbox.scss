@@ -1,0 +1,90 @@
+// `.sumi-checkbox`: styling for `input[type=checkbox][sumiCheckbox]` (see
+// `SumiCheckboxDirective`). Stays a native checkbox throughout — `appearance:
+// none` only drops the OS-drawn box, `:checked`/`:indeterminate`/`:disabled`
+// are the real DOM states, not classes, so `ngModel`, reactive forms,
+// keyboard and screen readers all keep working with zero extra wiring.
+//
+// The checkmark/dash is a `mask-image` cut from a solid `--sumi-on-accent`
+// square, not a baked-in colour, so it recolours with the theme and the
+// app's accent preset for free. `prefers-reduced-motion` is handled once,
+// globally, in `_base.scss` (it clamps every `transition-duration`), so the
+// 120ms transitions below do not need their own reduced-motion override.
+
+.sumi-checkbox {
+  appearance: none;
+  flex-shrink: 0;
+  display: inline-grid;
+  place-content: center;
+  box-sizing: border-box;
+  width: 1.125em;
+  height: 1.125em;
+  margin: 0;
+  // Deliberately smaller than `--sumi-radius-sm` (8px): that radius is
+  // tuned for full-size controls (buttons, inputs) and reads as an almost
+  // round blob on a box this small.
+  border-radius: 4px;
+  // `--sumi-muted`, not `--sumi-line`: the border is the only thing that
+  // shows an unchecked box exists, so it needs the 3:1 non-text contrast
+  // (WCAG 1.4.11) that the hairline colour does not reach on `--sumi-surface`.
+  border: 1.5px solid var(--sumi-muted);
+  background: var(--sumi-surface);
+  vertical-align: -0.2em;
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease;
+
+  &::before {
+    content: '';
+    width: 0.75em;
+    height: 0.75em;
+    background-color: var(--sumi-on-accent);
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3 8.5l3.5 3.5 6.5-7.5' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+      center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3 8.5l3.5 3.5 6.5-7.5' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+      center / contain no-repeat;
+    transform: scale(0);
+    transition: transform 120ms ease;
+  }
+
+  &:hover:not(:disabled) {
+    border-color: var(--sumi-text-2);
+  }
+
+  &:checked,
+  &:indeterminate {
+    background: var(--sumi-accent);
+    border-color: var(--sumi-accent);
+  }
+
+  &:checked::before {
+    transform: scale(1);
+  }
+
+  // Comes after `:checked::before` so a box that is both `checked` and
+  // `indeterminate` (the "some but not all children selected" case some
+  // apps also mark as checked) still shows the dash, matching what the
+  // native `:indeterminate` pseudo-class itself prioritises.
+  &:indeterminate::before {
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 8h9' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 8h9' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+    transform: scale(1);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--sumi-focus-ring);
+    border-radius: 4px;
+  }
+}
+
+// Unlike the other form components, no `@media (pointer: coarse)` min-size
+// bump here: the checkbox is always used inside a `<label>` (see the
+// README's Checkbox section), and the label text itself extends the tap
+// target far past 44px — enlarging the box itself would break "sits on the
+// text baseline" at 1.125em.
