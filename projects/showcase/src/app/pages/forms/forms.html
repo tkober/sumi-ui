@@ -77,6 +77,59 @@
   </section>
 
   <section>
+    <h2>Checkbox</h2>
+    <div class="row">
+      <label class="demo__checkbox-label">
+        <input
+          id="demo-checkbox-single"
+          type="checkbox"
+          sumiCheckbox
+          [(ngModel)]="agreeToTerms"
+          name="agreeToTerms"
+        />
+        I agree to the terms
+      </label>
+    </div>
+
+    <div class="row">
+      <label class="demo__checkbox-label">
+        <input
+          id="demo-checkbox-select-all"
+          type="checkbox"
+          sumiCheckbox
+          [checked]="allChecked()"
+          [indeterminate]="selectAllIndeterminate()"
+          (change)="toggleAllChecklistItems($event.target.checked)"
+        />
+        Select all
+      </label>
+    </div>
+    <ul class="demo__checklist">
+      @for (item of checklist(); track item.label; let i = $index) {
+        <li>
+          <label class="demo__checkbox-label">
+            <input
+              id="demo-checkbox-item-{{ i }}"
+              type="checkbox"
+              sumiCheckbox
+              [checked]="item.checked"
+              (change)="toggleChecklistItem(i, $event.target.checked)"
+            />
+            {{ item.label }}
+          </label>
+        </li>
+      }
+    </ul>
+
+    <div class="row">
+      <label class="demo__checkbox-label">
+        <input id="demo-checkbox-disabled" type="checkbox" sumiCheckbox checked disabled />
+        Disabled (checked)
+      </label>
+    </div>
+  </section>
+
+  <section>
     <h2>Kbd</h2>
     <p>
       Press <kbd sumiKbd>Enter</kbd> to continue, or <kbd sumiKbd>Alt</kbd> +

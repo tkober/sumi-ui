@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, computed, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { form, FormField } from '@angular/forms/signals';
 import { SUMI_FORMS, SumiButtonVariant, SumiSegmentedOption, SumiSize } from 'sumi-ui/forms';
@@ -17,6 +17,33 @@ export class FormsPage {
 
   protected lastSubmitted = '';
   protected sliderValue = signal(40);
+
+  // sumi-ui#60: a single checkbox bound via ngModel, plus a checklist whose
+  // "select all" checkbox goes indeterminate once some but not all of its
+  // items are checked.
+  protected agreeToTerms = false;
+
+  protected readonly checklist = signal([
+    { label: 'Greetings', checked: true },
+    { label: 'Numbers', checked: false },
+    { label: 'Verbs', checked: false },
+  ]);
+
+  protected readonly allChecked = computed(() => this.checklist().every((item) => item.checked));
+  protected readonly someChecked = computed(() => this.checklist().some((item) => item.checked));
+  protected readonly selectAllIndeterminate = computed(
+    () => this.someChecked() && !this.allChecked(),
+  );
+
+  protected toggleChecklistItem(index: number, checked: boolean): void {
+    this.checklist.update((items) =>
+      items.map((item, i) => (i === index ? { ...item, checked } : item)),
+    );
+  }
+
+  protected toggleAllChecklistItems(checked: boolean): void {
+    this.checklist.update((items) => items.map((item) => ({ ...item, checked })));
+  }
 
   protected readonly rangeOptions: SumiSegmentedOption<string>[] = [
     { value: 'kana', label: 'Kana' },

@@ -786,6 +786,41 @@ characters="合格" label="Passed" />`. Its own `restart` output drives
    focus-mode round with prompt/verdict/countdown/session-bar → summary
    inside the gate again).
 
+   ### Checkbox
+
+   `sumiCheckbox` (sumi-ui#60) is an attribute directive for a native
+   `input[type=checkbox]`, in the same style as `sumiInput`/`sumiSelect`/
+   `sumiSlider`: it only adds a class, the element stays a plain checkbox,
+   so `ngModel`, reactive forms, keyboard and screen readers work with no
+   extra wiring. Unlike `sumi-toggle` (a `button[role=switch]` for an
+   on/off setting), it is for real multi-select — picking several items
+   from a list. Wrap it in a `<label>` so clicking the text also toggles
+   it:
+
+   ```html
+   <label>
+     <input type="checkbox" sumiCheckbox [(ngModel)]="agreeToTerms" name="agreeToTerms" />
+     I agree to the terms
+   </label>
+   ```
+
+   `indeterminate` is a real property on `HTMLInputElement`, so a
+   "select all" checkbox binds it directly — no wrapper component or
+   extra input needed:
+
+   ```html
+   <input
+     type="checkbox"
+     sumiCheckbox
+     [checked]="allChecked()"
+     [indeterminate]="someChecked() && !allChecked()"
+     (change)="toggleAll($event.target.checked)"
+   />
+   ```
+
+   See the showcase's Forms page ("Checkbox" section) for this plus a
+   disabled example.
+
    ### Vetoing a `sumi-toggle` / `sumi-segmented-control` change
 
    Both controls flip/select optimistically on click, same as any other
