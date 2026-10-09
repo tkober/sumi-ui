@@ -8,8 +8,6 @@
 
 .sumi-dialog {
   box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
   width: min(480px, 100vw - 32px);
   max-height: min(640px, 100vh - 64px);
   margin: auto;
@@ -19,6 +17,15 @@
   background: var(--sumi-surface);
   color: var(--sumi-text);
   box-shadow: var(--sumi-shadow);
+
+  // `display` only while `[open]` (`showModal()`'s own reflected attribute)
+  // — the UA stylesheet's `dialog:not([open]) { display: none }` otherwise
+  // gets overridden by this class selector's higher specificity, which
+  // would render the panel (full of its own content) even while closed.
+  &[open] {
+    display: flex;
+    flex-direction: column;
+  }
 
   &::backdrop {
     background: color-mix(in oklab, var(--sumi-text) 45%, transparent);
