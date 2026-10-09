@@ -346,8 +346,9 @@ export function stackOffsets(values: readonly number[]): number[] {
  * are shown — so a chart measured narrower than the caller anticipated
  * (sumi-ui#61: a 360px "Coming up" card) still never collides two labels,
  * without the caller having to guess the chart's rendered width itself.
- * `minLabelSpacing` is the caller's own per-label minimum in real px (see
- * `sumi-bar-chart`'s `MIN_LABEL_SPACING`).
+ * `minLabelSpacing` is the caller's own per-label minimum in real px — see
+ * `axisMinLabelSpacing`, which derives it from the labels actually being
+ * shown rather than a fixed guess.
  */
 export function axisLabelStep(
   count: number,
@@ -361,6 +362,30 @@ export function axisLabelStep(
   const maxLabelsThatFit = Math.max(1, Math.floor(plotInnerWidth / minLabelSpacing));
   const fitStep = Math.ceil(count / maxLabelsThatFit);
   return Math.max(labelEvery, fitStep);
+}
+
+/**
+ * The minimum centre-to-centre spacing (px) two of `sumi-bar-chart`'s
+ * x-axis labels need, for use as `axisLabelStep`'s `minLabelSpacing` — not
+ * a fixed guess (sumi-ui#63: a fixed 60px under-estimated "07:00 AM",
+ * which overlapped its neighbour at a 360px card width) but derived from
+ * the longest label actually being shown, estimated via
+ * `AXIS_LABEL_CHAR_WIDTH`.
+ *
+ * A *middle*-anchored label only needs to clear half its width on each
+ * side of its centre, so a naive estimate would use one label's width as
+ * the minimum spacing between two centres. But the first and last labels
+ * are edge-anchored (`sumi-bar-chart`'s `labelAnchor`: `text-anchor`
+ * `start`/`end`, not `middle`), so they extend their *full* width toward
+ * their neighbour instead of half of it. Sized for that worst case — one
+ * full width (the anchored label) plus half of its middle-anchored
+ * neighbour's width, i.e. 1.5x the estimated width — plus a small fixed
+ * gap (`AXIS_LABEL_GAP`) so two labels never end up touching edge-to-edge.
+ */
+export function axisMinLabelSpacing(labels: readonly string[]): number {
+  const longestLabelLength = Math.max(0, ...labels.map((label) => label.length));
+  const estimatedWidth = longestLabelLength * AXIS_LABEL_CHAR_WIDTH;
+  return 1.5 * estimatedWidth + AXIS_LABEL_GAP;
 }
 
 /** Indices to label on a bar chart's x-axis: every `every`-th bar, always
@@ -906,6 +931,18 @@ export function polarPoint(cx: number, cy: number, radius: number, angle: number
 // enough for a fits/doesn't-fit decision — not pixel-exact typesetting.
 const LABEL_CHAR_WIDTH = 7;
 const LABEL_LINE_HEIGHT = 11;
+
+// `sumi-bar-chart`'s x-axis labels, same 12px `--sumi-text-xs` font as
+// above but calibrated separately (sumi-ui#63): a bar chart's minimum
+// label *spacing* has to be a tight lower bound — under-estimating it is
+// exactly what let "07:00 AM" (measured 46px wide, i.e. ~5.75px/character)
+// overlap its neighbour at 60px/label fixed spacing — whereas
+// `LABEL_CHAR_WIDTH`'s donut/sunburst fits-or-not check can afford to be a
+// looser average. Rounded up from 5.75 so the estimate never undershoots.
+const AXIS_LABEL_CHAR_WIDTH = 6;
+// Small fixed gap (px) kept between two adjacent axis labels' estimated
+// extents, on top of the width-derived spacing below.
+const AXIS_LABEL_GAP = 8;
 
 /**
  * Whether a label of `label.length` characters has room on an arc
