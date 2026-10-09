@@ -25,6 +25,7 @@ export {
   type SumiVerdictKind,
 } from './answer-field/answer-field';
 export { SumiPromptCard } from './prompt-card/prompt-card';
+export { SumiPromptVisualDirective } from './prompt-card/prompt-visual.directive';
 export { SumiVerdictCard } from './verdict/verdict';
 export { SumiVerdictDetailsDirective } from './verdict/verdict-details.directive';
 export { SumiCountdownRing } from './countdown-ring/countdown-ring';
@@ -38,6 +39,7 @@ export { SumiFuriganaToggle } from './furigana/furigana-toggle';
 import { SumiHoldFocus } from './hold-focus';
 import { SumiAnswerField } from './answer-field/answer-field';
 import { SumiPromptCard } from './prompt-card/prompt-card';
+import { SumiPromptVisualDirective } from './prompt-card/prompt-visual.directive';
 import { SumiVerdictCard } from './verdict/verdict';
 import { SumiVerdictDetailsDirective } from './verdict/verdict-details.directive';
 import { SumiCountdownRing } from './countdown-ring/countdown-ring';
@@ -52,6 +54,7 @@ export const SUMI_PRACTICE = [
   SumiAnswerField,
   SumiHoldFocus,
   SumiPromptCard,
+  SumiPromptVisualDirective,
   SumiVerdictCard,
   SumiVerdictDetailsDirective,
   SumiCountdownRing,

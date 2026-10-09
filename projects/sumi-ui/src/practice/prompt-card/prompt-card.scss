@@ -54,6 +54,27 @@
   overflow-wrap: anywhere;
 }
 
+// `[sumiPromptVisual]` — an image slot in place of `.sumi-prompt-card__text`
+// (see prompt-visual.directive.ts). It is plain projected content, not a
+// child component, so — like `sumi-card`'s header/footer — it needs
+// `::ng-deep` to be reached from this component's own stylesheet. Height
+// matches the text's own clamp for a single glyph (the
+// `calc(100cqi / --glyphs ...)` term does not apply — there is no glyph
+// count for an image), centred, never wider than the card.
+::ng-deep .sumi-prompt-card__visual {
+  display: block;
+  height: clamp(2.5rem, 14vw, 5rem);
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+// Monochrome black-on-transparent source (e.g. WaniKani radical images):
+// shown in the text colour in both themes, see `--sumi-ink-image-filter`
+// in _tokens.scss.
+::ng-deep .sumi-prompt-card__visual--ink {
+  filter: var(--sumi-ink-image-filter, brightness(0));
+}
+
 .sumi-prompt-card__meta {
   display: flex;
   justify-content: center;
@@ -76,6 +97,10 @@
 
 :host(.sumi-prompt-card--compact) .sumi-prompt-card__text {
   font-size: max(1.5rem, min(clamp(1.75rem, 9vw, 3rem), calc(100cqi / var(--glyphs, 1) * 0.95)));
+}
+
+:host(.sumi-prompt-card--compact) ::ng-deep .sumi-prompt-card__visual {
+  height: clamp(1.75rem, 9vw, 3rem);
 }
 
 :host(.sumi-prompt-card--compact) .sumi-prompt-card__meta {

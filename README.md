@@ -614,6 +614,21 @@ successfully with `ng build` from a throwaway Angular 22 app):
    </sumi-prompt-card>
    ```
 
+   `text` is optional — some prompts have no text at all, e.g. a WaniKani
+   radical with no Unicode character, only `character_image_url`. Leave
+   `text` unset and project the image into `[sumiPromptVisual]` instead; it
+   renders where the text would, sized like a single prompt glyph.
+   `sumiPromptVisual="ink"` is for a monochrome black-on-transparent source
+   image: it is shown in the card's text colour in both themes via the
+   `--sumi-ink-image-filter` token, instead of every app re-implementing the
+   light/dark `brightness()`/`invert()` pair itself:
+
+   ```html
+   <sumi-prompt-card kind="Meaning" [meta]="['Radical', 'Level 3']">
+     <img sumiPromptVisual="ink" [src]="radicalImageUrl" alt="" />
+   </sumi-prompt-card>
+   ```
+
    **`sumi-verdict`** (class `SumiVerdictCard` — `SumiVerdict` was already
    `sumi-answer-field`'s result-input type, see above) is the richer
    feedback block: colour, icon, title (defaulting per `kind` — "Correct",

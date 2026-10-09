@@ -2,7 +2,11 @@
   <span class="sumi-prompt-card__kind">{{ k }}</span>
 }
 
-<div class="sumi-prompt-card__text" lang="ja" [style.--glyphs]="glyphs()">{{ text() }}</div>
+<ng-content select="[sumiPromptVisual]" />
+
+@if (text(); as t) {
+  <div class="sumi-prompt-card__text" lang="ja" [style.--glyphs]="glyphs()">{{ t }}</div>
+}
 
 <ng-content />
 

@@ -27,6 +27,23 @@ import { glyphCount } from '../glyphs';
  *   <p class="hint">Te-form, affirmative</p>
  * </sumi-prompt-card>
  * ```
+ *
+ * `text` is optional: some prompts (e.g. WaniKani radicals with no Unicode
+ * character, only `character_image_url`) have no text at all. Project an
+ * image into `[sumiPromptVisual]` instead — it renders where the text
+ * would, sized like a single prompt glyph — and leave `text` unset:
+ *
+ * ```html
+ * <sumi-prompt-card kind="Meaning" [meta]="['Radical', 'Level 3']">
+ *   <img sumiPromptVisual="ink" [src]="radicalImageUrl" alt="" />
+ * </sumi-prompt-card>
+ * ```
+ *
+ * `sumiPromptVisual="ink"` is for a monochrome black-on-transparent image
+ * (as WaniKani serves them): it is shown in the text colour in both
+ * themes via `--sumi-ink-image-filter` (see `_tokens.scss`), instead of
+ * every app re-implementing the light/dark `brightness()`/`invert()` pair
+ * itself.
  */
 @Component({
   selector: 'sumi-prompt-card',
@@ -41,7 +58,8 @@ import { glyphCount } from '../glyphs';
 export class SumiPromptCard {
   protected readonly keyboard = inject(SumiKeyboardVisibility);
 
-  readonly text = input.required<string>();
+  /** Optional — unset or `''` for a prompt shown only via `[sumiPromptVisual]`. */
+  readonly text = input<string>();
   /** Small chip above the prompt, e.g. "Reading" or "Meaning". */
   readonly kind = input<string>();
   /** Small muted line under the prompt, e.g. `['Kanji', 'Level 9', 'Guru']`. */
@@ -54,5 +72,5 @@ export class SumiPromptCard {
   readonly tone = input<string>();
 
   /** Bound to `.sumi-prompt-card__text` as `--glyphs`, see the SCSS comment. */
-  protected readonly glyphs = computed(() => glyphCount(this.text()));
+  protected readonly glyphs = computed(() => glyphCount(this.text() ?? ''));
 }
