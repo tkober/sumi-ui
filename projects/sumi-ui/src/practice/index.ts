@@ -31,6 +31,7 @@ export { SumiVerdictDetailsDirective } from './verdict/verdict-details.directive
 export { SumiCountdownRing } from './countdown-ring/countdown-ring';
 export { SumiSessionBar } from './session-bar/session-bar';
 export { SumiSessionSummary } from './session-summary/session-summary';
+export { SumiSummaryTile } from './session-summary/summary-tile';
 export { SumiSessionGate } from './session-gate/session-gate';
 export { SumiFurigana } from './furigana/furigana.service';
 export { SumiFuriganaText, type SumiFuriganaSegment } from './furigana/furigana-text';
@@ -45,6 +46,7 @@ import { SumiVerdictDetailsDirective } from './verdict/verdict-details.directive
 import { SumiCountdownRing } from './countdown-ring/countdown-ring';
 import { SumiSessionBar } from './session-bar/session-bar';
 import { SumiSessionSummary } from './session-summary/session-summary';
+import { SumiSummaryTile } from './session-summary/summary-tile';
 import { SumiSessionGate } from './session-gate/session-gate';
 import { SumiFuriganaText } from './furigana/furigana-text';
 import { SumiFuriganaToggle } from './furigana/furigana-toggle';
@@ -60,6 +62,7 @@ export const SUMI_PRACTICE = [
   SumiCountdownRing,
   SumiSessionBar,
   SumiSessionSummary,
+  SumiSummaryTile,
   SumiSessionGate,
   SumiFuriganaText,
   SumiFuriganaToggle,

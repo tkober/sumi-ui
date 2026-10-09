@@ -1,5 +1,7 @@
+import { Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { SumiSessionSummary } from './session-summary';
+import { SumiSummaryTile } from './summary-tile';
 
 function render(inputs: {
   answered: number;
@@ -118,5 +120,32 @@ describe('SumiSessionSummary', () => {
       .dispatchEvent(new Event('click', { bubbles: true }));
 
     expect(restarted).toBe(1);
+  });
+
+  it('renders an extra tile projected by the app after the built-in ones, same structure', () => {
+    @Component({
+      imports: [SumiSessionSummary, SumiSummaryTile],
+      template: `
+        <sumi-session-summary [answered]="4" [correct]="3" [durationMs]="20000" [delta]="5">
+          <div sumiSummaryTile label="Ø per word">4.2 <small>s</small></div>
+          <div sumiSummaryTile label="Streak" trend="down">0</div>
+        </sumi-session-summary>
+      `,
+    })
+    class Host {}
+
+    TestBed.configureTestingModule({ imports: [Host] });
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const el = fixture.nativeElement as HTMLElement;
+
+    const tiles = el.querySelectorAll('.sumi-session-summary__tiles > .sumi-session-summary__tile');
+    expect(tiles.length).toBe(6);
+    expect(tiles[4].querySelector('dt')?.textContent).toBe('Ø per word');
+    expect(tiles[4].querySelector('dd')?.textContent?.trim()).toBe('4.2 s');
+    expect(tiles[4].querySelector('dd')?.classList.contains('sumi-tabular')).toBe(true);
+    expect(
+      tiles[5].querySelector('dd')?.classList.contains('sumi-session-summary__tile-value--down'),
+    ).toBe(true);
   });
 });

@@ -12,7 +12,7 @@ import {
   type SumiLandscapeId,
 } from 'sumi-ui/layout';
 import { SumiButtonDirective } from 'sumi-ui/forms';
-import { SumiSessionSummary } from 'sumi-ui/practice';
+import { SumiSessionSummary, SumiSummaryTile } from 'sumi-ui/practice';
 import type { SumiMotif, SumiPattern as SumiPatternName } from 'sumi-ui/core';
 
 /**
@@ -34,6 +34,7 @@ import type { SumiMotif, SumiPattern as SumiPatternName } from 'sumi-ui/core';
     SumiEmptyState,
     SumiHanko,
     SumiSessionSummary,
+    SumiSummaryTile,
     SumiButtonDirective,
   ],
 })

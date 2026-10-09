@@ -27,31 +27,3 @@
   margin: 0 0 var(--sumi-space-6);
   text-align: left;
 }
-
-.sumi-session-summary__tile {
-  dt {
-    margin: 0;
-    color: var(--sumi-muted);
-    font-size: var(--sumi-text-xs);
-  }
-
-  dd {
-    margin: var(--sumi-space-1) 0 0;
-    font-size: var(--sumi-text-xl);
-    font-weight: 600;
-
-    small {
-      font-size: var(--sumi-text-sm);
-      font-weight: 400;
-      color: var(--sumi-muted);
-    }
-  }
-}
-
-.sumi-session-summary__tile-value--up {
-  color: var(--sumi-correct);
-}
-
-.sumi-session-summary__tile-value--down {
-  color: var(--sumi-wrong);
-}
