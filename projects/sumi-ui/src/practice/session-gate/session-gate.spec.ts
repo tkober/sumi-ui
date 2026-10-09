@@ -16,6 +16,7 @@ function dispatchEnter(target: EventTarget): void {
       text="Take your time."
       actionLabel="Start session"
       [showAction]="showAction()"
+      [actionDisabled]="actionDisabled()"
       (start)="startCount.set(startCount() + 1)"
     >
       <input class="field" />
@@ -25,6 +26,7 @@ function dispatchEnter(target: EventTarget): void {
 class HostComponent {
   title = signal<string | undefined>('Ready to practice?');
   showAction = signal(true);
+  actionDisabled = signal(false);
   startCount = signal(0);
 }
 
@@ -88,6 +90,44 @@ describe('SumiSessionGate', () => {
   it('renders no companion by default', () => {
     const { host } = create();
     expect(host.querySelector('sumi-companion')).toBeNull();
+  });
+
+  it('disables the action button and marks it aria-busy when actionDisabled is true', () => {
+    const { fixture, host } = create();
+    fixture.componentInstance.actionDisabled.set(true);
+    fixture.detectChanges();
+
+    const button = host.querySelector('button') as HTMLButtonElement;
+    expect(button.disabled).toBe(true);
+    expect(button.getAttribute('aria-disabled')).toBe('true');
+    expect(button.getAttribute('aria-busy')).toBe('true');
+  });
+
+  it('Enter does nothing while actionDisabled is true, even re-enabled Enter works again', () => {
+    const { fixture, host } = create();
+    fixture.componentInstance.actionDisabled.set(true);
+    fixture.detectChanges();
+
+    dispatchEnter(host);
+    expect(fixture.componentInstance.startCount()).toBe(0);
+
+    fixture.componentInstance.actionDisabled.set(false);
+    fixture.detectChanges();
+
+    dispatchEnter(host);
+    expect(fixture.componentInstance.startCount()).toBe(1);
+  });
+
+  it('Enter does nothing while actionDisabled is true even when showAction is false (ended state)', () => {
+    const { fixture, host } = create();
+    fixture.componentInstance.showAction.set(false);
+    fixture.componentInstance.actionDisabled.set(true);
+    fixture.detectChanges();
+
+    expect(host.querySelector('button')).toBeNull();
+
+    dispatchEnter(host);
+    expect(fixture.componentInstance.startCount()).toBe(0);
   });
 });
 

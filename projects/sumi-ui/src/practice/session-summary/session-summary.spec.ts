@@ -4,17 +4,24 @@ import { SumiSessionSummary } from './session-summary';
 import { SumiSummaryTile } from './summary-tile';
 
 function render(inputs: {
-  answered: number;
-  correct: number;
+  answered?: number;
+  correct?: number;
   durationMs: number;
   delta?: number;
   deltaLabel?: string;
   levelUp?: string;
+  headline?: string;
+  actionLabel?: string;
+  actionDisabled?: boolean;
 }) {
   TestBed.configureTestingModule({ imports: [SumiSessionSummary] });
   const fixture = TestBed.createComponent(SumiSessionSummary);
-  fixture.componentRef.setInput('answered', inputs.answered);
-  fixture.componentRef.setInput('correct', inputs.correct);
+  if (inputs.answered != null) {
+    fixture.componentRef.setInput('answered', inputs.answered);
+  }
+  if (inputs.correct != null) {
+    fixture.componentRef.setInput('correct', inputs.correct);
+  }
   fixture.componentRef.setInput('durationMs', inputs.durationMs);
   if (inputs.delta != null) {
     fixture.componentRef.setInput('delta', inputs.delta);
@@ -24,6 +31,15 @@ function render(inputs: {
   }
   if (inputs.levelUp != null) {
     fixture.componentRef.setInput('levelUp', inputs.levelUp);
+  }
+  if (inputs.headline != null) {
+    fixture.componentRef.setInput('headline', inputs.headline);
+  }
+  if (inputs.actionLabel != null) {
+    fixture.componentRef.setInput('actionLabel', inputs.actionLabel);
+  }
+  if (inputs.actionDisabled != null) {
+    fixture.componentRef.setInput('actionDisabled', inputs.actionDisabled);
   }
   fixture.detectChanges();
   return fixture;
@@ -147,5 +163,109 @@ describe('SumiSessionSummary', () => {
     expect(
       tiles[5].querySelector('dd')?.classList.contains('sumi-session-summary__tile-value--down'),
     ).toBe(true);
+  });
+
+  it('omits the Answered/Correct tiles when both are unset, but keeps Time and projected tiles', () => {
+    @Component({
+      imports: [SumiSessionSummary, SumiSummaryTile],
+      template: `
+        <sumi-session-summary [durationMs]="42000">
+          <div sumiSummaryTile label="Turns">8</div>
+        </sumi-session-summary>
+      `,
+    })
+    class Host {}
+
+    TestBed.configureTestingModule({ imports: [Host] });
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const el = fixture.nativeElement as HTMLElement;
+
+    const dts = Array.from(el.querySelectorAll('.sumi-session-summary__tile dt')).map(
+      (dt) => dt.textContent,
+    );
+    expect(dts).not.toContain('Answered');
+    expect(dts).not.toContain('Correct');
+    expect(dts).toContain('Time');
+    expect(dts).toContain('Turns');
+    const tiles = el.querySelectorAll('.sumi-session-summary__tile');
+    expect(tiles.length).toBe(2);
+  });
+
+  it('still omits both tiles when only one of answered/correct is set', () => {
+    @Component({
+      imports: [SumiSessionSummary],
+      template: `<sumi-session-summary [answered]="4" [durationMs]="1000" />`,
+    })
+    class Host {}
+
+    TestBed.configureTestingModule({ imports: [Host] });
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const el = fixture.nativeElement as HTMLElement;
+
+    const dts = Array.from(el.querySelectorAll('.sumi-session-summary__tile dt')).map(
+      (dt) => dt.textContent,
+    );
+    expect(dts).not.toContain('Answered');
+    expect(dts).not.toContain('Correct');
+  });
+
+  it('shows Answered/Correct with accuracy when both are set, unchanged from before', () => {
+    const fixture = render({ answered: 10, correct: 7, durationMs: 125000 });
+    const dts = Array.from(host(fixture).querySelectorAll('.sumi-session-summary__tile dt')).map(
+      (dt) => dt.textContent,
+    );
+    expect(dts).toContain('Answered');
+    expect(dts).toContain('Correct');
+    expect(tileValue(fixture, 1).textContent).toContain('70%');
+  });
+
+  it('uses the default headline and action label when unset', () => {
+    const fixture = render({ answered: 1, correct: 1, durationMs: 1000 });
+    expect(host(fixture).querySelector('.sumi-session-summary__headline')?.textContent).toBe(
+      'Session complete',
+    );
+    expect(host(fixture).querySelector('button')?.textContent?.trim()).toBe('Practice again');
+  });
+
+  it('renders a custom headline and action label', () => {
+    const fixture = render({
+      durationMs: 1000,
+      headline: 'Conversation complete',
+      actionLabel: 'Show review',
+    });
+    expect(host(fixture).querySelector('.sumi-session-summary__headline')?.textContent).toBe(
+      'Conversation complete',
+    );
+    expect(host(fixture).querySelector('button')?.textContent?.trim()).toBe('Show review');
+  });
+
+  it('disables the action button and marks it aria-busy when actionDisabled is true, and a click does nothing', () => {
+    const fixture = render({ durationMs: 1000, actionDisabled: true });
+    let restarted = 0;
+    fixture.componentInstance.restart.subscribe(() => restarted++);
+
+    const button = host(fixture).querySelector('button')!;
+    expect(button.disabled).toBe(true);
+    expect(button.getAttribute('aria-disabled')).toBe('true');
+    expect(button.getAttribute('aria-busy')).toBe('true');
+
+    button.dispatchEvent(new Event('click', { bubbles: true }));
+    expect(restarted).toBe(0);
+  });
+
+  it('leaves the action button enabled, with no aria-busy, when actionDisabled is false (default)', () => {
+    const fixture = render({ durationMs: 1000 });
+    const button = host(fixture).querySelector('button')!;
+    expect(button.disabled).toBe(false);
+    expect(button.getAttribute('aria-disabled')).toBeNull();
+    expect(button.getAttribute('aria-busy')).toBeNull();
+  });
+
+  it('does not divide by zero / produce NaN accuracy when answered is 0 with both stats set', () => {
+    const fixture = render({ answered: 0, correct: 0, durationMs: 0 });
+    expect(tileValue(fixture, 1).textContent).not.toContain('NaN');
+    expect(tileValue(fixture, 1).textContent).toContain('0%');
   });
 });

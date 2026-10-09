@@ -10,13 +10,15 @@
   }
 </div>
 
-<h2 class="sumi-session-summary__headline">Session complete</h2>
+<h2 class="sumi-session-summary__headline">{{ headline() }}</h2>
 
 <dl class="sumi-session-summary__tiles">
-  <div sumiSummaryTile label="Answered">{{ answered() }}</div>
-  <div sumiSummaryTile label="Correct">
-    {{ correct() }} <small>({{ accuracy() }}%)</small>
-  </div>
+  @if (hasQuizStats()) {
+    <div sumiSummaryTile label="Answered">{{ answered() }}</div>
+    <div sumiSummaryTile label="Correct">
+      {{ correct() }} <small>({{ accuracy() }}%)</small>
+    </div>
+  }
   <div sumiSummaryTile label="Time">{{ duration() }}</div>
   @if (hasDelta()) {
     <div sumiSummaryTile [label]="deltaLabel() ?? 'Change'" [trend]="deltaTrend()">
@@ -27,4 +29,14 @@
   <ng-content />
 </dl>
 
-<button type="button" sumiButton variant="primary" (click)="restart.emit()">Practice again</button>
+<button
+  type="button"
+  sumiButton
+  variant="primary"
+  [disabled]="actionDisabled()"
+  [attr.aria-disabled]="actionDisabled() ? 'true' : null"
+  [attr.aria-busy]="actionDisabled() ? 'true' : null"
+  (click)="onActionClick()"
+>
+  {{ actionLabel() }}
+</button>

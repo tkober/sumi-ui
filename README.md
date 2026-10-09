@@ -708,6 +708,11 @@ successfully with `ng build` from a throwaway Angular 22 app):
    `sumi-ink-backdrop[layout="full"]` (T1/T2, see "Motifs" above): `motif`
    and `pattern` override `SUMI_CONFIG` for this instance, and `companion`
    shows a small companion standing in the scene, off to the side.
+   `actionDisabled` (sumi-ui#56) keeps the gate's own button visible but
+   disabled (`aria-disabled`/`aria-busy="true"`) and disables its `Enter`
+   registration the same way, so `Enter` stays inert even while
+   `showAction` is `false` (the ended state) — e.g. while a background
+   analysis is still running.
 
    ```html
    @if (state() === 'idle') {
@@ -736,6 +741,33 @@ characters="合格" label="Passed" />`. Its own `restart` output drives
    the "Practice again" button. `levelUp` (T8, e.g. `"Level 4"`) shows a
    second 昇級 hanko next to the result when a level was reached during the
    session — omit it (the default) for no change.
+
+   `answered`/`correct` are optional (sumi-ui#56): a non-quiz app (e.g.
+   jp-conversation-practice, graded by the API afterwards rather than
+   per-item) leaves both unset and gets neither tile — `Time` and any
+   projected app tiles still render, no accuracy is computed. `headline`
+   (default `"Session complete"`) and `actionLabel` (default `"Practice
+   again"`) let such an app use its own wording, and `actionDisabled`
+   keeps the button visible but disabled (`aria-disabled`,
+   `aria-busy="true"`, a disabled click does nothing) while e.g. a
+   background analysis is still running — pair it with the wrapping
+   `sumi-session-gate`'s own `actionDisabled` so `Enter` is locked too:
+
+   ```html
+   <sumi-session-gate [showAction]="false" [actionDisabled]="analysing()" companion="tsuru" (start)="openReview()">
+     <sumi-session-summary
+       [durationMs]="durationMs()"
+       headline="Conversation complete"
+       [actionLabel]="analysing() ? 'Analysing…' : 'Show review'"
+       [actionDisabled]="analysing()"
+       (restart)="openReview()"
+     >
+       <sumi-hanko sumiSummaryArt characters="合格" label="Passed" />
+       <div sumiSummaryTile label="Turns">{{ turns() }}</div>
+       <div sumiSummaryTile label="Cost">{{ cost() | currency }}</div>
+     </sumi-session-summary>
+   </sumi-session-gate>
+   ```
 
    **`sumi-furigana`** renders `{ base: string; reading?: string }[]`
    segments as ruby annotations (ported from jp-conversation-practice's

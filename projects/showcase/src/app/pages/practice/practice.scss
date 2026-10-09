@@ -95,3 +95,11 @@ sumi-segmented-control {
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: var(--sumi-space-4);
 }
+
+sumi-toggle {
+  margin: var(--sumi-space-2) 0 var(--sumi-space-4);
+}
+
+.demo__conversation-gate {
+  display: block;
+}

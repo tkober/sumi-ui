@@ -102,6 +102,46 @@
   </section>
 
   <section class="demo">
+    <h2>Conversation-style ending</h2>
+    <p>
+      jp-conversation-practice is not a quiz: a session is a conversation, graded by the API
+      afterwards. <code>sumi-session-summary</code> without <code>answered</code>/<code
+        >correct</code
+      >
+      shows only Time and app tiles, with its own headline/action wording, while
+      <code>actionDisabled</code> keeps the action locked on both the summary and the wrapping gate
+      until the analysis finishes (sumi-ui#56).
+    </p>
+
+    <sumi-toggle
+      [value]="conversationAnalysing()"
+      (valueChange)="toggleConversationAnalysing($event)"
+    >
+      Analysing
+    </sumi-toggle>
+
+    <sumi-session-gate
+      class="demo__conversation-gate"
+      [showAction]="false"
+      [actionDisabled]="conversationAnalysing()"
+      companion="tsuru"
+      (start)="onConversationAction()"
+    >
+      <sumi-session-summary
+        [durationMs]="138000"
+        headline="Conversation complete"
+        [actionLabel]="conversationActionLabel()"
+        [actionDisabled]="conversationAnalysing()"
+        (restart)="onConversationAction()"
+      >
+        <sumi-hanko sumiSummaryArt characters="合格" label="Passed" />
+        <div sumiSummaryTile label="Turns">14</div>
+        <div sumiSummaryTile label="Cost">$0.04</div>
+      </sumi-session-summary>
+    </sumi-session-gate>
+  </section>
+
+  <section class="demo">
     <h2>Other modes</h2>
     <p>
       The grading round above only uses <code>kana</code> and <code>latin</code>. Everything else

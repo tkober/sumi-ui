@@ -10,7 +10,15 @@
     <ng-content />
 
     @if (showAction()) {
-      <button type="button" sumiButton variant="primary" (click)="start.emit()">
+      <button
+        type="button"
+        sumiButton
+        variant="primary"
+        [disabled]="actionDisabled()"
+        [attr.aria-disabled]="actionDisabled() ? 'true' : null"
+        [attr.aria-busy]="actionDisabled() ? 'true' : null"
+        (click)="onActionClick()"
+      >
         {{ actionLabel() }}
       </button>
     }
