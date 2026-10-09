@@ -895,6 +895,10 @@ characters="合格" label="Passed" />`. Its own `restart` output drives
    page. `labelHeader`/`valueHeader` rename the `table` fallback's first
    two columns (default `'Label'`/`'Value'`; `valueHeader` only applies to
    plain bars, a stacked table names each series column after its label).
+   `labelEvery` is only a minimum: the x-axis thins its labels further,
+   automatically, so they never collide at the chart's actual measured
+   width (e.g. a narrow card); it never shows *more* labels than
+   `labelEvery` asked for, only fewer.
 
    `sumi-calendar-heatmap` and `sumi-matrix-heatmap` are the two "any
    values in a grid" charts (day activity as weeks x weekdays; anything

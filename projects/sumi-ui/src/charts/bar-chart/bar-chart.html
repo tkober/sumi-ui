@@ -9,7 +9,7 @@
   <text class="sumi-bar-chart__max" x="0" [attr.y]="plot().top - 6">{{ maxValue() }}</text>
 
   @if (!stacked()) {
-    @for (bar of singleBars(); track bar.label; let i = $index) {
+    @for (bar of singleBars(); track $index; let i = $index) {
       <rect
         class="sumi-bar-chart__bar"
         [class.sumi-bar-chart__bar--highlight]="bar.highlight"
@@ -33,7 +33,7 @@
       }
     }
   } @else {
-    @for (column of stackedBars(); track column.label; let i = $index) {
+    @for (column of stackedBars(); track $index; let i = $index) {
       @for (segment of column.segments; track segment.key) {
         <rect
           class="sumi-bar-chart__bar"
