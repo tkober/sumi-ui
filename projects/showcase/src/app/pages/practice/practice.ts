@@ -1,6 +1,11 @@
 import { Component, DestroyRef, computed, inject, signal, viewChild } from '@angular/core';
-import { SumiFocusModeDirective, SumiPage, SumiShellFocusActionsDirective } from 'sumi-ui/layout';
-import { SumiButtonDirective, SumiSegmentedControl } from 'sumi-ui/forms';
+import {
+  SumiFocusModeDirective,
+  SumiHanko,
+  SumiPage,
+  SumiShellFocusActionsDirective,
+} from 'sumi-ui/layout';
+import { SumiButtonDirective, SumiSegmentedControl, SumiToggle } from 'sumi-ui/forms';
 import { SUMI_KEYS, SumiHotkeys, injectHotkey } from 'sumi-ui/core';
 import {
   SUMI_PRACTICE,
@@ -124,7 +129,10 @@ type SessionState = 'idle' | 'running' | 'ended';
  * a `sumi-session-summary` at the end. `sumi-session-bar` lives in the
  * shell's header itself via `*sumiShellFocusActions` (#27) rather than
  * inside this page's own markup — its answered/accuracy stay live and its
- * "End session" button calls this page's own `endSession()`. A small
+ * "End session" button calls this page's own `endSession()`. A
+ * "Conversation-style ending" section demos `sumi-session-summary` without
+ * `answered`/`correct` and `actionDisabled` on it and the wrapping gate
+ * (sumi-ui#56) — a toggle flips between "analysing" and "ready". A small
  * "Other building blocks" section below shows furigana, every countdown
  * state and every verdict kind side by side.
  */
@@ -136,6 +144,8 @@ type SessionState = 'idle' | 'running' | 'ended';
     SumiPage,
     SumiButtonDirective,
     SumiSegmentedControl,
+    SumiToggle,
+    SumiHanko,
     SumiFocusModeDirective,
     SumiShellFocusActionsDirective,
     ...SUMI_PRACTICE,
@@ -370,4 +380,24 @@ export class PracticePage {
     { kind: 'retry', message: "That's a real reading, just not the one asked for." },
     { kind: 'held', message: 'Sure? Enter counts it, Esc lets you fix it.' },
   ];
+
+  // --- Conversation-style ending (sumi-ui#56) ---------------------------
+  // jp-conversation-practice is not a quiz: a session is a conversation,
+  // graded by the API after the fact (a few seconds). This demos
+  // `sumi-session-summary` without `answered`/`correct` (Turns/Cost tiles
+  // instead), a custom headline/actionLabel, and `actionDisabled` on both
+  // the summary and the wrapping gate while that analysis "runs" — toggle
+  // below to flip between the two states.
+  protected readonly conversationAnalysing = signal(true);
+  protected readonly conversationActionLabel = computed(() =>
+    this.conversationAnalysing() ? 'Analysing…' : 'Show review',
+  );
+
+  protected toggleConversationAnalysing(analysing: boolean): void {
+    this.conversationAnalysing.set(analysing);
+  }
+
+  protected onConversationAction(): void {
+    this.logHotkey('Conversation: Show review');
+  }
 }

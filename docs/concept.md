@@ -201,7 +201,7 @@ wird nichts ausgelöst.
 
 | Taste         | Wirkung                                                                                                           | Gilt in                       |
 | ------------- | ----------------------------------------------------------------------------------------------------------------- | ----------------------------- |
-| `Enter`       | Prüfen, danach weiter. Auf Start- und Ende-Screens: Session starten.                                              | alle Tipp-Apps                |
+| `Enter`       | Prüfen, danach weiter. Auf Start- und Ende-Screens: Session starten. Wirkungslos, solange `sumi-session-gate`s `actionDisabled` gesetzt ist (sumi-ui#56). | alle Tipp-Apps                |
 | `Shift Enter` | Neue Zeile in mehrzeiligen Feldern (`Enter` sendet)                                                               | wo es mehrzeilige Felder gibt |
 | `Esc`         | Angehaltene Antwort korrigieren, sonst offenes Panel schließen                                                    | alle                          |
 | `Alt K`       | „I know this“                                                                                                     | **nur kanji-trainer**         |
@@ -307,6 +307,13 @@ Bibliothek fest:
   `sumi-session-summary` in `sumi-session-gate [showAction]="false"`, dann
   deckt T1s Szene den Hintergrund ab. Der Hanko bleibt im
   `[sumiSummaryArt]`-Slot, der Begleiter wandert mit dem Gate in die Szene.
+  `answered`/`correct` sind optional (sumi-ui#56): Apps ohne Quiz-Zahlen
+  (z. B. jp-conversation-practice, dessen Session eine API-Auswertung statt
+  einer Pro-Item-Wertung bekommt) lassen beide weg und zeigen nur `Time`
+  plus eigene `sumiSummaryTile`s, `headline`/`actionLabel` tragen dann
+  eigenen Text (z. B. „Conversation complete“ / „Show review“), und
+  `actionDisabled` sperrt die Aktion auf Summary **und** Gate (inklusive
+  `Enter`) sichtbar, aber inaktiv, solange die Auswertung läuft.
 - **T3 Leerzustand** (`sumi-empty-state`): zeigt immer Musterband und
   Landschaft. `companion` zeichnet zusätzlich einen kleinen Begleiter vor
   der Landschaft, rechts, statt sie zu ersetzen.

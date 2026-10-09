@@ -49,6 +49,11 @@ import { SumiInkBackdrop } from 'sumi-ui/layout';
  * this one is **not** `allowInEditable` — a gate screen has no field to
  * protect typing in, and the concept's ground rule only grants that
  * exception to editable-aware registrations.
+ *
+ * `actionDisabled` (sumi-ui#56) disables both the gate's own button and
+ * its `Enter` registration — e.g. a conversation app keeps the ended
+ * state's action locked until a background analysis finishes, so `Enter`
+ * must not jump ahead early even though `showAction` is `false` there.
  */
 @Component({
   selector: 'sumi-session-gate',
@@ -75,6 +80,16 @@ export class SumiSessionGate {
    * the ended state does not show two of them.
    */
   readonly showAction = input(true);
+  /**
+   * Keeps the gate's own button visible but disabled (`aria-disabled`,
+   * `aria-busy="true"`), and disables its `Enter` registration the same
+   * way — e.g. while a background analysis is still running, so `Enter`
+   * cannot jump ahead early even when `showAction` is `false` (the ended
+   * state's own button, not this one, is what's on screen then; see
+   * `sumi-session-summary`'s matching `actionDisabled`). Defaults to
+   * `false`.
+   */
+  readonly actionDisabled = input(false);
 
   readonly start = output<void>();
 
@@ -83,7 +98,21 @@ export class SumiSessionGate {
       keys: SUMI_KEYS.submit,
       label: 'Start session',
       scope: 'page',
+      enabled: () => !this.actionDisabled(),
       handler: () => this.start.emit(),
     });
+  }
+
+  /**
+   * Guards `start` against a click while `actionDisabled` is set — the
+   * native `disabled` attribute already stops a real pointer click, but
+   * this keeps the output from firing under any other way the button's
+   * `click` handler might run.
+   */
+  protected onActionClick(): void {
+    if (this.actionDisabled()) {
+      return;
+    }
+    this.start.emit();
   }
 }
