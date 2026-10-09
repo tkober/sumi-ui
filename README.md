@@ -890,8 +890,11 @@ characters="合格" label="Passed" />`. Its own `restart` output drives
    pre-scrolled to the newest week. `sumi-matrix-heatmap` renders as a CSS
    grid rather than an SVG — a `(row, column)` pair missing from `cells`
    and one explicitly `value: null` both render as "no data" (a diagonal
-   hatch over `--sumi-sunken`, per docs/concept.md's "Nie nur Farbe"), and
-   its row-header column stays `position: sticky` while the grid scrolls
+   hatch over `--sumi-sunken`, per docs/concept.md's "Nie nur Farbe"). A
+   slot that does not exist at all (the ヤ row's i/e in a gojūon grid) is a
+   cell with `blank: true` instead: an empty gap with no fill, hatch, title
+   or table text, never selectable (sumi-ui#50). Its
+   row-header column stays `position: sticky` while the grid scrolls
    horizontally on a narrow screen.
 
    A cell can carry a `detail` string alongside its `value` (e.g. "7/10

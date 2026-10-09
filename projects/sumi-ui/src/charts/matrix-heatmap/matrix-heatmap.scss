@@ -107,3 +107,9 @@
   font-size: var(--sumi-text-sm);
   color: var(--sumi-muted);
 }
+
+// A slot that does not exist (`blank: true`, sumi-ui#50): just the grid's
+// gap, so it never reads as the hatched "no data" state.
+.sumi-matrix-heatmap__cell--blank {
+  background: none;
+}

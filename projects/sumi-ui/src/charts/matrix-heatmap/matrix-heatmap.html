@@ -15,7 +15,12 @@
       <div class="sumi-matrix-heatmap__row-header" [attr.lang]="cellLang()">{{ row }}</div>
       @for (column of columns(); track column) {
         @let cell = cellAt(row, column);
-        @if (selectable()) {
+        @if (cell.blank) {
+          <div
+            class="sumi-matrix-heatmap__cell sumi-matrix-heatmap__cell--blank"
+            aria-hidden="true"
+          ></div>
+        } @else if (selectable()) {
           <button
             type="button"
             class="sumi-matrix-heatmap__cell sumi-matrix-heatmap__cell--selectable"

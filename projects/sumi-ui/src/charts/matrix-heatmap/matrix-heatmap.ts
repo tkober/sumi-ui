@@ -36,7 +36,10 @@ export interface SumiMatrixCellSelection {
  * A `(row, column)` pair missing from `cells`, or present with
  * `value: null`, both render as "no data" (`--sumi-sunken` plus a diagonal
  * hatch, since colour alone would not survive greyscale/colour-blind
- * viewing — see docs/concept.md's "Nie nur Farbe"). `showValues` renders
+ * viewing — see docs/concept.md's "Nie nur Farbe"). A slot that does not
+ * exist at all (the ヤ row's i/e in the kana grid below) is a cell with
+ * `blank: true`: an empty gap, never mistaken for "not practised"
+ * (sumi-ui#50). `showValues` renders
  * `format(value)` inside each cell when there is room; `cellLang` (e.g.
  * `"ja"`) sets the row headers' language/font for scripts that need it
  * (kana row labels), independent of the column headers.
@@ -184,6 +187,9 @@ export class SumiMatrixHeatmap {
    *  one (e.g. "not practised yet"), and `cell.label`/`"no data"`
    *  otherwise — see the class doc comment. */
   private tableCellText(cell: MatrixCellGeometry): string {
+    if (cell.blank) {
+      return '';
+    }
     if (cell.label === null) {
       return cell.detail ?? 'no data';
     }
