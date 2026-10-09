@@ -16,6 +16,22 @@
   @media not ((hover: hover) and (pointer: fine)) {
     display: none;
   }
+
+  /* Under 720px `sumi-app-shell` shows its bottom tab bar in this same
+     strip (see layout/shell/shell-tab-bar.scss); without this the toggle
+     sits on top of the tab bar's last tab. Raise it the same way the
+     shell's own "More" sheet is offset above the tab bar: 64px (its
+     height) + the safe area + a gap. Applied unconditionally at this
+     width rather than only while the tab bar is actually visible (it is
+     hidden in focus mode and while the on-screen keyboard is open): this
+     component has no reach into the shell's state, since an app places it
+     anywhere, not necessarily as the shell's child, and the one case where
+     the tab bar is shown at this width — a real pointer, i.e. a narrow
+     desktop window, not a touch device — rarely overlaps with focus mode
+     or an on-screen keyboard anyway, so a fixed offset is a fine trade. */
+  @media (max-width: 719px) {
+    bottom: calc(64px + env(safe-area-inset-bottom, 0px) + var(--sumi-space-2));
+  }
 }
 
 .sumi-hotkey-help__toggle {

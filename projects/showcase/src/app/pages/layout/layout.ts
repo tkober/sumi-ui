@@ -33,7 +33,7 @@ export class LayoutPage {
 
   // Nav lock demo, analogous to the above.
   protected readonly demoNavLock = signal(false);
-  protected readonly demoNavLockReason = 'A conversation is running';
+  protected readonly demoNavLockReason = 'Conversation running — end it before leaving';
 
   protected readonly pageWidths: SumiPageWidth[] = ['narrow', 'default', 'wide'];
   protected readonly demoPageWidth = signal<SumiPageWidth>('default');

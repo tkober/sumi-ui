@@ -56,69 +56,7 @@
   <sumi-theme-toggle />
 </header>
 
-@if (!shell.focusMode() && !keyboard.isOpen()) {
-  <nav class="sumi-app-shell__tabbar" aria-label="Main">
-    @for (item of tabItems(); track item.link) {
-      <a
-        class="sumi-app-shell__tab"
-        [routerLink]="shell.navLock() ? null : item.link"
-        routerLinkActive="sumi-app-shell__tab--active"
-        [routerLinkActiveOptions]="{ exact: item.exact ?? false }"
-        [attr.aria-disabled]="shell.navLock() ? 'true' : null"
-        [attr.tabindex]="shell.navLock() ? -1 : null"
-      >
-        <sumi-icon [name]="item.icon" />
-        <span>{{ item.label }}</span>
-        @if (item.badge) {
-          <sumi-badge class="sumi-app-shell__tab-badge" [tone]="item.badgeTone ?? 'accent'">
-            {{ item.badge }}
-          </sumi-badge>
-        }
-      </a>
-    }
-    @if (hasOverflow()) {
-      <button
-        #moreTrigger
-        type="button"
-        class="sumi-app-shell__tab sumi-app-shell__tab--more"
-        aria-haspopup="true"
-        [attr.aria-expanded]="moreOpen()"
-        (click)="openMore()"
-      >
-        <sumi-icon name="more" />
-        <span>More</span>
-      </button>
-    }
-  </nav>
-}
-
-@if (moreOpen()) {
-  <div class="sumi-app-shell__more-backdrop" (click)="closeMore()"></div>
-  <div
-    #moreSheet
-    class="sumi-app-shell__more-sheet"
-    role="menu"
-    aria-label="More navigation"
-    (keydown.escape)="closeMore()"
-  >
-    @for (item of overflowItems(); track item.link) {
-      <a
-        class="sumi-app-shell__more-item"
-        role="menuitem"
-        [routerLink]="shell.navLock() ? null : item.link"
-        routerLinkActive="sumi-app-shell__more-item--active"
-        [attr.aria-disabled]="shell.navLock() ? 'true' : null"
-        (click)="closeMore()"
-      >
-        <sumi-icon [name]="item.icon" />
-        <span>{{ item.label }}</span>
-        @if (item.badge) {
-          <sumi-badge [tone]="item.badgeTone ?? 'accent'">{{ item.badge }}</sumi-badge>
-        }
-      </a>
-    }
-  </div>
-}
+<sumi-app-shell-tab-bar [nav]="nav()" />
 
 <main
   class="sumi-app-shell__main"
