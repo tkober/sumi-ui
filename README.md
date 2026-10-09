@@ -747,14 +747,19 @@ characters="合格" label="Passed" />`. Its own `restart` output drives
    per-item) leaves both unset and gets neither tile — `Time` and any
    projected app tiles still render, no accuracy is computed. `headline`
    (default `"Session complete"`) and `actionLabel` (default `"Practice
-   again"`) let such an app use its own wording, and `actionDisabled`
+again"`) let such an app use its own wording, and `actionDisabled`
    keeps the button visible but disabled (`aria-disabled`,
    `aria-busy="true"`, a disabled click does nothing) while e.g. a
    background analysis is still running — pair it with the wrapping
    `sumi-session-gate`'s own `actionDisabled` so `Enter` is locked too:
 
    ```html
-   <sumi-session-gate [showAction]="false" [actionDisabled]="analysing()" companion="tsuru" (start)="openReview()">
+   <sumi-session-gate
+     [showAction]="false"
+     [actionDisabled]="analysing()"
+     companion="tsuru"
+     (start)="openReview()"
+   >
      <sumi-session-summary
        [durationMs]="durationMs()"
        headline="Conversation complete"
@@ -932,7 +937,7 @@ characters="合格" label="Passed" />`. Its own `restart` output drives
    plain bars, a stacked table names each series column after its label).
    `labelEvery` is only a minimum: the x-axis thins its labels further,
    automatically, so they never collide at the chart's actual measured
-   width (e.g. a narrow card); it never shows *more* labels than
+   width (e.g. a narrow card); it never shows _more_ labels than
    `labelEvery` asked for, only fewer.
 
    `sumi-calendar-heatmap` and `sumi-matrix-heatmap` are the two "any
@@ -1057,6 +1062,119 @@ characters="合格" label="Passed" />`. Its own `restart` output drives
    review calendar, a kana confidence matrix, a conjugation miss-rate
    matrix, a katakana-reading outcome donut, a reviews-by-SRS-stage
    sunburst and per-level coverage bars).
+
+   ### Data table: selection and activation
+
+   `sumi-data-table` (sumi-ui#66) can take on a bulk-editing list like
+   kanji-trainer's Items page — tick rows for an action, click a row to
+   open its detail — without the app hand-rolling its own `<table>`:
+
+   ```html
+   <sumi-data-table
+     [columns]="columns"
+     [rows]="rows"
+     rowKey="id"
+     rowLabel="character"
+     [selectable]="true"
+     [activatable]="true"
+     [(selection)]="selectedIds"
+     (rowActivate)="openDetail($event)"
+   />
+   ```
+
+   - `selectable` adds a leading checkbox column, built from the library's
+     own `sumiCheckbox` (sumi-ui#60) — never a bespoke checkbox. The
+     header gets a "select all" checkbox (`indeterminate` for a partial
+     selection, accessible name "Select all rows"). `rowKey` names the row
+     field that uniquely identifies it; `selection` is a
+     `model<readonly (string | number)[]>()` holding the selected rows'
+     keys, so `[(selection)]` two-way binds straight to a signal. Without
+     a `rowKey`, selection falls back to the row's index — fine for a
+     list that never reorders, but a real id is preferred.
+   - `rowLabel` names the field used for each row checkbox's accessible
+     name ("Select 大"); without it, the name falls back to "Select row N".
+   - `activatable` turns a plain click on the row into `(rowActivate)`,
+     emitting that row's data. A click on an interactive element inside
+     the row — a checkbox, button, link, label, `<select>`, `<textarea>`
+     or anything `role="button"` — never triggers it, so the checkbox and
+     any cell-template button (see `SumiTableCellTemplate`) keep working
+     as their own controls. Hover/pointer styling on the row only appears
+     when `activatable` is set. There is no keyboard path onto the row
+     itself — a row click is a mouse/touch shortcut for something the
+     keyboard can already reach another way, same as a table row in most
+     native apps; an app that wants a keyboard-reachable "open detail"
+     action adds a real `<button>` in a cell template instead.
+   - Selected rows are tinted with `--sumi-accent-soft`, but the checkbox
+     stays checked and visible — the tint is never the only signal a row
+     is selected (docs/concept.md's "Nie nur Farbe").
+   - None of this changes a table that does not opt in: without
+     `selectable` there is no checkbox column, and without `activatable`
+     row clicks do nothing — both default to `false`, so an existing
+     `sumi-data-table` keeps rendering exactly as before.
+
+   See the Charts showcase page's "Items list" section for a full example,
+   including a row click opening a `sumi-dialog` (below) with the
+   selected row's data.
+
+   ### Dialog
+
+   `sumi-dialog` (sumi-ui#66, `sumi-ui/layout`) is a modal dialog built on
+   the native `<dialog>` element and `showModal()` — top layer, a native
+   focus trap and Esc-to-close for free, instead of every app building its
+   own overlay + backdrop + focus management (kanji-trainer's item detail
+   did exactly that before this issue):
+
+   ```html
+   <sumi-dialog [(open)]="detailOpen" title="大 (big)">
+     <p>Readings: だい・たい・おお</p>
+   </sumi-dialog>
+   ```
+
+   - `open` is a `model<boolean>()`. Esc, a click on the backdrop and the
+     always-present close button (`×`, `aria-label="Close"`) all set it to
+     `false`; setting it from the app opens/closes the dialog right back.
+     The native `cancel` (Esc) and `close` events both write `false` back
+     to `open`, so the model never desyncs from a close the dialog itself
+     initiated.
+   - The header is either the `title` input (a plain heading) or content
+     projected with `[sumiDialogHeader]` (the `SumiDialogHeader`
+     directive) for anything richer, e.g. a large character next to a
+     title and subtitle — never both; a projected header wins if both are
+     given. The close button is always there either way.
+   - The body (the default content slot) scrolls on its own once it
+     overflows; the header stays in place.
+   - `width` is `'narrow'` (the default) or `'wide'`. At a 360px viewport
+     the panel is the full width minus a 16px gutter on each side, with no
+     horizontal scrolling.
+   - Focus starts on the close button (not the dialog element itself), so
+     the visible focus ring lands on a control, same as everywhere else in
+     the library — never on the dialog's own box. Closing natively returns
+     focus to whatever opened the dialog.
+
+   See the Layout showcase page's "Dialog" section for narrow/wide and
+   custom-header examples, and the Charts page's "Items list" section for
+   one opened from a `sumi-data-table` row.
+
+   ### Progress
+
+   `sumi-progress` (sumi-ui#66, `sumi-ui/layout`) is a progress bar, e.g.
+   kanji-trainer's WaniKani import ("x of y items"):
+
+   ```html
+   <sumi-progress [value]="imported" [max]="total" ariaLabel="Importing items" />
+   <sumi-progress [value]="null" ariaLabel="Checking for updates" />
+   ```
+
+   `role="progressbar"` with `aria-valuemin`/`-max`/`-now`; `ariaLabel` is
+   required, since colour (`--sumi-accent` fill on a `--sumi-sunken`
+   track) is never the only signal of what the bar means. `value` is
+   clamped to `[0, max]` (default `max` is `100`) before it reaches either
+   the fill width or `aria-valuenow` — a value outside that range from the
+   app never overflows the track or reports a nonsensical number to a
+   screen reader. `value: null` renders indeterminate: no `aria-valuenow`
+   at all (per the ARIA spec for an unknown duration) and a sweeping fill
+   animation instead of a fixed width, disabled under
+   `prefers-reduced-motion`.
 
 5. Install the library's font, wanakana and chart maths packages as direct
    dependencies — they are `peerDependencies` here, so this repo expects
