@@ -27,6 +27,7 @@ function setValue(input: HTMLInputElement, value: string): void {
       [verdict]="verdict()"
       [iKnow]="iKnow()"
       [iDontKnow]="iDontKnow()"
+      [placeholder]="placeholder()"
       [(value)]="value"
       (submitted)="submitted.set($event)"
       (confirmed)="confirmedCount.set(confirmedCount() + 1)"
@@ -42,6 +43,7 @@ class HostComponent {
   verdict = signal<SumiVerdict | null>(null);
   iKnow = signal(false);
   iDontKnow = signal(false);
+  placeholder = signal<string | undefined>(undefined);
   value = signal('');
   submitted = signal<string | null>(null);
   confirmedCount = signal(0);
@@ -266,6 +268,19 @@ describe('SumiAnswerField', () => {
     host.verdict.set({ kind: 'correct' });
     fixture.detectChanges();
     expect(document.activeElement).toBe(input());
+  });
+
+  it('renders no placeholder attribute when none is set', () => {
+    const { input } = create();
+    expect(input().hasAttribute('placeholder')).toBe(false);
+    expect(input().placeholder).toBe('');
+  });
+
+  it('renders the placeholder attribute when one is set', () => {
+    const { fixture, host, input } = create();
+    host.placeholder.set('e.g. たべる');
+    fixture.detectChanges();
+    expect(input().getAttribute('placeholder')).toBe('e.g. たべる');
   });
 
   it('registers Enter with a label that switches between "Check answer" and "Next"', () => {
