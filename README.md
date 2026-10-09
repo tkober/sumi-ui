@@ -416,8 +416,11 @@ successfully with `ng build` from a throwaway Angular 22 app):
 
    `sumi-hotkey-help` is the small round flyout button (bottom-right,
    hidden without a real pointer) listing every currently active hotkey,
-   grouped by scope. Recommended placement is once, in the shell, same as
-   the showcase's own `app.html`:
+   grouped by scope. Under 720px — a narrow desktop window, since a touch
+   device with no real pointer never shows it at all — it sits above
+   `sumi-app-shell`'s bottom tab bar instead of on top of it, the same way
+   the tab bar's own "More" sheet is offset (sumi-ui#52). Recommended
+   placement is once, in the shell, same as the showcase's own `app.html`:
 
    ```html
    <sumi-app-shell [brand]="brand" [nav]="navItems">

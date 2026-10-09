@@ -237,7 +237,14 @@ Tabellen-Fallback (siehe kanji-trainer Forecast).
 
 - `sumi-app-shell`: Kopfzeile mit Markenzeichen (Glyph der App), Navigation,
   Badges, App-Umschalter und Theme-Umschalter. Unter 720 px eine Tab-Leiste
-  unten mit höchstens fünf Einträgen.
+  unten mit höchstens fünf Einträgen (eigene Teilkomponente
+  `SumiAppShellTabBar`, sumi-ui#52, damit die kompilierten Styles unter
+  Angulars `anyComponentStyle`-Budget bleiben).
+- Der Sperrhinweis (`sumiNavLock`) steht neben der Marke im Header. Unter
+  720 px darf er auf höchstens zwei Zeilen umbrechen statt den Header zu
+  sprengen; ab 720 px bleibt er einzeilig (sumi-ui#52).
+- `sumi-hotkey-help` sitzt fix unten rechts; unter 720 px rutscht er über die
+  Tab-Leiste, genau wie deren eigenes "More"-Sheet (sumi-ui#52).
 - Auf Übungsscreens verschwindet die Navigation. Oben stehen nur Fortschritt und
   Genauigkeit.
 - Das Eingabefeld klebt über der Tastatur. Die Position kommt aus der
