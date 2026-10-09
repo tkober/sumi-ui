@@ -62,13 +62,15 @@
 .sumi-app-shell__more-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 25;
+  // Above sumi-hotkey-help (30): the sheet is modal, the toggle must not
+  // float over its last item.
+  z-index: 35;
   background: rgb(0 0 0 / 30%);
 }
 
 .sumi-app-shell__more-sheet {
   position: fixed;
-  z-index: 26;
+  z-index: 36;
   left: var(--sumi-space-4);
   right: var(--sumi-space-4);
   bottom: calc(64px + env(safe-area-inset-bottom, 0px) + var(--sumi-space-2));
