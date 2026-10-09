@@ -51,3 +51,29 @@ td[data-tone='correct'] {
 td[data-tone='wrong'] {
   color: var(--sumi-wrong);
 }
+
+.sumi-data-table__select-cell {
+  width: 1px;
+  white-space: nowrap;
+}
+
+// Selected rows are tinted with the accent, but the checkbox stays checked
+// and visible — the tint is never the only signal that a row is selected
+// (docs/concept.md's "Nie nur Farbe").
+tbody tr.sumi-data-table__row--selected td {
+  background: var(--sumi-accent-soft);
+}
+
+// Hover/pointer only when the table opts into row activation; a table with
+// neither `selectable` nor `activatable` set renders exactly as before.
+tbody tr.sumi-data-table__row--activatable {
+  cursor: pointer;
+
+  &:hover td {
+    background: var(--sumi-sunken);
+  }
+
+  &.sumi-data-table__row--selected:hover td {
+    background: var(--sumi-accent-soft);
+  }
+}
