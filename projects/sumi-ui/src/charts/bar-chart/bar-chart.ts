@@ -82,6 +82,11 @@ export class SumiBarChart {
   readonly table = input(false);
   /** Fixed chart height in real px (the width always tracks the container). */
   readonly height = input(DEFAULT_HEIGHT);
+  /** Table fallback's first column header, both modes. */
+  readonly labelHeader = input('Label');
+  /** Table fallback's value column header, plain bars only (stacked mode
+   *  names each column after its series, see `tableColumns`). */
+  readonly valueHeader = input('Value');
 
   private readonly hostRef = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly destroyRef = inject(DestroyRef);
@@ -153,7 +158,7 @@ export class SumiBarChart {
   protected readonly tableColumns = computed<SumiTableColumn[]>(() => {
     if (this.stacked()) {
       return [
-        { key: 'label', label: 'Label' },
+        { key: 'label', label: this.labelHeader() },
         ...(this.series() ?? []).map((s) => ({
           key: s.key,
           label: s.label,
@@ -163,10 +168,17 @@ export class SumiBarChart {
       ];
     }
     return [
-      { key: 'label', label: 'Label' },
-      { key: 'value', label: 'Value', align: 'end' },
+      { key: 'label', label: this.labelHeader() },
+      { key: 'value', label: this.valueHeader(), align: 'end' },
     ];
   });
+
+  /** The series' `label` for a stacked segment's `<title>` (falls back to
+   *  the series `key`, an internal identifier, if it has no matching series —
+   *  e.g. stale `rows` data referencing a removed series). */
+  protected seriesLabel(key: string): string {
+    return this.series()?.find((s) => s.key === key)?.label ?? key;
+  }
 
   protected readonly tableRows = computed<SumiTableRow[]>(() => {
     if (this.stacked()) {

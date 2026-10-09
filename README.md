@@ -892,7 +892,9 @@ characters="合格" label="Passed" />`. Its own `restart` output drives
    `sumi-bar-chart` also has a stacked mode (`rows` + `series` instead of
    `bars`, coloured from the `--sumi-seq-*` ramp by series index) for a
    forecast broken down by stage, same shape as kanji-trainer's forecast
-   page.
+   page. `labelHeader`/`valueHeader` rename the `table` fallback's first
+   two columns (default `'Label'`/`'Value'`; `valueHeader` only applies to
+   plain bars, a stacked table names each series column after its label).
 
    `sumi-calendar-heatmap` and `sumi-matrix-heatmap` are the two "any
    values in a grid" charts (day activity as weeks x weekdays; anything
