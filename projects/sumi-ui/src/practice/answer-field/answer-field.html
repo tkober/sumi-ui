@@ -17,7 +17,7 @@
     [attr.aria-labelledby]="labelledBy() ?? null"
     [attr.aria-invalid]="status() === 'wrong' ? 'true' : null"
     [attr.aria-describedby]="messageId"
-    [placeholder]="placeholder() ?? null"
+    [attr.placeholder]="placeholder() ?? null"
     [value]="value()"
     [disabled]="disabled()"
     (input)="onInput($event)"
