@@ -13,32 +13,17 @@
 <h2 class="sumi-session-summary__headline">Session complete</h2>
 
 <dl class="sumi-session-summary__tiles">
-  <div class="sumi-session-summary__tile">
-    <dt>Answered</dt>
-    <dd class="sumi-tabular">{{ answered() }}</dd>
+  <div sumiSummaryTile label="Answered">{{ answered() }}</div>
+  <div sumiSummaryTile label="Correct">
+    {{ correct() }} <small>({{ accuracy() }}%)</small>
   </div>
-  <div class="sumi-session-summary__tile">
-    <dt>Correct</dt>
-    <dd class="sumi-tabular">
-      {{ correct() }} <small>({{ accuracy() }}%)</small>
-    </dd>
-  </div>
-  <div class="sumi-session-summary__tile">
-    <dt>Time</dt>
-    <dd class="sumi-tabular">{{ duration() }}</dd>
-  </div>
+  <div sumiSummaryTile label="Time">{{ duration() }}</div>
   @if (hasDelta()) {
-    <div class="sumi-session-summary__tile">
-      <dt>{{ deltaLabel() ?? 'Change' }}</dt>
-      <dd
-        class="sumi-tabular"
-        [class.sumi-session-summary__tile-value--up]="deltaSign() === 'up'"
-        [class.sumi-session-summary__tile-value--down]="deltaSign() === 'down'"
-      >
-        {{ delta()! > 0 ? '+' : '' }}{{ delta() }}
-      </dd>
+    <div sumiSummaryTile [label]="deltaLabel() ?? 'Change'" [trend]="deltaTrend()">
+      {{ delta()! > 0 ? '+' : '' }}{{ delta() }}
     </div>
   }
+  <!-- Extra tiles from the app: <div sumiSummaryTile label="…">…</div> (sumi-ui#48). -->
   <ng-content />
 </dl>
 

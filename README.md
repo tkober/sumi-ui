@@ -724,7 +724,10 @@ successfully with `ng build` from a throwaway Angular 22 app):
    **`sumi-session-summary`** — answered/correct (with rounded accuracy),
    duration as `m:ss`, an optional signed `delta` (e.g. an Elo change,
    coloured `--sumi-correct`/`--sumi-wrong` by sign) with a `deltaLabel`,
-   extra tiles via the default content slot, and a `[sumiSummaryArt]` slot
+   extra tiles via the default content slot as `<div sumiSummaryTile
+label="Ø per word">4.2 s</div>` (`SumiSummaryTile`, the same component the
+   built-in tiles use, so they look identical; `trend="up"|"down"` colours
+   the value like the delta, sumi-ui#48), and a `[sumiSummaryArt]` slot
    for a hanko/backdrop illustration, e.g. `<sumi-hanko sumiSummaryArt
 characters="合格" label="Passed" />`. Its own `restart` output drives
    the "Practice again" button. `levelUp` (T8, e.g. `"Level 4"`) shows a

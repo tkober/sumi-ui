@@ -1,6 +1,7 @@
 import { Component, computed, input, output } from '@angular/core';
 import { SumiButtonDirective } from 'sumi-ui/forms';
 import { SumiHanko } from 'sumi-ui/layout';
+import { SumiSummaryTile } from './summary-tile';
 
 /** `ms` as `m:ss`, e.g. `125000` → `"2:05"`. Never negative. */
 function formatDuration(ms: number): string {
@@ -25,6 +26,10 @@ function formatDuration(ms: number): string {
  * change: a session end without a level-up only ever shows the one hanko
  * an app put in `[sumiSummaryArt]`.
  *
+ * An app with a further figure (e.g. average time per item) projects it as
+ * `<div sumiSummaryTile label="…">` into the default slot; it lands after
+ * the built-in tiles and looks the same (`SumiSummaryTile`, sumi-ui#48).
+ *
  * ```html
  * <sumi-session-gate title="Session complete" actionLabel="Practice again" (start)="restart()">
  *   <sumi-session-summary
@@ -45,7 +50,7 @@ function formatDuration(ms: number): string {
   selector: 'sumi-session-summary',
   templateUrl: './session-summary.html',
   styleUrl: './session-summary.scss',
-  imports: [SumiButtonDirective, SumiHanko],
+  imports: [SumiButtonDirective, SumiHanko, SumiSummaryTile],
   host: { class: 'sumi-session-summary' },
 })
 export class SumiSessionSummary {
@@ -69,10 +74,10 @@ export class SumiSessionSummary {
 
   protected readonly hasDelta = computed(() => this.delta() != null);
 
-  protected readonly deltaSign = computed<'up' | 'down' | 'flat'>(() => {
+  protected readonly deltaTrend = computed<'up' | 'down' | undefined>(() => {
     const delta = this.delta();
     if (!delta) {
-      return 'flat';
+      return undefined;
     }
     return delta > 0 ? 'up' : 'down';
   });
