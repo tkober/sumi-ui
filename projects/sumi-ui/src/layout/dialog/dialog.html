@@ -4,6 +4,7 @@
   [class.sumi-dialog--wide]="width() === 'wide'"
   (cancel)="onDialogClosed()"
   (close)="onDialogClosed()"
+  (pointerdown)="onPointerDown($event)"
   (click)="onBackdropClick($event)"
 >
   <div class="sumi-dialog__header">

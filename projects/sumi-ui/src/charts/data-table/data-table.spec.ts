@@ -268,6 +268,17 @@ describe('SumiDataTable activation', () => {
     expect(fixture.componentInstance.activated).toBeUndefined();
   });
 
+  it('does not emit rowActivate when the click lands beside the checkbox in its cell', () => {
+    const fixture = create(true);
+    const hit: HTMLElement = fixture.nativeElement.querySelector(
+      'tbody .sumi-data-table__select-hit',
+    );
+    hit.click();
+    fixture.detectChanges();
+    expect(fixture.componentInstance.activated).toBeUndefined();
+    expect(fixture.componentInstance.selection()).toEqual(['a']);
+  });
+
   it('does not emit rowActivate when the click lands on a button inside a cell template', () => {
     const fixture = create(true);
     const button: HTMLButtonElement = fixture.nativeElement.querySelector('tbody button');

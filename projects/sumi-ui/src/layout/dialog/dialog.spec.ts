@@ -105,9 +105,21 @@ describe('SumiDialog', () => {
     const { fixture, dialog } = create();
     fixture.componentInstance.open.set(true);
     fixture.detectChanges();
+    dialog.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true }));
     dialog.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     fixture.detectChanges();
     expect(fixture.componentInstance.open()).toBe(false);
+  });
+
+  it('stays open when a press inside the body is released over the backdrop', () => {
+    const { fixture, dialog } = create();
+    fixture.componentInstance.open.set(true);
+    fixture.detectChanges();
+    const body: HTMLElement = fixture.nativeElement.querySelector('.sumi-dialog__body');
+    body.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true }));
+    dialog.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    fixture.detectChanges();
+    expect(fixture.componentInstance.open()).toBe(true);
   });
 
   it('does not close on a click inside the header/body (target is a descendant)', () => {

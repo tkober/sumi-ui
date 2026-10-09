@@ -89,12 +89,24 @@ export class SumiDialog {
     this.open.set(false);
   }
 
+  /** Where the current click started; see `onBackdropClick`. */
+  private pressedOnBackdrop = false;
+
+  protected onPointerDown(event: PointerEvent): void {
+    this.pressedOnBackdrop = event.target === this.dialogRef()?.nativeElement;
+  }
+
   protected onBackdropClick(event: MouseEvent): void {
     // The dialog's own padding is zero (see dialog.scss), so the event
     // target is the dialog element itself only for a genuine backdrop
     // click — any click on the header/body lands on a descendant instead.
-    if (event.target === this.dialogRef()?.nativeElement) {
+    // The press has to start there too: selecting text in the body and
+    // releasing over the backdrop fires a click on the dialog element (the
+    // common ancestor), which must not close it.
+    const onBackdrop = event.target === this.dialogRef()?.nativeElement;
+    if (onBackdrop && this.pressedOnBackdrop) {
       this.close();
     }
+    this.pressedOnBackdrop = false;
   }
 }

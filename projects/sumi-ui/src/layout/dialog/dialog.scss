@@ -27,8 +27,10 @@
     flex-direction: column;
   }
 
+  // A plain black scrim: `--sumi-text` would turn into a light wash in the
+  // dark theme and brighten the page instead of dimming it.
   &::backdrop {
-    background: color-mix(in oklab, var(--sumi-text) 45%, transparent);
+    background: rgb(0 0 0 / 45%);
   }
 
   &--wide {

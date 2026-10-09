@@ -52,9 +52,23 @@ td[data-tone='wrong'] {
   color: var(--sumi-wrong);
 }
 
+// The whole cell is the checkbox's label, so a tap anywhere in it toggles
+// the row instead of activating it (a bare checkbox is too small a target on
+// a phone, and a near miss would open the row instead).
 .sumi-data-table__select-cell {
   width: 1px;
+  padding: 0;
   white-space: nowrap;
+}
+
+.sumi-data-table__select-hit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  padding: var(--sumi-space-2) var(--sumi-space-3);
+  cursor: pointer;
 }
 
 // Selected rows are tinted with the accent, but the checkbox stays checked
