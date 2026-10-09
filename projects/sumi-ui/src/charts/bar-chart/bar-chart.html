@@ -43,7 +43,7 @@
           [attr.height]="segment.height"
           [style.fill]="segment.color"
         >
-          <title>{{ column.label }} / {{ segment.key }}: {{ segment.value }}</title>
+          <title>{{ column.label }} / {{ seriesLabel(segment.key) }}: {{ segment.value }}</title>
         </rect>
       }
       @if (labelIndices().has(i)) {

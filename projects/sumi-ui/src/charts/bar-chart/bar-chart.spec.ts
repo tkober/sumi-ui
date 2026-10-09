@@ -12,6 +12,8 @@ import { SumiBarChart, type SumiBar, type SumiBarSeries, type SumiStackedRow } f
       [series]="series()"
       [labelEvery]="labelEvery()"
       [table]="table()"
+      [labelHeader]="labelHeader()"
+      [valueHeader]="valueHeader()"
     />
   `,
 })
@@ -25,6 +27,8 @@ class HostComponent {
   readonly series = signal<SumiBarSeries[] | undefined>(undefined);
   readonly labelEvery = signal(1);
   readonly table = signal(false);
+  readonly labelHeader = signal('Label');
+  readonly valueHeader = signal('Value');
 }
 
 function setup() {
@@ -103,5 +107,70 @@ describe('SumiBarChart', () => {
     fixture.detectChanges();
     const rows = fixture.nativeElement.querySelectorAll('tbody tr');
     expect(rows.length).toBe(3);
+  });
+
+  it("titles a stacked segment with the series' label, not its key", () => {
+    const fixture = setup();
+    fixture.componentInstance.bars.set(undefined);
+    fixture.componentInstance.rows.set([{ label: 'Mon', values: { a: 2, b: 3 } }]);
+    fixture.componentInstance.series.set([
+      { key: 'a', label: 'Apprentice' },
+      { key: 'b', label: 'Guru' },
+    ]);
+    fixture.detectChanges();
+    const titles = [
+      ...fixture.nativeElement.querySelectorAll('rect.sumi-bar-chart__bar title'),
+    ] as HTMLElement[];
+    expect(titles.map((t) => t.textContent)).toEqual(['Mon / Apprentice: 2', 'Mon / Guru: 3']);
+  });
+
+  it('falls back to the key when a stacked segment has no matching series', () => {
+    const fixture = setup();
+    fixture.componentInstance.bars.set(undefined);
+    fixture.componentInstance.rows.set([{ label: 'Mon', values: { a: 2, stale: 3 } }]);
+    fixture.componentInstance.series.set([{ key: 'a', label: 'Apprentice' }]);
+    fixture.detectChanges();
+    const titles = [
+      ...fixture.nativeElement.querySelectorAll('rect.sumi-bar-chart__bar title'),
+    ] as HTMLElement[];
+    expect(titles.map((t) => t.textContent)).toEqual(['Mon / Apprentice: 2']);
+  });
+
+  it('defaults the table headers to Label/Value', () => {
+    const fixture = setup();
+    fixture.componentInstance.table.set(true);
+    fixture.detectChanges();
+    const headers = [...fixture.nativeElement.querySelectorAll('thead th')] as HTMLElement[];
+    expect(headers.map((h) => h.textContent.trim())).toEqual(['Label', 'Value']);
+  });
+
+  it('uses labelHeader/valueHeader for the table headers when given', () => {
+    const fixture = setup();
+    fixture.componentInstance.table.set(true);
+    fixture.componentInstance.labelHeader.set('Hour');
+    fixture.componentInstance.valueHeader.set('Reviews');
+    fixture.detectChanges();
+    const headers = [...fixture.nativeElement.querySelectorAll('thead th')] as HTMLElement[];
+    expect(headers.map((h) => h.textContent.trim())).toEqual(['Hour', 'Reviews']);
+  });
+
+  it('uses labelHeader for the first table column in stacked mode too', () => {
+    const fixture = setup();
+    fixture.componentInstance.bars.set(undefined);
+    fixture.componentInstance.table.set(true);
+    fixture.componentInstance.labelHeader.set('Day');
+    fixture.componentInstance.rows.set([{ label: 'Mon', values: { a: 2, b: 3 } }]);
+    fixture.componentInstance.series.set([
+      { key: 'a', label: 'Apprentice' },
+      { key: 'b', label: 'Guru' },
+    ]);
+    fixture.detectChanges();
+    const headers = [...fixture.nativeElement.querySelectorAll('thead th')] as HTMLElement[];
+    expect(headers.map((h) => h.textContent.trim())).toEqual([
+      'Day',
+      'Apprentice',
+      'Guru',
+      'Total',
+    ]);
   });
 });
