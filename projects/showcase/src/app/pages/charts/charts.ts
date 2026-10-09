@@ -12,7 +12,8 @@ import {
   type SumiTableColumn,
   type SumiTableRow,
 } from 'sumi-ui/charts';
-import { SumiPage } from 'sumi-ui/layout';
+import { SumiDialog, SumiDialogHeader, SumiPage } from 'sumi-ui/layout';
+import { SumiButtonDirective } from 'sumi-ui/forms';
 
 /**
  * Charts showcase: example data modelled on the shapes the four apps
@@ -25,7 +26,14 @@ import { SumiPage } from 'sumi-ui/layout';
   selector: 'app-charts-page',
   templateUrl: './charts.html',
   styleUrl: './charts.scss',
-  imports: [SumiPage, SumiTableCellTemplate, ...SUMI_CHARTS],
+  imports: [
+    SumiPage,
+    SumiDialog,
+    SumiDialogHeader,
+    SumiButtonDirective,
+    SumiTableCellTemplate,
+    ...SUMI_CHARTS,
+  ],
 })
 export class ChartsPage {
   // --- KPI tiles, modelled on kanji-trainer's dashboard --------------------
@@ -195,6 +203,34 @@ export class ChartsPage {
       tone: 'wrong',
     },
   ];
+
+  // --- Items list: selectable + activatable rows opening a sumi-dialog ----
+  // kanji-trainer's Items page (sumi-ui#66): tick rows for a bulk action,
+  // click a row (outside the checkbox) to open its detail.
+  protected readonly itemColumns: SumiTableColumn[] = [
+    { key: 'character', label: 'Item' },
+    { key: 'meaning', label: 'Meaning' },
+    { key: 'level', label: 'Level', align: 'end' },
+  ];
+  protected readonly itemRows: SumiTableRow[] = [
+    { id: 'i1', character: '大', meaning: 'big', reading: 'だい・たい・おお', level: 3 },
+    { id: 'i2', character: '小', meaning: 'small', reading: 'しょう・こ・お', level: 3 },
+    { id: 'i3', character: '食べる', meaning: 'to eat', reading: 'たべる', level: 4 },
+    { id: 'i4', character: '飲む', meaning: 'to drink', reading: 'のむ', level: 4 },
+  ];
+  protected readonly itemSelection = signal<readonly (string | number)[]>([]);
+  protected readonly itemDetailOpen = signal(false);
+  protected readonly activeItem = signal<SumiTableRow | null>(null);
+
+  protected openItemDetail(row: SumiTableRow): void {
+    this.activeItem.set(row);
+    this.itemDetailOpen.set(true);
+  }
+
+  /** Demo-only stand-in for the real bulk action: clears the selection. */
+  protected markSelectedKnown(): void {
+    this.itemSelection.set([]);
+  }
 }
 
 /** A fixed pseudo-random walk, same recipe as `buildEloHistory` above — a

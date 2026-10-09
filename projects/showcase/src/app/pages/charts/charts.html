@@ -198,4 +198,49 @@
       by the row's own <code>tone</code> field.
     </p>
   </section>
+
+  <section class="demo">
+    <h2>Items list: selectable + activatable rows (sumi-ui#66)</h2>
+    <p class="demo__note">
+      kanji-trainer's Items page: tick rows for a bulk action ("I know these"), click anywhere else
+      on a row to open its detail in a <code>sumi-dialog</code>. A click on the checkbox itself
+      never opens the dialog.
+    </p>
+    <div class="demo__item-actions">
+      <button
+        type="button"
+        sumiButton
+        size="sm"
+        [disabled]="itemSelection().length === 0"
+        (click)="markSelectedKnown()"
+      >
+        I know these ({{ itemSelection().length }})
+      </button>
+    </div>
+    <sumi-data-table
+      [columns]="itemColumns"
+      [rows]="itemRows"
+      rowKey="id"
+      rowLabel="character"
+      [selectable]="true"
+      [activatable]="true"
+      [(selection)]="itemSelection"
+      (rowActivate)="openItemDetail($event)"
+    />
+  </section>
 </sumi-page>
+
+<sumi-dialog [(open)]="itemDetailOpen" width="narrow">
+  @if (activeItem(); as item) {
+    <div sumiDialogHeader class="demo__item-dialog-header">
+      <span class="demo__item-dialog-char" lang="ja">{{ item['character'] }}</span>
+      <div>
+        <h2>{{ item['meaning'] }}</h2>
+        <p lang="ja">{{ item['reading'] }}</p>
+      </div>
+    </div>
+  }
+  @if (activeItem(); as item) {
+    <p>Level {{ item['level'] }}.</p>
+  }
+</sumi-dialog>

@@ -41,4 +41,24 @@ export class LayoutPage {
   protected endFocusModeDemo(): void {
     this.demoFocusMode.set(false);
   }
+
+  // Dialog demo: narrow (the default), wide, and a projected
+  // [sumiDialogHeader] instead of the plain `title` input.
+  protected readonly dialogNarrowOpen = signal(false);
+  protected readonly dialogWideOpen = signal(false);
+  protected readonly dialogHeaderOpen = signal(false);
+  protected readonly wideDialogParagraphs = [1, 2, 3, 4, 5, 6, 7, 8];
+
+  // Progress demo: a determinate bar the demo advances by hand (standing in
+  // for a real import's progress events) plus an indeterminate one.
+  protected readonly progressMax = 120;
+  protected readonly progressValue = signal(30);
+
+  protected advanceProgress(): void {
+    this.progressValue.update((value) => Math.min(value + 15, this.progressMax));
+  }
+
+  protected resetProgress(): void {
+    this.progressValue.set(0);
+  }
 }
