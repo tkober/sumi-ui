@@ -28,6 +28,7 @@ function setValue(input: HTMLInputElement, value: string): void {
       [iKnow]="iKnow()"
       [iDontKnow]="iDontKnow()"
       [placeholder]="placeholder()"
+      [modeCue]="modeCue()"
       [(value)]="value"
       (submitted)="submitted.set($event)"
       (confirmed)="confirmedCount.set(confirmedCount() + 1)"
@@ -44,6 +45,7 @@ class HostComponent {
   iKnow = signal(false);
   iDontKnow = signal(false);
   placeholder = signal<string | undefined>(undefined);
+  modeCue = signal(false);
   value = signal('');
   submitted = signal<string | null>(null);
   confirmedCount = signal(0);
@@ -301,5 +303,78 @@ describe('SumiAnswerField', () => {
     host.verdict.set({ kind: 'held' });
     fixture.detectChanges();
     expect(enterLabels()).toEqual(['Confirm']);
+  });
+
+  describe('modeCue', () => {
+    function fieldEl(fixture: ReturnType<typeof create>['fixture']): HTMLElement {
+      return fixture.nativeElement.querySelector('sumi-answer-field');
+    }
+
+    it('shows no cue class or tag by default, for any mode', () => {
+      const { fixture, host } = create();
+      host.mode.set('kana');
+      fixture.detectChanges();
+      expect(fieldEl(fixture).classList.contains('sumi-answer-field--cue-kana')).toBe(false);
+      expect(fixture.nativeElement.querySelector('.sumi-answer-field__cue-tag')).toBeNull();
+    });
+
+    it.each<[SumiAnswerMode, string]>([
+      ['kana', 'あ'],
+      ['katakana', 'ア'],
+    ])('shows the kana cue and the %s tag "%s" when modeCue is on', (mode, tag) => {
+      const { fixture, host } = create();
+      host.mode.set(mode);
+      host.modeCue.set(true);
+      fixture.detectChanges();
+      const field = fieldEl(fixture);
+      expect(field.classList.contains('sumi-answer-field--cue-kana')).toBe(true);
+      expect(field.classList.contains('sumi-answer-field--cue-latin')).toBe(false);
+      const tagEl = fixture.nativeElement.querySelector('.sumi-answer-field__cue-tag');
+      expect(tagEl?.textContent).toBe(tag);
+      expect(tagEl?.getAttribute('aria-hidden')).toBe('true');
+      expect(tagEl?.getAttribute('lang')).toBe('ja');
+    });
+
+    it.each<SumiAnswerMode>(['latin', 'romaji'])(
+      'shows the latin cue and the "A" tag for %s mode when modeCue is on',
+      (mode) => {
+        const { fixture, host } = create();
+        host.mode.set(mode);
+        host.modeCue.set(true);
+        fixture.detectChanges();
+        const field = fieldEl(fixture);
+        expect(field.classList.contains('sumi-answer-field--cue-latin')).toBe(true);
+        expect(field.classList.contains('sumi-answer-field--cue-kana')).toBe(false);
+        const tagEl = fixture.nativeElement.querySelector('.sumi-answer-field__cue-tag');
+        expect(tagEl?.textContent).toBe('A');
+        expect(tagEl?.getAttribute('aria-hidden')).toBe('true');
+        expect(tagEl?.hasAttribute('lang')).toBe(false);
+      },
+    );
+
+    it('shows no cue for free mode even when modeCue is on', () => {
+      const { fixture, host } = create();
+      host.mode.set('free');
+      host.modeCue.set(true);
+      fixture.detectChanges();
+      const field = fieldEl(fixture);
+      expect(field.classList.contains('sumi-answer-field--cue-kana')).toBe(false);
+      expect(field.classList.contains('sumi-answer-field--cue-latin')).toBe(false);
+      expect(fixture.nativeElement.querySelector('.sumi-answer-field__cue-tag')).toBeNull();
+    });
+
+    it('keeps the accessible name on label, not the decorative tag', () => {
+      const { fixture, host, input } = create();
+      host.mode.set('kana');
+      host.modeCue.set(true);
+      fixture.detectChanges();
+      // The tag has no accessible-name-bearing attributes of its own
+      // (aria-hidden), so the input's own aria-labelledby/label still does
+      // the job — verified elsewhere; here just confirm the tag itself
+      // never becomes part of the accessible name.
+      const tagEl = fixture.nativeElement.querySelector('.sumi-answer-field__cue-tag');
+      expect(tagEl?.hasAttribute('aria-label')).toBe(false);
+      expect(input().getAttribute('aria-labelledby')).toBeNull();
+    });
   });
 });

@@ -114,6 +114,22 @@
   // present, without touching the shapes themselves.
   --sumi-ink-strength: 1;
 
+  // Mode cue for `sumi-answer-field`'s `modeCue` (sumi-ui#68): a dark field
+  // for kana/katakana answers, a light field for latin/romaji ones in BOTH
+  // themes, so the two tell apart at a glance without reading the label —
+  // WaniKani's own convention, see docs/concept.md#eingabe-sumi-answer-field.
+  // `-text` is deliberately constant across themes (the whole point of the
+  // light field in dark mode is that it stays light), so it skips
+  // `light-dark()` unlike every colour token above.
+  --sumi-cue-kana-bg: light-dark(#2b2f38, #050505);
+  --sumi-cue-kana-text: #ffffff;
+  --sumi-cue-kana-line: light-dark(#2b2f38, #5a5a54);
+  --sumi-cue-kana-hint: light-dark(#a9adb8, #8f8c83);
+  --sumi-cue-latin-bg: light-dark(#ffffff, #ecebe6);
+  --sumi-cue-latin-text: #1e1d1b;
+  --sumi-cue-latin-line: light-dark(#c9c5bb, #ecebe6);
+  --sumi-cue-latin-hint: light-dark(#9a978f, #7b7870);
+
   // `filter` for a monochrome black-on-transparent image shown in the text
   // colour (`sumi-prompt-card`'s `[sumiPromptVisual]="ink"`, e.g. WaniKani
   // radical images with no Unicode character). `filter` cannot take

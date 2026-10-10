@@ -50,6 +50,47 @@
   }
 }
 
+// `modeCue` (sumi-ui#68): a decorative script tag at the left — `あ`/`ア`
+// for `kana`/`katakana`, `A` for `latin`/`romaji` — see the mockup's
+// `.field .tag` (a filled pill; plain bold text here instead, to stay
+// inside the component style budget). Absolutely positioned against
+// `.sumi-answer-field__row` (`position: relative` above), which shares the
+// input's own box since the row itself carries no padding/border of its
+// own. Its colour is inherited from `cueVars()`'s real `color` on the
+// host (see that computed's doc comment) — no rule of its own needed.
+.sumi-answer-field__cue-tag {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  translate: 0 -50%;
+  pointer-events: none;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+// WaniKani's dark reading bar for `kana`/`katakana`, a light field in both
+// themes for `latin`/`romaji` (see `_tokens.scss`'s `--sumi-cue-kana-*`/
+// `-latin-*`) — one rule for both, `cueVars()` resolves which token set
+// `--sumi-cue-*` points at, so this never needs to know which cue it is.
+// `color: inherit` picks up the host's own `color` (also from
+// `cueVars()`) rather than repeating it — the base rule above always sets
+// an explicit `color`, so inheriting still has to be said here to win.
+// Equal inline padding both sides (wider than the plain field's
+// `--sumi-space-6`) so the centred text/placeholder clears the tag, which
+// only ever sits on the left. `caret-color` needs no explicit value: its
+// `auto` default already tracks `color`.
+:host(.sumi-answer-field--cue-kana) .sumi-answer-field__input,
+:host(.sumi-answer-field--cue-latin) .sumi-answer-field__input {
+  padding: 0 44px;
+  background: var(--sumi-cue-bg);
+  border-color: var(--sumi-cue-line);
+  color: inherit;
+
+  &::placeholder {
+    color: var(--sumi-cue-hint);
+  }
+}
+
 // `typing`: the accent-coloured focus ring is the only thing marking the
 // field while nothing has been judged yet. Scoped to `:host(--typing)`
 // (rather than a bare `:focus-visible` on the input) so it never outranks
@@ -77,21 +118,47 @@
   box-shadow: var(--sumi-focus-ring);
 }
 
+// Each of these three also resets `color`/`caret-color`/placeholder to the
+// same `--sumi-text`/`--sumi-muted` the plain (non-cue) field already
+// relies on implicitly — proven to contrast against every `-soft`
+// background in both themes. Without it, a cue field's own `color` (e.g.
+// `--sumi-cue-kana-text`, always white) would stay exactly as the cue left
+// it once a verdict is up, i.e. white text on `--sumi-wrong-soft`'s pale
+// pink — the unreadable-white-on-light-verdict bug the old kanji-trainer
+// `review.scss` had to work around. These selectors have the same
+// specificity as the cue rules above (one host class + one descendant
+// class each), so being the later rule in the file is what lets them win;
+// keep them below the cue block.
 :host(.sumi-answer-field--incomplete) .sumi-answer-field__input,
 :host(.sumi-answer-field--held) .sumi-answer-field__input,
 :host(.sumi-answer-field--retry) .sumi-answer-field__input {
   border-color: var(--sumi-retry);
   background: var(--sumi-retry-soft);
+  color: var(--sumi-text);
+
+  &::placeholder {
+    color: var(--sumi-muted);
+  }
 }
 
 :host(.sumi-answer-field--correct) .sumi-answer-field__input {
   border-color: var(--sumi-correct);
   background: var(--sumi-correct-soft);
+  color: var(--sumi-text);
+
+  &::placeholder {
+    color: var(--sumi-muted);
+  }
 }
 
 :host(.sumi-answer-field--wrong) .sumi-answer-field__input {
   border-color: var(--sumi-wrong);
   background: var(--sumi-wrong-soft);
+  color: var(--sumi-text);
+
+  &::placeholder {
+    color: var(--sumi-muted);
+  }
 }
 
 .sumi-answer-field__icon {
