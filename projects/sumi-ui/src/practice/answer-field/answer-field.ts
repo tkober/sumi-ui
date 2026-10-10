@@ -99,6 +99,7 @@ const SHAKE_MS = 400;
     '[class.sumi-answer-field--shake]': 'shaking()',
     '[class.sumi-answer-field--cue-kana]': "cue() === 'kana'",
     '[class.sumi-answer-field--cue-latin]': "cue() === 'latin'",
+    '[class.sumi-answer-field--cue]': 'cue() !== null',
     '[style]': 'cueVars()',
   },
 })
@@ -229,14 +230,12 @@ export class SumiAnswerField {
   });
 
   /**
-   * Resolves `cue()` to the matching `--sumi-cue-{kana,latin}-*` token set,
-   * as generic `--sumi-cue-*` custom properties on the host (bound below) —
-   * one shared CSS rule then reads these instead of needing a whole
-   * duplicated rule per cue (see answer-field.scss). `color` is a real
-   * style property, not a custom one: set on the host, it is what
-   * `.sumi-answer-field__cue-tag` (which never sets its own `color`) picks
-   * up via plain CSS inheritance, and what its `currentColor` background
-   * resolves against — no separate colour rule needed for the tag at all.
+   * Points the generic `--sumi-cue-*` properties at the current cue's
+   * `--sumi-cue-{kana,latin}-*` tokens, so answer-field.scss needs one rule
+   * instead of one per cue. Once an answer is settled (any status but
+   * `typing`) the text colour drops back to `--sumi-text`: the verdict tints
+   * are pale in light and dark in dark, and the cue's own white (kana) or
+   * near-black (latin) text would vanish on one of them.
    */
   protected readonly cueVars = computed<Record<string, string> | null>(() => {
     const cue = this.cue();
@@ -245,10 +244,10 @@ export class SumiAnswerField {
     }
     const prefix = `--sumi-cue-${cue}`;
     return {
-      color: `var(${prefix}-text)`,
       '--sumi-cue-bg': `var(${prefix}-bg)`,
       '--sumi-cue-line': `var(${prefix}-line)`,
       '--sumi-cue-hint': `var(${prefix}-hint)`,
+      '--sumi-cue-text': this.status() === 'typing' ? `var(${prefix}-text)` : 'var(--sumi-text)',
     };
   });
 

@@ -363,6 +363,23 @@ describe('SumiAnswerField', () => {
       expect(fixture.nativeElement.querySelector('.sumi-answer-field__cue-tag')).toBeNull();
     });
 
+    it('points the cue text at --sumi-text once an answer is settled', () => {
+      const { fixture, host } = create();
+      host.mode.set('kana');
+      host.modeCue.set(true);
+      fixture.detectChanges();
+      const style = () => fieldEl(fixture).style.getPropertyValue('--sumi-cue-text');
+      expect(style()).toBe('var(--sumi-cue-kana-text)');
+
+      host.verdict.set({ kind: 'wrong' });
+      fixture.detectChanges();
+      expect(style()).toBe('var(--sumi-text)');
+
+      host.verdict.set(null);
+      fixture.detectChanges();
+      expect(style()).toBe('var(--sumi-cue-kana-text)');
+    });
+
     it('keeps the accessible name on label, not the decorative tag', () => {
       const { fixture, host, input } = create();
       host.mode.set('kana');
