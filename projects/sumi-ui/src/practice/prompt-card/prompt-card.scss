@@ -40,15 +40,17 @@
 // keeps that confined to this card). `pattern="none"` (the library default)
 // or an app that never configured one renders `sumi-pattern`'s `<svg>`
 // empty, i.e. no layer at all, with no extra markup needed here.
-// Fixed at the tile's own size (720×260, see the template) rather than
+// Fixed at the tile's own size (1280×260, see the template) rather than
 // stretched over the card: `sumi-pattern` slices its viewBox to cover its
 // box, so a card-sized box scaled the tile up by the card's height and drew
-// the pattern several times too coarse. Centred, clipped by the card.
+// the pattern several times too coarse. Centred, clipped by the card. The
+// width covers the widest `sumi-page` (1200px), so the pattern never ends
+// in an edge inside a card.
 :host(.sumi-prompt-card--tinted) .sumi-prompt-card__pattern {
   position: absolute;
   top: 0;
   left: 50%;
-  width: 720px;
+  width: 1280px;
   height: 260px;
   translate: -50% 0;
   z-index: -1;
