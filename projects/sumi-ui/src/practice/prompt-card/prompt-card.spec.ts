@@ -1,13 +1,24 @@
 import { Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { SumiKeyboardVisibility } from 'sumi-ui/core';
-import { SumiPromptCard } from './prompt-card';
+import {
+  SUMI_ACCENT_PRESETS,
+  SUMI_CONFIG,
+  SumiKeyboardVisibility,
+  type SumiConfig,
+} from 'sumi-ui/core';
+import { SumiPromptCard, type SumiPromptCardAppearance } from './prompt-card';
 import { SumiPromptVisualDirective } from './prompt-visual.directive';
 
 @Component({
   imports: [SumiPromptCard],
   template: `
-    <sumi-prompt-card [text]="text()" [kind]="kind()" [meta]="meta()" [tone]="tone()">
+    <sumi-prompt-card
+      [text]="text()"
+      [kind]="kind()"
+      [meta]="meta()"
+      [tone]="tone()"
+      [appearance]="appearance()"
+    >
       @if (extra()) {
         <p class="extra">extra content</p>
       }
@@ -19,7 +30,26 @@ class HostComponent {
   kind = signal<string | undefined>(undefined);
   meta = signal<string[] | undefined>(undefined);
   tone = signal<string | undefined>(undefined);
+  appearance = signal<SumiPromptCardAppearance>('accent');
   extra = signal(false);
+}
+
+function configureSumi(config: Partial<SumiConfig> = {}) {
+  TestBed.configureTestingModule({
+    imports: [HostComponent],
+    providers: [
+      {
+        provide: SUMI_CONFIG,
+        useValue: {
+          accent: SUMI_ACCENT_PRESETS.ai,
+          motif: 'mountains',
+          pattern: 'none',
+          dashboardPort: 8087,
+          ...config,
+        },
+      },
+    ],
+  });
 }
 
 @Component({
@@ -36,8 +66,8 @@ class VisualHostComponent {
 }
 
 describe('SumiPromptCard', () => {
-  function create() {
-    TestBed.configureTestingModule({ imports: [HostComponent] });
+  function create(config: Partial<SumiConfig> = {}) {
+    configureSumi(config);
     const fixture = TestBed.createComponent(HostComponent);
     fixture.detectChanges();
     const host = fixture.nativeElement as HTMLElement;
@@ -133,6 +163,58 @@ describe('SumiPromptCard', () => {
     fixture.detectChanges();
     const cardHost = host.querySelector('sumi-prompt-card') as HTMLElement;
     expect(cardHost.style.getPropertyValue('--sumi-prompt-tone')).toBe('#2b4c7e');
+  });
+
+  describe('appearance', () => {
+    it('defaults to accent, never adding the tinted class', () => {
+      const { fixture, host } = create();
+      fixture.componentInstance.tone.set('#2b4c7e');
+      fixture.detectChanges();
+      const cardHost = host.querySelector('sumi-prompt-card') as HTMLElement;
+      expect(cardHost.classList.contains('sumi-prompt-card--tinted')).toBe(false);
+    });
+
+    it('adds the tinted class for appearance="tinted" with a tone set', () => {
+      const { fixture, host } = create();
+      fixture.componentInstance.appearance.set('tinted');
+      fixture.componentInstance.tone.set('#2b4c7e');
+      fixture.detectChanges();
+      const cardHost = host.querySelector('sumi-prompt-card') as HTMLElement;
+      expect(cardHost.classList.contains('sumi-prompt-card--tinted')).toBe(true);
+    });
+
+    it('looks like accent — no tinted class — for appearance="tinted" without a tone', () => {
+      const { fixture, host } = create();
+      fixture.componentInstance.appearance.set('tinted');
+      fixture.detectChanges();
+      const cardHost = host.querySelector('sumi-prompt-card') as HTMLElement;
+      expect(cardHost.classList.contains('sumi-prompt-card--tinted')).toBe(false);
+    });
+
+    it('renders the app pattern layer when tinted and a pattern is configured', () => {
+      const { fixture, host } = create({ pattern: 'seigaiha' });
+      fixture.componentInstance.appearance.set('tinted');
+      fixture.componentInstance.tone.set('#2b4c7e');
+      fixture.detectChanges();
+      const pattern = host.querySelector('sumi-pattern .sumi-pattern__svg');
+      expect(pattern?.innerHTML.trim()).not.toBe('');
+    });
+
+    it('renders no pattern markup when provideSumi({ pattern: "none" })', () => {
+      const { fixture, host } = create({ pattern: 'none' });
+      fixture.componentInstance.appearance.set('tinted');
+      fixture.componentInstance.tone.set('#2b4c7e');
+      fixture.detectChanges();
+      const pattern = host.querySelector('sumi-pattern .sumi-pattern__svg');
+      expect(pattern?.innerHTML.trim()).toBe('');
+    });
+
+    it('renders no sumi-pattern element at all for appearance="accent"', () => {
+      const { fixture, host } = create({ pattern: 'seigaiha' });
+      fixture.componentInstance.tone.set('#2b4c7e');
+      fixture.detectChanges();
+      expect(host.querySelector('sumi-pattern')).toBeNull();
+    });
   });
 
   it('renders no text element when text is unset', () => {

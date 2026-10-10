@@ -1,3 +1,7 @@
+@if (tinted()) {
+  <sumi-pattern class="sumi-prompt-card__pattern" [background]="tintedBackground" />
+}
+
 @if (kind(); as k) {
   <span class="sumi-prompt-card__kind">{{ k }}</span>
 }

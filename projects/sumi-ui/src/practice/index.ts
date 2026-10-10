@@ -24,7 +24,7 @@ export {
   type SumiVerdict,
   type SumiVerdictKind,
 } from './answer-field/answer-field';
-export { SumiPromptCard } from './prompt-card/prompt-card';
+export { SumiPromptCard, type SumiPromptCardAppearance } from './prompt-card/prompt-card';
 export { SumiPromptVisualDirective } from './prompt-card/prompt-visual.directive';
 export { SumiVerdictCard } from './verdict/verdict';
 export { SumiVerdictDetailsDirective } from './verdict/verdict-details.directive';
