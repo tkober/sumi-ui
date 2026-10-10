@@ -47,6 +47,14 @@ export interface SumiVerdict {
 /** Every externally visible state, including the two the field owns itself. */
 export type SumiAnswerFieldStatus = 'typing' | 'incomplete' | SumiVerdictKind;
 
+/**
+ * Which `modeCue` look a `mode` gets — see `SumiAnswerField.cue` and
+ * docs/concept.md#eingabe-sumi-answer-field. `romaji`/`katakana` share a
+ * cue with their "same script family" sibling (`latin`/`kana`): the cue is
+ * about which alphabet the learner types in, not what is being asked.
+ */
+type SumiAnswerFieldCue = 'kana' | 'latin';
+
 const SHAKE_MS = 400;
 
 /**
@@ -66,6 +74,14 @@ const SHAKE_MS = 400;
  * component derives two more states on its own — `typing` (no verdict) and
  * `incomplete` (Enter pressed on an unfinished kana syllable, e.g. "kan" —
  * transient, cleared on the next edit).
+ *
+ * `modeCue` (sumi-ui#68, off by default) additionally colours the field by
+ * which script `mode` expects — a dark field for `kana`/`katakana`, a
+ * light one (in both themes) for `latin`/`romaji`, nothing for `free` —
+ * with a small decorative tag at the left. A settled verdict still
+ * overrides background, border, text colour, placeholder and caret, so a
+ * `correct`/`wrong`/`retry`/`held` state always reads the same regardless
+ * of the cue underneath it.
  */
 @Component({
   selector: 'sumi-answer-field',
@@ -81,6 +97,10 @@ const SHAKE_MS = 400;
     '[class.sumi-answer-field--correct]': "status() === 'correct'",
     '[class.sumi-answer-field--wrong]': "status() === 'wrong'",
     '[class.sumi-answer-field--shake]': 'shaking()',
+    '[class.sumi-answer-field--cue-kana]': "cue() === 'kana'",
+    '[class.sumi-answer-field--cue-latin]': "cue() === 'latin'",
+    '[class.sumi-answer-field--cue]': 'cue() !== null',
+    '[style]': 'cueVars()',
   },
 })
 export class SumiAnswerField {
@@ -95,6 +115,15 @@ export class SumiAnswerField {
   readonly iDontKnow = input(false);
   /** Only for loading states — the field is still never `readonly`. */
   readonly disabled = input(false);
+  /**
+   * Shows which script the answer is expected in (sumi-ui#68, WaniKani's
+   * own convention): `kana`/`katakana` get a dark field with a decorative
+   * `あ`/`ア` tag, `latin`/`romaji` a light field (in both themes) with an
+   * `A` tag, `free` nothing. Off by default — with `modeCue` false nothing
+   * about the field changes. The tag is `aria-hidden`; the accessible name
+   * still comes from `label`/`labelledBy`.
+   */
+  readonly modeCue = input(false);
 
   /** What the field displays — the converted text. */
   readonly value = model('');
@@ -178,6 +207,48 @@ export class SumiAnswerField {
   protected readonly isJapanese = computed(() => {
     const mode = this.mode();
     return mode === 'kana' || mode === 'katakana';
+  });
+
+  /** `null` for `free`, or whenever `modeCue` is off — see its doc comment. */
+  protected readonly cue = computed<SumiAnswerFieldCue | null>(() => {
+    if (!this.modeCue()) {
+      return null;
+    }
+    return this.isJapanese() ? 'kana' : this.mode() === 'free' ? null : 'latin';
+  });
+
+  /** The decorative left-hand tag text for the current `cue`, or `null`. */
+  protected readonly cueTag = computed<string | null>(() => {
+    switch (this.cue()) {
+      case 'kana':
+        return this.mode() === 'katakana' ? 'ア' : 'あ';
+      case 'latin':
+        return 'A';
+      default:
+        return null;
+    }
+  });
+
+  /**
+   * Points the generic `--sumi-cue-*` properties at the current cue's
+   * `--sumi-cue-{kana,latin}-*` tokens, so answer-field.scss needs one rule
+   * instead of one per cue. Once an answer is settled (any status but
+   * `typing`) the text colour drops back to `--sumi-text`: the verdict tints
+   * are pale in light and dark in dark, and the cue's own white (kana) or
+   * near-black (latin) text would vanish on one of them.
+   */
+  protected readonly cueVars = computed<Record<string, string> | null>(() => {
+    const cue = this.cue();
+    if (!cue) {
+      return null;
+    }
+    const prefix = `--sumi-cue-${cue}`;
+    return {
+      '--sumi-cue-bg': `var(${prefix}-bg)`,
+      '--sumi-cue-line': `var(${prefix}-line)`,
+      '--sumi-cue-hint': `var(${prefix}-hint)`,
+      '--sumi-cue-text': this.status() === 'typing' ? `var(${prefix}-text)` : 'var(--sumi-text)',
+    };
   });
 
   /** `go` while an answer is still being composed, `next` once it is settled. */

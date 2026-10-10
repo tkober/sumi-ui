@@ -3,6 +3,14 @@
 }
 
 <div class="sumi-answer-field__row">
+  @if (cueTag(); as tag) {
+    <span
+      class="sumi-answer-field__cue-tag"
+      aria-hidden="true"
+      [attr.lang]="cue() === 'kana' ? 'ja' : null"
+      >{{ tag }}</span
+    >
+  }
   <input
     #field
     [id]="inputId"

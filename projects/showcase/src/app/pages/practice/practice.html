@@ -28,8 +28,8 @@
           @let current = card();
           <sumi-prompt-card
             [text]="current.characters"
-            [kind]="current.label"
-            [meta]="current.meta"
+            [kind]="current.meta[0]"
+            [meta]="current.meta.slice(1)"
             [tone]="current.tone"
           >
             @if (current.timeTargetMs) {
@@ -43,9 +43,10 @@
             [verdict]="verdict()"
             [iKnow]="true"
             [iDontKnow]="true"
+            [modeCue]="true"
             [(value)]="value"
             [label]="current.label + ' for ' + current.characters"
-            placeholder="Type your answer"
+            [placeholder]="current.label"
             (submitted)="onSubmitted($event)"
             (confirmed)="onConfirmed()"
             (edited)="onEdited()"
@@ -156,6 +157,55 @@
       [label]="'Demo field, ' + demoMode() + ' mode'"
       placeholder="Type something"
     />
+  </section>
+
+  <section class="demo">
+    <h2>Tinted prompt card (sumi-ui#68)</h2>
+    <p>
+      <code>appearance="tinted"</code>, once <code>tone</code> is set, is a stronger but still only
+      <em>tinted</em> look — a 12% background tint, a 2px border all round and the app's
+      <code>sumi-pattern</code> fading out behind the content, plus a chip filled solid in
+      <code>tone</code> — never a fully coloured card. Per the chosen design (mockup variant D), the
+      chip now names the item type; the question type (reading or meaning) is instead carried by the
+      answer field below, via its own <code>placeholder</code> and <code>modeCue</code>.
+    </p>
+    <div class="demo__tinted-grid">
+      @for (sample of tintedSamples; track sample.kind) {
+        <sumi-prompt-card
+          appearance="tinted"
+          [text]="sample.characters"
+          [kind]="sample.kind"
+          [meta]="sample.meta"
+          [tone]="sample.tone"
+        />
+      }
+    </div>
+  </section>
+
+  <section class="demo">
+    <h2>Mode cue (sumi-ui#68)</h2>
+    <p>
+      <code>modeCue</code> makes the expected script visible on the field itself: a dark field with
+      a <span lang="ja">あ</span> tag for <code>kana</code>/<code>katakana</code>, a light field (in
+      both themes) with an <code>A</code> tag for <code>latin</code>/<code>romaji</code>. A settled
+      verdict still overrides background, border and text colour — including on the dark field,
+      where white text on a pale verdict background would otherwise be unreadable.
+    </p>
+    <div class="demo__cue-grid">
+      @for (sample of modeCueSamples; track sample.label) {
+        <div class="demo__sample demo__sample--cue">
+          <sumi-answer-field
+            [mode]="sample.mode"
+            [modeCue]="true"
+            [value]="sample.value"
+            [verdict]="sample.verdict"
+            [placeholder]="sample.placeholder"
+            [label]="sample.label"
+          />
+          <span>{{ sample.label }}</span>
+        </div>
+      }
+    </div>
   </section>
 
   <section class="demo">

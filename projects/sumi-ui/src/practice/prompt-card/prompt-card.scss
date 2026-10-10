@@ -5,6 +5,10 @@
 :host {
   display: block;
   position: relative;
+  // Confines `.sumi-prompt-card__pattern`'s negative z-index to this card's
+  // own paint layer (see below) instead of the ancestor stacking context,
+  // so it never shows through behind unrelated page content.
+  isolation: isolate;
   // Lets `.sumi-prompt-card__text` size itself off this card's own width
   // (`cqi`) below, rather than the viewport.
   container-type: inline-size;
@@ -15,6 +19,48 @@
   background: var(--sumi-surface);
   text-align: center;
   transition: padding 150ms ease;
+}
+
+// `appearance="tinted"` with a `tone` set (see `SumiPromptCardAppearance`):
+// a 12% tint and a 2px border all round, replacing the plain border and the
+// 3px top accent above. Without a `tone`, `.sumi-prompt-card--tinted` is
+// never added (see the component's `tinted` computed), so the card falls
+// through to the plain `:host` rules untouched.
+:host(.sumi-prompt-card--tinted) {
+  border: 2px solid var(--sumi-prompt-tone);
+  background: color-mix(in oklab, var(--sumi-prompt-tone) 12%, var(--sumi-surface));
+}
+
+// The app pattern (`sumi-pattern`, `provideSumi({ pattern })`), stroked in
+// `tone` at ~45% and masked to fade out by 70% of the card's height — see
+// docs/concept.md#tuschemotive for the same band/fade idea elsewhere.
+// Absolutely positioned with a negative z-index so it paints behind the
+// in-flow, non-positioned content (`:host`'s `isolation: isolate` above
+// keeps that confined to this card). `pattern="none"` (the library default)
+// or an app that never configured one renders `sumi-pattern`'s `<svg>`
+// empty, i.e. no layer at all, with no extra markup needed here.
+:host(.sumi-prompt-card--tinted) .sumi-prompt-card__pattern {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  color: color-mix(in oklab, var(--sumi-prompt-tone) 45%, transparent);
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, transparent 70%);
+  mask-image: linear-gradient(180deg, #000 0%, transparent 70%);
+
+  // `sumi-pattern`'s own ambient opacity (`ink-opacity.scss`, ~11%/5%) is
+  // tuned for a background motif, not this stronger in-tone stroke — the
+  // tone's alpha above already carries the ~45% figure, so the inner `<svg>`
+  // itself needs full opacity. `sumi-pattern` is a real child component
+  // (not projected content), so, like `sumi-card`'s header/footer, this
+  // needs `::ng-deep` to reach past its own encapsulation; the
+  // `:host(.sumi-prompt-card--tinted)` ancestor on this rule outweighs
+  // `pattern.scss`'s own `:host(.sumi-pattern--filled) .sumi-ink-pattern`
+  // rule by specificity, so it wins regardless of which pattern is
+  // configured.
+  ::ng-deep .sumi-ink-pattern {
+    opacity: 1;
+  }
 }
 
 .sumi-prompt-card__kind {
@@ -32,6 +78,18 @@
   font-weight: 600;
   letter-spacing: 0.02em;
   text-transform: uppercase;
+}
+
+// `tinted`'s chip is filled solid in `tone` with bold white text, not just
+// tinted. `tone` darkened by 20% toward black keeps white text at ≥4.5:1 on
+// the WaniKani colours that need it (radical `#00a1f1` 2.85:1 → 4.95:1,
+// kanji `#f100a1` 4.00:1 → 6.61:1 — see the issue and the PR description for
+// the numbers); vocabulary `#a100f1` already passes at 5.55:1 and the extra
+// darkening only widens that margin, so one formula covers all three.
+:host(.sumi-prompt-card--tinted) .sumi-prompt-card__kind {
+  background: color-mix(in oklab, var(--sumi-prompt-tone), black 20%);
+  color: #fff;
+  font-weight: 700;
 }
 
 .sumi-prompt-card__text {

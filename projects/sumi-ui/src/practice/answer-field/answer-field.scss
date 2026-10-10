@@ -50,6 +50,38 @@
   }
 }
 
+// `modeCue` (sumi-ui#68): the field coloured by the script `mode` expects
+// (`--sumi-cue-kana-*`/`-latin-*` in `_tokens.scss`; `cueVars()` points the
+// generic `--sumi-cue-*` at one set) plus a decorative tag at the left.
+// Equal inline padding both sides keeps the centred text clear of the tag.
+// The verdict rules below still win on background and border; `cueVars()`
+// switches `--sumi-cue-text` to `--sumi-text` once settled, so the text and
+// the tag never stay white on a pale verdict tint.
+:host(.sumi-answer-field--cue) .sumi-answer-field__input {
+  padding: 0 44px;
+  background: var(--sumi-cue-bg);
+  border-color: var(--sumi-cue-line);
+  color: var(--sumi-cue-text);
+
+  &::placeholder {
+    color: var(--sumi-cue-hint);
+  }
+}
+
+.sumi-answer-field__cue-tag {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  translate: 0 -50%;
+  padding: 1px 7px;
+  border-radius: 6px;
+  background: color-mix(in oklab, currentColor 15%, transparent);
+  color: var(--sumi-cue-text);
+  font-size: 0.75rem;
+  font-weight: 700;
+  pointer-events: none;
+}
+
 // `typing`: the accent-coloured focus ring is the only thing marking the
 // field while nothing has been judged yet. Scoped to `:host(--typing)`
 // (rather than a bare `:focus-visible` on the input) so it never outranks

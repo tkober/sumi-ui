@@ -132,9 +132,15 @@ type SessionState = 'idle' | 'running' | 'ended';
  * "End session" button calls this page's own `endSession()`. A
  * "Conversation-style ending" section demos `sumi-session-summary` without
  * `answered`/`correct` and `actionDisabled` on it and the wrapping gate
- * (sumi-ui#56) — a toggle flips between "analysing" and "ready". A small
- * "Other building blocks" section below shows furigana, every countdown
- * state and every verdict kind side by side.
+ * (sumi-ui#56) — a toggle flips between "analysing" and "ready". The
+ * grading round's own card/field also demo sumi-ui#68's conventions: the
+ * chip names the item type (`current.meta[0]`), the question type is
+ * instead carried by the field's `placeholder` + `modeCue`. A "Tinted
+ * prompt card" section shows `appearance="tinted"` in all three WaniKani
+ * tones, and a "Mode cue" section shows `modeCue` in `kana`/`latin` across
+ * every verdict state (sumi-ui#68). A small "Other building blocks"
+ * section below shows furigana, every countdown state and every verdict
+ * kind side by side.
  */
 @Component({
   selector: 'app-practice-page',
@@ -355,6 +361,84 @@ export class PracticePage {
     clearInterval(this.timerHandle);
     this.timerHandle = undefined;
   }
+
+  // --- Tinted prompt card (sumi-ui#68) ----------------------------------
+  // The three WaniKani item-type colours, straight from the chosen mockup
+  // (variant D) — reused as-is rather than re-picked, so the showcase
+  // matches what the issue actually signed off on. Glyphs are the
+  // mockup's own `ITEMS` samples.
+  protected readonly tintedSamples: {
+    characters: string;
+    kind: string;
+    meta: string[];
+    tone: string;
+  }[] = [
+    { characters: '亠', kind: 'Radical', meta: ['Level 1'], tone: '#00a1f1' },
+    { characters: '木', kind: 'Kanji', meta: ['Level 2'], tone: '#f100a1' },
+    { characters: '大人', kind: 'Vocabulary', meta: ['Level 2'], tone: '#a100f1' },
+  ];
+
+  // --- Mode cue (sumi-ui#68) ---------------------------------------------
+  // One `kana` and one `latin` field per state (typing/correct/wrong/
+  // held), `appearance`'s tinted-card counterpart for `sumi-answer-field`.
+  protected readonly modeCueSamples: {
+    label: string;
+    mode: SumiAnswerMode;
+    placeholder: string;
+    value: string;
+    verdict: SumiVerdict | null;
+  }[] = [
+    { label: 'Reading, typing', mode: 'kana', placeholder: 'Reading', value: '', verdict: null },
+    {
+      label: 'Reading, correct',
+      mode: 'kana',
+      placeholder: 'Reading',
+      value: 'たべる',
+      verdict: { kind: 'correct' },
+    },
+    {
+      label: 'Reading, wrong',
+      mode: 'kana',
+      placeholder: 'Reading',
+      value: 'たべない',
+      verdict: { kind: 'wrong', message: 'Expected: たべる' },
+    },
+    {
+      label: 'Reading, held',
+      mode: 'kana',
+      placeholder: 'Reading',
+      value: 'め',
+      verdict: { kind: 'held', message: 'Sure? Enter counts it, Esc lets you fix it.' },
+    },
+    {
+      label: 'Meaning, typing',
+      mode: 'latin',
+      placeholder: 'Meaning',
+      value: '',
+      verdict: null,
+    },
+    {
+      label: 'Meaning, correct',
+      mode: 'latin',
+      placeholder: 'Meaning',
+      value: 'forest',
+      verdict: { kind: 'correct' },
+    },
+    {
+      label: 'Meaning, wrong',
+      mode: 'latin',
+      placeholder: 'Meaning',
+      value: 'tree',
+      verdict: { kind: 'wrong', message: 'Expected: forest' },
+    },
+    {
+      label: 'Meaning, retry',
+      mode: 'latin',
+      placeholder: 'Meaning',
+      value: 'wood',
+      verdict: { kind: 'retry', message: "Doesn't count — that's a real reading of 木." },
+    },
+  ];
 
   // --- "Other building blocks" section ---------------------------------
 
