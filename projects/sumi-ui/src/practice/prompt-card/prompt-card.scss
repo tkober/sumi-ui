@@ -27,6 +27,7 @@
 // never added (see the component's `tinted` computed), so the card falls
 // through to the plain `:host` rules untouched.
 :host(.sumi-prompt-card--tinted) {
+  overflow: hidden;
   border: 2px solid var(--sumi-prompt-tone);
   background: color-mix(in oklab, var(--sumi-prompt-tone) 12%, var(--sumi-surface));
 }
@@ -39,9 +40,17 @@
 // keeps that confined to this card). `pattern="none"` (the library default)
 // or an app that never configured one renders `sumi-pattern`'s `<svg>`
 // empty, i.e. no layer at all, with no extra markup needed here.
+// Fixed at the tile's own size (720×260, see the template) rather than
+// stretched over the card: `sumi-pattern` slices its viewBox to cover its
+// box, so a card-sized box scaled the tile up by the card's height and drew
+// the pattern several times too coarse. Centred, clipped by the card.
 :host(.sumi-prompt-card--tinted) .sumi-prompt-card__pattern {
   position: absolute;
-  inset: 0;
+  top: 0;
+  left: 50%;
+  width: 720px;
+  height: 260px;
+  translate: -50% 0;
   z-index: -1;
   pointer-events: none;
   color: color-mix(in oklab, var(--sumi-prompt-tone) 45%, transparent);
