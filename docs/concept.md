@@ -185,6 +185,23 @@ als Input und kümmert sich nur um Darstellung und Ablauf.
 - Ein Timer ist ein optionaler Slot (`sumi-countdown-ring`).
 - `prefers-reduced-motion` schaltet das Schütteln ab.
 
+**`modeCue`** (sumi-ui#68, Default aus) macht den erwarteten Schrifttyp am
+Feld selbst sichtbar, nicht nur am Label — WaniKanis Konvention: dunkles
+Feld mit heller Schrift und Kennzeichen `あ`/`ア` für `kana`/`katakana`,
+helles Feld in **beiden** Themes mit Kennzeichen `A` für `latin`/`romaji`,
+kein Hinweis bei `free`. Das Kennzeichen ist dekorativ (`aria-hidden`), der
+zugängliche Name kommt weiter von `label`/`labelledBy`; links und rechts im
+Feld gleich viel Innenabstand, damit der zentrierte Text das Kennzeichen nie
+überlappt. Ein Zustand (`correct`/`wrong`/`retry`/`held`) überschreibt auf
+einem getönten Feld Hintergrund, Rand **und Schriftfarbe** (plus Platzhalter
+und Caret) — sonst stünde die helle `kana`-Schrift unlesbar auf dem hellen
+`-soft`-Zustandshintergrund, genau der Fehler, den der alte kanji-trainer in
+`review.scss` vermeiden musste. Neue Tokens in `_tokens.scss`:
+`--sumi-cue-kana-bg/-text/-line/-hint` und
+`--sumi-cue-latin-bg/-text/-line/-hint`, mit `light-dark()` wie die übrigen
+Tokens — außer `-text`, das bewusst themenunabhängig bleibt (der helle
+Latin-Hintergrund soll im Dunkel-Theme hell bleiben).
+
 jp-conversation-practice nutzt dieselbe Rückmeldungssprache (Farbe, Symbol,
 Text) für das Gespräch.
 
@@ -254,6 +271,22 @@ Tabellen-Fallback (siehe kanji-trainer Forecast).
   `character_image_url`, WaniKani) zeigen statt Text ein Bild im Slot
   `[sumiPromptVisual]`, mit einer Tinten-Variante für einfarbige
   Schwarz-auf-transparent-Quellen (sumi-ui#46).
+- `tone` ist eine Domänenfarbe (z. B. kanji-trainers Radikal/Kanji/Vokabel-
+  Farben), nie die ganze Karte vollflächig eingefärbt — in keiner
+  `appearance`. Im Default `'accent'` ist das ein 3-px-Rand oben und eine
+  Tönung im `kind`-Chip. `'tinted'` (sumi-ui#68, nur mit gesetztem `tone`)
+  ist kräftiger, aber immer noch eine Tönung mit Muster, keine voll
+  eingefärbte Karte: 12 % Hintergrundtönung, 2-px-Rand rundum, dahinter das
+  App-Muster aus `provideSumi({ pattern })` als auslaufende Ebene in `tone`
+  (fehlt bei `pattern: 'none'` einfach), und ein in `tone` gefüllter Chip.
+  Ohne `tone` sieht `'tinted'` wie `'accent'` aus.
+- `sumi-answer-field`s `modeCue` (sumi-ui#68, Default aus) macht zusätzlich
+  zum Label sichtbar, in welcher Schrift die Antwort erwartet wird — dunkles
+  Feld mit Kennzeichen `あ`/`ア` für `kana`/`katakana`, helles Feld (in
+  beiden Themes) mit Kennzeichen `A` für `latin`/`romaji`, kein Hinweis bei
+  `free`; siehe docs/concept.md#eingabe-sumi-answer-field. Damit kann
+  `sumi-prompt-card`s `kind`-Chip den Item-Typ zeigen (z. B. „Kanji“) statt
+  „Reading“/„Meaning“ zu wiederholen.
 - Touch-Ziele mindestens 44 px, Safe-Area-Abstände für iOS.
 
 ## Tuschemotive

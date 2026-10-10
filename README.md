@@ -547,6 +547,44 @@ successfully with `ng build` from a throwaway Angular 22 app):
    for a loading state — it is never how the field freezes after an
    answer (see below).
 
+   **`modeCue`** (boolean, default `false` — sumi-ui#68) makes the
+   expected script visible on the field itself, not just a label, so
+   `kanji-trainer`'s "Reading"/"Meaning" confusion (same component, same
+   border, one small chip apart) cannot happen — WaniKani's own
+   convention: a dark field for a kana answer, a light one for a Latin
+   one, each with a small decorative tag at the left (`aria-hidden`; the
+   accessible name still comes from `label`/`labelledBy`):
+
+   - `'kana'`/`'katakana'`: a dark field, light text, tag `あ`/`ア`
+     (`lang="ja"`).
+   - `'latin'`/`'romaji'`: a light field in **both** themes (so the
+     difference from the dark one survives dark mode), tag `A`.
+   - `'free'`: no cue at all.
+
+   ```html
+   <sumi-answer-field mode="kana" [modeCue]="true" placeholder="Reading" label="Reading" />
+   <sumi-answer-field mode="latin" [modeCue]="true" placeholder="Meaning" label="Meaning" />
+   ```
+
+   The field gives both sides equal inline padding so the centred
+   text/placeholder never collides with the tag, which only ever sits on
+   the left. A settled verdict (`correct`/`wrong`/`retry`/`held`) still
+   overrides background, border, **and text colour** on a cued field —
+   without that, a verdict's pale `-soft` background under the cue's own
+   white text (on `'kana'`) would be unreadable, exactly the bug the old
+   kanji-trainer `review.scss` had to work around. Placeholder and caret
+   are covered too. The new tokens are `--sumi-cue-kana-bg/-text/-line/-hint`
+   and `--sumi-cue-latin-bg/-text/-line/-hint` in `_tokens.scss`, each with
+   `light-dark()` like every other colour token — except `-text`, which is
+   deliberately constant across themes (that is the whole point of the
+   light field staying light in dark mode).
+
+   **Pairing `modeCue` with `sumi-prompt-card`:** once the field already
+   shows the question type via its own cue, `sumi-prompt-card`'s `kind`
+   chip is free to show the item type instead (`"Kanji"`, `"Vocabulary"`,
+   `"Radical"`) rather than repeating "Reading"/"Meaning" — the showcase's
+   Practice page does exactly this.
+
    Enter, Escape, Alt+K and Alt+H are registered by the field itself via
    `injectHotkey` (scope `'practice'`), so an app using
    `sumi-answer-field` does not register them again. Enter is registered
@@ -604,9 +642,9 @@ successfully with `ng build` from a throwaway Angular 22 app):
    always in `--sumi-font-ui` (never the display font — prompts are
    learning material, see docs/concept.md#schrift) and `lang="ja"`.
    `kind` is a small chip ("Reading"), `meta` a muted line
-   (`['Kanji', 'Level 9', 'Guru']`), `tone` a CSS colour used only as a
-   subtle top border and chip tint (never the whole card — domain
-   colouring, e.g. kanji-trainer's radical/kanji/vocabulary colours). The
+   (`['Kanji', 'Level 9', 'Guru']`), `tone` a CSS colour for domain
+   colouring (e.g. kanji-trainer's radical/kanji/vocabulary colours) —
+   never the whole card painted solid, in either `appearance`. The
    content slot is for anything beyond the text itself (a conjugation
    instruction, an image). It shrinks automatically while the on-screen
    keyboard is open (`SumiKeyboardVisibility`, see docs/concept.md#layout-und-mobil).
@@ -616,6 +654,41 @@ successfully with `ng build` from a throwaway Angular 22 app):
      <sumi-countdown-ring [elapsedMs]="elapsedMs()" [targetMs]="6000" />
    </sumi-prompt-card>
    ```
+
+   **`appearance`** (`'accent' | 'tinted'`, default `'accent'` — sumi-ui#68)
+   picks how `tone` is used:
+
+   - `'accent'` is today's look: a 3px top border and a tint on the `kind`
+     chip, `tone` never touching the rest of the card.
+   - `'tinted'`, once `tone` is also set, is a stronger but still only
+     _tinted_ look, not a fully coloured card: a 12% `tone` background
+     (`color-mix(in oklab, tone 12%, --sumi-surface)`) and a 2px `tone`
+     border all round (replacing the top border), the app's
+     `sumi-pattern` (from `provideSumi({ pattern })`) as a layer behind
+     the content — stroked in `tone` at ~45%, masked to fade to
+     transparent by 70% of the card's height, `aria-hidden` — and a
+     chip filled solid in `tone` with bold white text instead of the
+     tinted one. `pattern: 'none'` (the library default) simply renders
+     no pattern layer. Without a `tone`, `'tinted'` looks exactly like
+     `'accent'` — there is nothing to tint.
+
+   ```html
+   <sumi-prompt-card appearance="tinted" text="食" kind="Kanji" [tone]="'#f100a1'" />
+   ```
+
+   The filled chip needs its own contrast check: white text at 4.5:1 on
+   WaniKani's own three colours only works for two of them as-is, so the
+   chip background is `color-mix(in oklab, tone, black 20%)`, never `tone`
+   directly:
+
+   | Tone                 | White on `tone` | White on `tone` darkened 20% toward black |
+   | --------------------- | ---------------- | ------------------------------------------ |
+   | Radical `#00a1f1`     | 2.85:1 (fails)   | 4.95:1                                      |
+   | Kanji `#f100a1`       | 4.00:1 (fails)   | 6.61:1                                      |
+   | Vocabulary `#a100f1`  | 5.55:1 (passes)  | 8.67:1                                      |
+
+   The prompt text and `meta` line are unaffected by `appearance` — they
+   stay in `--sumi-text`/`--sumi-text-2` either way.
 
    `text` is optional — some prompts have no text at all, e.g. a WaniKani
    radical with no Unicode character, only `character_image_url`. Leave
