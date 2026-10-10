@@ -96,6 +96,26 @@ sumi-segmented-control {
   gap: var(--sumi-space-4);
 }
 
+.demo__tinted-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--sumi-space-4);
+}
+
+.demo__cue-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--sumi-space-4);
+}
+
+.demo__sample--cue {
+  align-items: stretch;
+
+  sumi-answer-field {
+    width: 100%;
+  }
+}
+
 sumi-toggle {
   margin: var(--sumi-space-2) 0 var(--sumi-space-4);
 }
