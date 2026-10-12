@@ -20,12 +20,16 @@
           *sumiShellFocusActions
           [answered]="answered()"
           [correct]="correct()"
+          [done]="correct()"
           [total]="cards.length"
+          [showProgress]="false"
           (end)="endSession()"
         />
 
         <div class="demo__round" sumiFocusMode>
           @let current = card();
+          <sumi-session-progress ariaLabel="Session progress" [segments]="progressSegments()" />
+
           <sumi-prompt-card
             [text]="current.characters"
             [kind]="current.meta[0]"
@@ -157,6 +161,25 @@
       [label]="'Demo field, ' + demoMode() + ' mode'"
       placeholder="Type something"
     />
+  </section>
+
+  <section class="demo">
+    <h2>Session progress (sumi-ui#74)</h2>
+    <p>
+      <code>sumi-session-progress</code> fills in <code>--sumi-accent</code> only, with no
+      distinction between a finished and a currently-running segment. A single segment (no batches,
+      e.g. a plain review queue) is one continuous bar with no labels row; with more than one
+      segment and at least one <code>label</code> set, each segment's label appears underneath,
+      small and muted. It is embedded live in the focus-mode round above, where
+      <code>sumi-session-bar</code> uses <code>[done]</code> and <code>[showProgress]="false"</code>
+      instead of its own built-in bar.
+    </p>
+
+    <h3>Single bar, no batches</h3>
+    <sumi-session-progress ariaLabel="Reviews progress" [segments]="singleBarSegments" />
+
+    <h3>Three batches</h3>
+    <sumi-session-progress ariaLabel="Lesson quiz progress" [segments]="quizBatchSegments" />
   </section>
 
   <section class="demo">
