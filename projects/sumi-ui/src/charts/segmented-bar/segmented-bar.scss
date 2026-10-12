@@ -20,7 +20,8 @@
   color: var(--sumi-muted);
 }
 
+// Only the spacing: `display` stays sumi-legend's own flex, whose gap
+// keeps one entry's value from running into the next swatch.
 sumi-legend {
-  display: block;
   margin-top: var(--sumi-space-2);
 }
