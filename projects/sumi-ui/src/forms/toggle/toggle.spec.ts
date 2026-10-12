@@ -31,6 +31,24 @@ describe('SumiToggle', () => {
     expect(button.getAttribute('aria-checked')).toBe('true');
   });
 
+  it('grows only an invisible hit area on touch, never the pill itself', () => {
+    // jsdom does no layout, so check the coarse-pointer rules instead.
+    const coarse = Array.from(document.styleSheets)
+      .flatMap((sheet) => Array.from(sheet.cssRules ?? []))
+      .filter(
+        (rule): rule is CSSMediaRule =>
+          rule instanceof CSSMediaRule && rule.conditionText.includes('pointer: coarse'),
+      )
+      .flatMap((media) => Array.from(media.cssRules) as CSSStyleRule[])
+      .filter((rule) => rule.selectorText?.includes('sumi-toggle__control'));
+    expect(coarse.length).toBeGreaterThan(0);
+    for (const rule of coarse) {
+      expect(rule.style.minHeight).toBe('');
+      expect(rule.style.height).toBe('');
+    }
+    expect(coarse.some((rule) => rule.selectorText.includes('::after'))).toBe(true);
+  });
+
   it('projects the label content', () => {
     expect(fixture.nativeElement.textContent).toContain('Dark mode');
   });
