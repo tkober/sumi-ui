@@ -247,3 +247,111 @@ describe('SumiSegmentedControl overflow scrolling', () => {
     expect(getComputedStyle(button).flexShrink).not.toBe('1');
   });
 });
+
+// sumi-ui#78: the `fill` input stretches the track to full width at any
+// viewport size, with options sharing that width equally instead of
+// sticking to one side and leaving empty space. These hosts give the
+// control a fixed width, like a narrow viewport would, since `fill`
+// itself only ever stretches to the *parent's* width.
+const SHORT_OPTIONS: SumiSegmentedOption<string>[] = [
+  { value: 'pos', label: 'Positive' },
+  { value: 'neg', label: 'Negative' },
+];
+
+const LONG_OPTIONS: SumiSegmentedOption<string>[] = [
+  { value: 'casual-positive', label: 'Casual, positive' },
+  { value: 'casual-negative', label: 'Casual, negative' },
+  { value: 'polite-positive', label: 'Polite, positive' },
+  { value: 'polite-negative', label: 'Polite, negative' },
+];
+
+@Component({
+  imports: [SumiSegmentedControl],
+  template: `<div style="width: 360px">
+    <sumi-segmented-control [fill]="fill()" [options]="options" [(value)]="value" />
+  </div>`,
+})
+class FillHostComponent {
+  readonly options = SHORT_OPTIONS;
+  readonly value = signal('pos');
+  readonly fill = signal(true);
+}
+
+@Component({
+  imports: [SumiSegmentedControl],
+  template: `<div style="width: 150px">
+    <sumi-segmented-control fill [options]="options" [(value)]="value" />
+  </div>`,
+})
+class NarrowFillHostComponent {
+  readonly options = LONG_OPTIONS;
+  readonly value = signal('casual-positive');
+}
+
+function track(fixture: { nativeElement: HTMLElement }): HTMLElement {
+  return fixture.nativeElement.querySelector('[role="radiogroup"]')!;
+}
+
+describe('SumiSegmentedControl fill', () => {
+  beforeEach(() => {
+    // The test DOM (jsdom, no real layout engine) doesn't implement
+    // `scrollIntoView`; the constructor's `afterRenderEffect` calls it
+    // whenever a selected option mounts. Pixel-level claims (equal
+    // widths, the scroll fallback) are verified separately in a real
+    // browser — see the PR description/screenshots for sumi-ui#78 — since
+    // `getBoundingClientRect`/`scrollWidth` are always 0 here.
+    HTMLElement.prototype.scrollIntoView = vi.fn();
+  });
+
+  it('sets the host class when fill is true, and not when it is false/absent', () => {
+    TestBed.configureTestingModule({ imports: [FillHostComponent] });
+    const fixture = TestBed.createComponent(FillHostComponent);
+    fixture.detectChanges();
+    const host = fixture.nativeElement.querySelector('sumi-segmented-control')!;
+    expect(host.classList.contains('sumi-segmented-control--fill')).toBe(true);
+
+    fixture.componentInstance.fill.set(false);
+    fixture.detectChanges();
+    expect(host.classList.contains('sumi-segmented-control--fill')).toBe(false);
+  });
+
+  it('gives filled options equal flex and a label-sized floor, not the fixed min-width', () => {
+    TestBed.configureTestingModule({ imports: [FillHostComponent] });
+    const fixture = TestBed.createComponent(FillHostComponent);
+    fixture.detectChanges();
+
+    const host = fixture.nativeElement.querySelector('sumi-segmented-control')!;
+    expect(getComputedStyle(host).display).toBe('flex');
+
+    for (const button of optionButtons(fixture)) {
+      const style = getComputedStyle(button);
+      // `flex: 1 1 0` (sumi-ui#78): every option grows/shrinks equally
+      // from a zero basis instead of the desktop `flex: none` — this is
+      // what makes them end up equal width and fill the track. The actual
+      // pixel widths are verified in a real browser (see above): this
+      // jsdom-based suite has no layout engine to measure them with.
+      expect(style.flexGrow).toBe('1');
+      expect(style.flexShrink).toBe('1');
+      expect(style.flexBasis).toBe('0px');
+      // Replaces the fixed `2.5rem` min-width so it cannot fight equal
+      // sizing on a longer label.
+      expect(style.minWidth).toBe('max-content');
+    }
+  });
+
+  it('keeps long labels on one line and the track scrollable, even when filled', () => {
+    TestBed.configureTestingModule({ imports: [NarrowFillHostComponent] });
+    const fixture = TestBed.createComponent(NarrowFillHostComponent);
+    fixture.detectChanges();
+
+    // Same `overflow-x: auto` the unfilled control already relies on
+    // (sumi-ui#36) — `fill` does not change the scroll fallback.
+    expect(getComputedStyle(track(fixture)).overflowX).toBe('auto');
+
+    for (const button of optionButtons(fixture)) {
+      const style = getComputedStyle(button);
+      expect(style.whiteSpace).toBe('nowrap');
+      expect(style.minWidth).toBe('max-content');
+    }
+  });
+});

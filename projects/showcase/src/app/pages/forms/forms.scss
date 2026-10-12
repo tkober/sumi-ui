@@ -25,6 +25,18 @@ textarea {
   max-width: 220px;
 }
 
+// Pins a `fill` segmented control to a phone-sized track regardless of the
+// viewport, so the equal-width/scroll-fallback behaviour (sumi-ui#78) shows
+// up the same way on desktop as on a narrow screen. A fixed `width`, not
+// `max-width`, matters here: as a flex item of `.row` it would otherwise
+// shrink-to-fit its content and leave `fill` no slack to equalize options
+// of different label lengths. Capped at 100% so it never pushes the page
+// wider than a 360px phone.
+.demo__fill-box {
+  flex: none;
+  width: min(320px, 100%);
+}
+
 .demo__checkbox-label {
   display: inline-flex;
   align-items: center;

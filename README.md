@@ -992,11 +992,17 @@ again"`) let such an app use its own wording, and `actionDisabled`
 
    ### `sumi-segmented-control`: when not to use it
 
-   Options never shrink or wrap — a row that does not fit its container
-   scrolls horizontally inside its own box (and keeps the selected option
-   scrolled into view) rather than squeezing labels until they clip. That
-   makes overflow _safe_, but a segmented control is still meant for a
-   small, fixed set of mutually exclusive options, not a scrollable menu:
+   Options never wrap, and never shrink below their label — a row that
+   does not fit its container scrolls horizontally inside its own box
+   (and keeps the selected option scrolled into view) rather than
+   squeezing or clipping labels. Below 480px, or whenever the `fill`
+   input is set (`<sumi-segmented-control fill>`), the track stretches to
+   full width and its options share that width equally instead of
+   sticking to one side with empty space left over; above 480px without
+   `fill`, nothing changes — the track and its options stay sized to their
+   labels. That makes overflow _safe_, but a segmented control is still
+   meant for a small, fixed set of mutually exclusive options, not a
+   scrollable menu:
 
    - More than about four or five options, or a set whose length varies a
      lot at runtime → use a `<select>` instead.

@@ -176,6 +176,37 @@
       />
       <span>too many options for the box — scrolls instead of squeezing (sumi-ui#36)</span>
     </div>
+    <div class="row">
+      <div class="demo__fill-box">
+        <sumi-segmented-control
+          fill
+          [options]="fillPositiveNegative"
+          [(value)]="fillPositiveNegativeValue"
+        />
+      </div>
+      <span>
+        <code>fill</code>, 2 options — equal widths, no empty area on the right (sumi-ui#78)
+      </span>
+    </div>
+    <div class="row">
+      <div class="demo__fill-box">
+        <sumi-segmented-control fill [options]="fillTextEmoji" [(value)]="fillTextEmojiValue" />
+      </div>
+      <span><code>fill</code>, 3 options</span>
+    </div>
+    <div class="row">
+      <div class="demo__fill-box">
+        <sumi-segmented-control
+          fill
+          [options]="fillCasualPolite"
+          [(value)]="fillCasualPoliteValue"
+        />
+      </div>
+      <span>
+        <code>fill</code>, 4 long options — still scrolls instead of squeezing a label (sumi-ui#36,
+        sumi-ui#78)
+      </span>
+    </div>
   </section>
 
   <section>
