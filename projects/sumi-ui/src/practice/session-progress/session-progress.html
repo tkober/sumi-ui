@@ -1,0 +1,32 @@
+<ng-template #strip>
+  <div
+    class="sumi-session-progress__bar"
+    [class.sumi-session-progress__bar--narrow]="narrow()"
+    role="progressbar"
+    [attr.aria-label]="ariaLabel()"
+    [attr.aria-valuemin]="0"
+    [attr.aria-valuemax]="totalSize()"
+    [attr.aria-valuenow]="totalDone()"
+  >
+    <div class="sumi-session-progress__track">
+      @for (segment of segments(); track $index) {
+        <div class="sumi-session-progress__segment" [style.flex-grow]="segment.size">
+          <div class="sumi-session-progress__fill" [style.width.%]="fillPercents()[$index]"></div>
+        </div>
+      }
+    </div>
+    @if (showLabels()) {
+      <div class="sumi-session-progress__labels">
+        @for (segment of segments(); track $index) {
+          <span class="sumi-session-progress__label" [style.flex-grow]="segment.size">{{
+            segment.label
+          }}</span>
+        }
+      </div>
+    }
+  </div>
+</ng-template>
+
+@if (!narrow()) {
+  <ng-container [ngTemplateOutlet]="stripTemplate() ?? null" />
+}
