@@ -6,7 +6,7 @@
  * implements). Imports from `d3-scale`/`d3-shape` are named ESM imports only,
  * so a consumer's bundler can tree-shake the parts that go unused.
  */
-import { scaleBand, scaleLinear } from 'd3-scale';
+import { scaleBand, scaleLinear, scaleTime } from 'd3-scale';
 import {
   arc as d3Arc,
   area as d3Area,
@@ -798,6 +798,259 @@ export function heatmapCellColor(bucket: number): string {
  *  so steps 4 and 5 switch to `--sumi-on-accent` instead. */
 export function heatmapTextColor(bucket: number): string {
   return bucket >= 4 ? 'var(--sumi-on-accent)' : 'var(--sumi-text)';
+}
+
+// --- Line chart (sumi-line-chart) ------------------------------------------
+//
+// Unlike `sumi-bar-chart`'s categorical `scaleBand` columns, a line
+// chart's x-axis is a real `d3-scale` `scaleTime`, so a gap in the dates
+// (a day with no data) shows up as a gap in spacing rather than being
+// silently compressed like an evenly spaced band would. `mode: 'line'`
+// plots each series independently against the chart's own max value;
+// `mode: 'stacked-area'` stacks every series bottom-up per point (same
+// `stackOffsets` convention as `stackedBarGeometry`) and plots against the
+// tallest *stack total*, not each series' own max.
+
+/** One resolved value + screen position, used both for a `'line'`-mode
+ *  series' own end-of-line callout and for `'stacked-area'`'s single
+ *  stack-top callout. */
+export interface LineSeriesPointGeometry {
+  x: number;
+  y: number;
+  value: number;
+}
+
+/** One series' drawn geometry within `sumi-line-chart`. */
+export interface LineSeriesGeometry {
+  key: string;
+  color: string;
+  /** The stroke path: the series' own values in `'line'` mode, or the
+   *  stack's top edge (this series' cumulative top) in `'stacked-area'`
+   *  mode. */
+  linePath: string;
+  /** Fill path between this series' stacked bottom and top; empty string
+   *  in `'line'` mode, which has no fill. */
+  areaPath: string;
+  /** This series' own last value and where it lands on screen — the
+   *  per-series end-of-line callout in `'line'` mode. In `'stacked-area'`
+   *  mode this is still this series' own (non-cumulative) value, but the
+   *  chart shows `LineChartGeometry.stackTotal` instead, not this. */
+  last: LineSeriesPointGeometry;
+}
+
+/** One x-axis tick: a real screen `x` (not evenly spaced — see the
+ *  section comment above) plus its date label. */
+export interface LineChartTick {
+  x: number;
+  label: string;
+}
+
+/** One event marker's screen `x`, clamped inside the plot area so a date
+ *  outside the chart's own date range still draws at the nearest edge
+ *  instead of off the `viewBox`. */
+export interface LineChartEventGeometry {
+  label: string;
+  x: number;
+}
+
+export interface LineChartGeometry {
+  series: LineSeriesGeometry[];
+  /** The y-axis max: the largest single value in `'line'` mode, the
+   *  largest stacked total in `'stacked-area'` mode — called out top-left,
+   *  like `sumi-bar-chart`'s own max callout. */
+  maxValue: number;
+  /** Screen y of value 0, for the baseline and area fills' lower edge. */
+  baselineY: number;
+  ticks: LineChartTick[];
+  events: LineChartEventGeometry[];
+  /** The stacked total at the last point, only in `'stacked-area'` mode
+   *  (`null` in `'line'` mode, where each series' own `last` is shown
+   *  instead). */
+  stackTotal: LineSeriesPointGeometry | null;
+}
+
+/** `"15 Oct"` for an ISO `date` string, parsed as a UTC day (`parseISODate`)
+ *  so the label never shifts by a day depending on the viewer's timezone —
+ *  used for `sumi-line-chart`'s x-axis ticks and its table fallback's date
+ *  column. */
+export function formatLineChartDateLabel(date: string): string {
+  const parsed = parseISODate(date);
+  return `${parsed.getUTCDate()} ${MONTH_NAMES[parsed.getUTCMonth()]}`;
+}
+
+/**
+ * Builds `sumi-line-chart`'s full geometry: the x scale is a real
+ * `d3-scale` `scaleTime` over the points' own dates (so gaps are
+ * respected), the y scale `0..maxValue` (see `LineChartGeometry.maxValue`).
+ * `colors` is expected pre-resolved to `seriesKeys`' length (the component
+ * defaults a missing series `color` from `rampColor` before calling this,
+ * same convention as `stackedBarGeometry`); a short/empty array still falls
+ * back to `rampColor` here so this function never throws on its own.
+ *
+ * Edge cases:
+ * - no points, or no series: every path empty, `ticks`/`events` empty,
+ *   `stackTotal` null.
+ * - exactly one point: plotted as a flat line/area across the full inner
+ *   width (same recipe as `sparklineGeometry`'s single-point case) rather
+ *   than collapsing `scaleTime`'s domain into a single pixel.
+ */
+export function lineChartGeometry(
+  points: readonly { date: string; values: Record<string, number> }[],
+  seriesKeys: readonly string[],
+  colors: readonly string[],
+  mode: 'line' | 'stacked-area',
+  events: readonly { date: string; label: string }[],
+  plot: PlotBox,
+): LineChartGeometry {
+  const innerHeight = plot.height - plot.top - plot.bottom;
+  const baselineY = plot.height - plot.bottom;
+  const colorFor = (index: number) =>
+    colors[index] ?? rampColor(index, Math.max(1, seriesKeys.length));
+
+  if (points.length === 0 || seriesKeys.length === 0) {
+    return {
+      series: seriesKeys.map((key, i) => ({
+        key,
+        color: colorFor(i),
+        linePath: '',
+        areaPath: '',
+        last: { x: plot.left, y: baselineY, value: 0 },
+      })),
+      maxValue: 0,
+      baselineY,
+      ticks: [],
+      events: [],
+      stackTotal: null,
+    };
+  }
+
+  const dates = points.map((p) => parseISODate(p.date));
+  const n = points.length;
+  const singlePoint = n === 1;
+  const domainEnd =
+    !singlePoint && dates[n - 1].getTime() > dates[0].getTime()
+      ? dates[n - 1]
+      : new Date(dates[0].getTime() + DAY_MS);
+  const x = scaleTime()
+    .domain([dates[0], domainEnd])
+    .range([plot.left, plot.width - plot.right]);
+  // A single point is plotted flat across the inner width instead of every
+  // x landing on the same pixel (`scaleTime` of one instant).
+  const xs = singlePoint ? [plot.left, plot.width - plot.right] : dates.map((d) => x(d));
+  const plotN = xs.length;
+  const dataIndexOf = (plotIndex: number) => (singlePoint ? 0 : plotIndex);
+  const lastPlotIndex = plotN - 1;
+  const lastDataIndex = n - 1;
+
+  const totals = points.map((p) => seriesKeys.reduce((sum, key) => sum + (p.values[key] ?? 0), 0));
+  const maxValue =
+    mode === 'stacked-area'
+      ? Math.max(1, ...totals)
+      : Math.max(1, ...points.flatMap((p) => seriesKeys.map((key) => p.values[key] ?? 0)));
+
+  const y = scaleLinear().domain([0, maxValue]).range([innerHeight, 0]);
+  const toY = (value: number) => plot.top + y(value);
+
+  const plotIndices = Array.from({ length: plotN }, (_, i) => i);
+  const buildLinePath = (ys: readonly number[]): string =>
+    d3Line<number>()
+      .x((_, i) => xs[i])
+      .y((_, i) => ys[i])
+      .curve(curveMonotoneX)(plotIndices) ?? '';
+  const buildAreaPath = (y0s: readonly number[], y1s: readonly number[]): string =>
+    d3Area<number>()
+      .x((_, i) => xs[i])
+      .y0((_, i) => y0s[i])
+      .y1((_, i) => y1s[i])
+      .curve(curveMonotoneX)(plotIndices) ?? '';
+
+  const series: LineSeriesGeometry[] = [];
+  let stackTotal: LineSeriesPointGeometry | null = null;
+
+  if (mode === 'stacked-area') {
+    // Running bottom/top offsets per point, stacked bottom-up in
+    // `seriesKeys`' order (`stackOffsets`, same convention as
+    // `stackedBarGeometry`).
+    const offsetsPerPoint = points.map((p) =>
+      stackOffsets(seriesKeys.map((key) => p.values[key] ?? 0)),
+    );
+    seriesKeys.forEach((key, i) => {
+      const bottoms = plotIndices.map((pi) => toY(offsetsPerPoint[dataIndexOf(pi)][i]));
+      const tops = plotIndices.map((pi) => {
+        const di = dataIndexOf(pi);
+        return toY(offsetsPerPoint[di][i] + (points[di].values[key] ?? 0));
+      });
+      series.push({
+        key,
+        color: colorFor(i),
+        linePath: buildLinePath(tops),
+        areaPath: buildAreaPath(bottoms, tops),
+        last: {
+          x: xs[lastPlotIndex],
+          y: tops[lastPlotIndex],
+          value: points[lastDataIndex].values[key] ?? 0,
+        },
+      });
+    });
+    stackTotal = {
+      x: xs[lastPlotIndex],
+      y: toY(totals[lastDataIndex]),
+      value: totals[lastDataIndex],
+    };
+  } else {
+    seriesKeys.forEach((key, i) => {
+      const ys = plotIndices.map((pi) => toY(points[dataIndexOf(pi)].values[key] ?? 0));
+      series.push({
+        key,
+        color: colorFor(i),
+        linePath: buildLinePath(ys),
+        areaPath: '',
+        last: {
+          x: xs[lastPlotIndex],
+          y: ys[lastPlotIndex],
+          value: points[lastDataIndex].values[key] ?? 0,
+        },
+      });
+    });
+  }
+
+  // x-axis ticks: the same initial thinning recipe as `sumi-bar-chart`
+  // (`axisLabelStep` + `sparseLabelIndices`) applied to the points' own
+  // index, which assumes its labels end up evenly spaced — true for
+  // `sumi-bar-chart`'s band scale, but not here: a real time scale spaces
+  // points by their actual date gap, so two indices that survive that
+  // first pass can still land closer together on screen than
+  // `minLabelSpacing` (e.g. a cluster of daily points right before a
+  // month-long gap). The pass below removes those on top, right to left
+  // so the forced last-point tick (added next) always wins the spot
+  // nearest the end over a neighbour auto-selected by index alone.
+  const plotInnerWidth = plot.width - plot.left - plot.right;
+  const tickLabels = points.map((p) => formatLineChartDateLabel(p.date));
+  const minLabelSpacing = axisMinLabelSpacing(tickLabels);
+  const step = axisLabelStep(n, 1, plotInnerWidth, minLabelSpacing);
+  const tickIndices = new Set(sparseLabelIndices(n, step));
+  tickIndices.add(lastDataIndex);
+  const sortedTickIndices = [...tickIndices].sort((a, b) => a - b);
+  const keptTickIndices: number[] = [];
+  for (let i = sortedTickIndices.length - 1; i >= 0; i--) {
+    const index = sortedTickIndices[i];
+    const nextKept = keptTickIndices[0];
+    const tickX = singlePoint ? xs[0] : xs[index];
+    if (nextKept === undefined || (singlePoint ? xs[0] : xs[nextKept]) - tickX >= minLabelSpacing) {
+      keptTickIndices.unshift(index);
+    }
+  }
+  const ticks = keptTickIndices.map((i) => ({
+    x: singlePoint ? xs[0] : xs[i],
+    label: tickLabels[i],
+  }));
+
+  const eventGeometry = events.map((event) => ({
+    label: event.label,
+    x: Math.min(plot.width - plot.right, Math.max(plot.left, x(parseISODate(event.date)))),
+  }));
+
+  return { series, maxValue, baselineY, ticks, events: eventGeometry, stackTotal };
 }
 
 // --- Donut and sunburst (sumi-donut, sumi-sunburst) ------------------------

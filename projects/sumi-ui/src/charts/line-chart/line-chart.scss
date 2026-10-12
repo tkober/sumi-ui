@@ -1,0 +1,88 @@
+:host {
+  display: block;
+}
+
+.sumi-line-chart__svg {
+  display: block;
+  width: 100%;
+  /* height is set per-instance via [style.height.px] in the template, kept
+     fixed in real px regardless of width (see line-chart.ts's observeWidth
+     usage) so strokes/text never stretch at a wide container. */
+}
+
+.sumi-line-chart__max {
+  font-family: var(--sumi-font-ui);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--sumi-text-xs);
+  fill: var(--sumi-muted);
+}
+
+.sumi-line-chart__area {
+  /* A touch of ink-wash translucency rather than a flat, fully opaque
+     fill — the stacked bands never overlap, so this is purely a finish,
+     not needed to tell them apart (that is the stroke + legend + table). */
+  fill-opacity: 0.82;
+}
+
+.sumi-line-chart__line {
+  stroke-width: 2;
+}
+
+.sumi-line-chart__dot {
+  // Same default-vs-inline-override split as `__end-label` just below: the
+  // stack-top dot in 'stacked-area' mode keeps this default, each series'
+  // own dot in 'line' mode overrides it via `[style.fill]`.
+  fill: var(--sumi-text);
+}
+
+.sumi-line-chart__baseline {
+  stroke: var(--sumi-line);
+  stroke-width: 1;
+}
+
+.sumi-line-chart__axis-label {
+  font-family: var(--sumi-font-ui);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--sumi-text-xs);
+  fill: var(--sumi-muted);
+}
+
+.sumi-line-chart__event-line {
+  stroke: var(--sumi-muted);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+}
+
+.sumi-line-chart__event-label {
+  font-family: var(--sumi-font-ui);
+  font-size: var(--sumi-text-xs);
+  fill: var(--sumi-muted);
+}
+
+.sumi-line-chart__end-label {
+  font-family: var(--sumi-font-ui);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--sumi-text-xs);
+  dominant-baseline: middle;
+  // The default for the single stack-top callout in 'stacked-area' mode
+  // (no per-series colour of its own); each series' own end-of-line
+  // callout in 'line' mode overrides this with its line's colour via an
+  // inline `[style.fill]` instead. Without this, SVG's own default fill
+  // (black) is unreadable in dark mode.
+  fill: var(--sumi-text);
+}
+
+.sumi-line-chart__table {
+  margin-top: var(--sumi-space-2);
+}
+
+.sumi-line-chart__table summary {
+  cursor: pointer;
+  font-size: var(--sumi-text-sm);
+  color: var(--sumi-muted);
+}
+
+sumi-legend {
+  display: block;
+  margin-top: var(--sumi-space-2);
+}

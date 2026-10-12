@@ -3,8 +3,12 @@ import {
   SUMI_CHARTS,
   SumiTableCellTemplate,
   type SumiBar,
+  type SumiBarSelectEvent,
   type SumiCalendarDay,
+  type SumiChartEvent,
   type SumiDonutSegment,
+  type SumiLinePoint,
+  type SumiLineSeries,
   type SumiMatrixCellInput,
   type SumiMatrixCellSelection,
   type SumiStackedRow,
@@ -64,6 +68,46 @@ export class ChartsPage {
     { key: 'master', label: 'Master+', color: 'var(--sumi-seq-5)' },
   ];
   protected readonly forecastRows: SumiStackedRow[] = buildWeeklyForecast();
+
+  // --- Items settled over 90 days, with an import marker (sumi-ui#76) -----
+  // Fixed end date, same reasoning as the review calendar below: the
+  // showcase (and its screenshots) render identically on every build.
+  protected readonly settledEndDate = '2024-10-20';
+  protected readonly settledSeries: SumiLineSeries[] = [
+    { key: 'earned', label: 'Earned' },
+    { key: 'known', label: 'Marked as known' },
+  ];
+  protected readonly settledPoints: SumiLinePoint[] = buildSettledPoints(90, this.settledEndDate);
+  protected readonly settledEvents: SumiChartEvent[] = [
+    { date: this.settledPoints[30].date, label: 'import' },
+  ];
+
+  // --- Open a level: a selectable bar chart (sumi-ui#76) -------------------
+  protected readonly itemsPerLevel: SumiBar[] = buildItemsPerLevel();
+  protected readonly selectedLevel = signal<SumiBarSelectEvent | null>(null);
+  protected readonly levelReadout = computed(() => {
+    const selected = this.selectedLevel();
+    return selected ? `Opened level ${selected.label}.` : 'Pick a bar to open that level.';
+  });
+
+  protected onLevelSelect(event: SumiBarSelectEvent): void {
+    this.selectedLevel.set(event);
+  }
+
+  // --- Dashboard progress rows (sumi-ui#76) ---------------------------------
+  protected readonly progressRows = [
+    { label: 'Radicals', seen: 48, total: 50 },
+    { label: 'Kanji', seen: 320, total: 400 },
+    { label: 'Vocabulary', seen: 540, total: 1200 },
+  ].map((row) => ({
+    label: row.label,
+    value: row.seen,
+    total: row.total,
+    segments: [
+      { label: 'Seen', value: row.seen, color: 'var(--sumi-accent)' },
+      { label: 'Remaining', value: row.total - row.seen, color: 'var(--sumi-sunken)' },
+    ],
+  }));
 
   // --- Coverage per level, one segmented bar per level ---------------------
   protected readonly coverageByLevel = [
@@ -361,4 +405,37 @@ function buildWeeklyForecast(): SumiStackedRow[] {
     label,
     values: { apprentice: apprentice[i], guru: guru[i], master: master[i] },
   }));
+}
+
+/** 90 days of items settled, split into "earned but not yet known" and
+ *  "marked as known" — stacked, their sum is the running total ever
+ *  settled. A one-time bulk import lands on day 30, on top of the steady
+ *  daily trickle everywhere else, so the sumi-line-chart demo has a real
+ *  event to mark. Deterministic (seeded, not Math.random) like the other
+ *  showcase builders, so the page — and its screenshots — render
+ *  identically on every build. */
+function buildSettledPoints(days: number, endDate: string): SumiLinePoint[] {
+  const rng = makeRng(53);
+  const end = new Date(`${endDate}T00:00:00Z`);
+  const points: SumiLinePoint[] = [];
+  let earned = 0;
+  let known = 0;
+  for (let i = 0; i < days; i++) {
+    const date = new Date(end.getTime() - (days - 1 - i) * 24 * 60 * 60 * 1000);
+    earned += Math.round(rng() * 4) + (i === 30 ? 40 : 0);
+    known = Math.min(earned, known + Math.round(rng() * Math.min(3, earned - known)));
+    points.push({
+      date: date.toISOString().slice(0, 10),
+      values: { earned: earned - known, known },
+    });
+  }
+  return points;
+}
+
+/** Items available to review at each of 10 levels — the sumi-bar-chart
+ *  `selectable` demo (sumi-ui#76): clicking/activating a bar would open
+ *  that level's item list in a real app. */
+function buildItemsPerLevel(): SumiBar[] {
+  const counts = [52, 48, 61, 39, 44, 57, 35, 28, 19, 12];
+  return counts.map((value, i) => ({ label: `${i + 1}`, value }));
 }

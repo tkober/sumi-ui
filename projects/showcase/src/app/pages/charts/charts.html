@@ -1,6 +1,6 @@
 <sumi-page
   title="Charts"
-  subtitle="Statistics components: stat tile, segmented bar, sparkline, bar chart, calendar and matrix heatmaps, donut, sunburst, legend, data table."
+  subtitle="Statistics components: stat tile, segmented bar, sparkline, bar chart, line chart, progress row, calendar and matrix heatmaps, donut, sunburst, legend, data table."
 >
   <section class="demo">
     <h2>Example data</h2>
@@ -85,6 +85,51 @@
         { label: 'Master+', color: 'var(--sumi-seq-5)' },
       ]"
     />
+  </section>
+
+  <section class="demo">
+    <h2>Items settled over 90 days (sumi-ui#76)</h2>
+    <p class="demo__note">
+      Two series stacked as areas — earned but not yet known, and marked as known — with the bulk
+      import around day 30 called out as a dashed event marker.
+    </p>
+    <sumi-line-chart
+      ariaLabel="Items settled over the last 90 days, earned and marked as known, import on day 30"
+      [points]="settledPoints"
+      [series]="settledSeries"
+      mode="stacked-area"
+      [events]="settledEvents"
+      [table]="true"
+    />
+  </section>
+
+  <section class="demo">
+    <h2>Open a level (selectable bar chart, sumi-ui#76)</h2>
+    <p class="demo__note">
+      Click, or Tab to a bar and press Enter/Space, to "open" that level — a real app would navigate
+      to its item list.
+    </p>
+    <sumi-bar-chart
+      ariaLabel="Items available per level, 1 to 10"
+      [bars]="itemsPerLevel"
+      [selectable]="true"
+      (barSelect)="onLevelSelect($event)"
+    />
+    <p class="demo__readout">{{ levelReadout() }}</p>
+  </section>
+
+  <section class="demo">
+    <h2>Dashboard progress rows (sumi-ui#76)</h2>
+    <div class="demo__progress-rows">
+      @for (row of progressRows; track row.label) {
+        <sumi-progress-row
+          [label]="row.label"
+          [segments]="row.segments"
+          [value]="row.value"
+          [total]="row.total"
+        />
+      }
+    </div>
   </section>
 
   <section class="demo">

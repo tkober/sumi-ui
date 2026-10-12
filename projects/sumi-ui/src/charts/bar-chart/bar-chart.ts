@@ -6,6 +6,7 @@ import {
   computed,
   inject,
   input,
+  output,
   signal,
 } from '@angular/core';
 import {
@@ -35,6 +36,13 @@ export interface SumiBarSeries {
 export interface SumiStackedRow {
   label: string;
   values: Record<string, number>;
+}
+
+/** Emitted by `barSelect`: the clicked/activated column's index (in `bars`
+ *  or `rows`, whichever is active) and its label. */
+export interface SumiBarSelectEvent {
+  index: number;
+  label: string;
 }
 
 const FALLBACK_WIDTH = 320;
@@ -67,6 +75,26 @@ const PAD = { top: 20, right: 8, bottom: 20, left: 8 };
  *   table
  * />
  * ```
+ *
+ * `selectable` (sumi-ui#76) turns every column — a plain bar or a whole
+ * stacked column, never an individual stacked segment — into a
+ * keyboard-reachable `role="button"` hit target the full plot height tall
+ * (so a short bar is just as easy to hit as a tall one), with a pointer
+ * cursor and an accessible name of `"<label>: <value>"`. Angular cannot
+ * reliably detect whether `(barSelect)` has a listener, so this is an
+ * explicit opt-in rather than something inferred from the output being
+ * bound; `barSelect` emits on click, Enter and Space, e.g. to open a level
+ * in Items:
+ *
+ * ```html
+ * <sumi-bar-chart
+ *   ariaLabel="7-day forecast by stage"
+ *   [rows]="days"
+ *   [series]="series"
+ *   selectable
+ *   (barSelect)="openLevel($event)"
+ * />
+ * ```
  */
 @Component({
   selector: 'sumi-bar-chart',
@@ -89,6 +117,12 @@ export class SumiBarChart {
   /** Table fallback's value column header, plain bars only (stacked mode
    *  names each column after its series, see `tableColumns`). */
   readonly valueHeader = input('Value');
+  /** Makes every column a keyboard-reachable, clickable hit target (see
+   *  the class doc comment) and enables `barSelect`. Off by default, so
+   *  existing markup keeps rendering plain, non-interactive bars. */
+  readonly selectable = input(false);
+  /** Emitted on click, Enter or Space when `selectable` is on. */
+  readonly barSelect = output<SumiBarSelectEvent>();
 
   private readonly hostRef = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly destroyRef = inject(DestroyRef);
@@ -133,6 +167,39 @@ export class SumiBarChart {
     }
     return Math.max(0, ...this.singleBars().map((bar) => bar.value));
   });
+
+  /** One hit target per column, `selectable` only: a column's own `x`/
+   *  `width` (shared with its drawn bar/segments) plus the label/value
+   *  pair for its accessible name — `bar.value` for a plain bar, the
+   *  stacked `row.total` for a whole stacked column (never a single
+   *  segment's own value, since the whole column is one hit target). */
+  protected readonly selectableColumns = computed(() => {
+    if (this.stacked()) {
+      return this.stackedBars().map((row) => ({
+        x: row.x,
+        width: row.width,
+        label: row.label,
+        value: row.total,
+      }));
+    }
+    return this.singleBars().map((bar) => ({
+      x: bar.x,
+      width: bar.width,
+      label: bar.label,
+      value: bar.value,
+    }));
+  });
+
+  protected onBarSelect(index: number, label: string): void {
+    this.barSelect.emit({ index, label });
+  }
+
+  protected onBarKeydown(event: KeyboardEvent, index: number, label: string): void {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      this.onBarSelect(index, label);
+    }
+  }
 
   /** The labels actually being thinned/placed on the x-axis: `bars`' own
    *  labels in single-series mode, `rows`' in stacked mode — the input

@@ -1,0 +1,94 @@
+<svg
+  class="sumi-line-chart__svg"
+  [attr.viewBox]="'0 0 ' + plot().width + ' ' + plot().height"
+  [style.height.px]="height()"
+  preserveAspectRatio="xMidYMid meet"
+  role="img"
+  [attr.aria-label]="ariaLabel()"
+>
+  <text class="sumi-line-chart__max" x="0" [attr.y]="plot().top - 8">
+    {{ geometry().maxValue }}
+  </text>
+
+  @for (s of geometry().series; track s.key) {
+    @if (s.areaPath) {
+      <path class="sumi-line-chart__area" [attr.d]="s.areaPath" [style.fill]="s.color" />
+    }
+  }
+
+  <line
+    class="sumi-line-chart__baseline"
+    [attr.x1]="plot().left"
+    [attr.x2]="plot().width - plot().right"
+    [attr.y1]="geometry().baselineY"
+    [attr.y2]="geometry().baselineY"
+  />
+
+  @for (s of geometry().series; track s.key) {
+    <path class="sumi-line-chart__line" [attr.d]="s.linePath" [style.stroke]="s.color" fill="none">
+      <title>{{ seriesLabel(s.key) }}</title>
+    </path>
+  }
+
+  @for (event of geometry().events; track event.label) {
+    <line
+      class="sumi-line-chart__event-line"
+      [attr.x1]="event.x"
+      [attr.x2]="event.x"
+      [attr.y1]="plot().top"
+      [attr.y2]="geometry().baselineY"
+    />
+    <text class="sumi-line-chart__event-label" [attr.x]="event.x + 4" [attr.y]="plot().top + 10">
+      {{ event.label }}
+    </text>
+  }
+
+  @for (tick of geometry().ticks; track tick.label; let i = $index) {
+    @let pos = tickAnchor(tick, i, geometry().ticks.length);
+    <text
+      class="sumi-line-chart__axis-label"
+      [attr.x]="pos.x"
+      [attr.y]="plot().height - 6"
+      [attr.text-anchor]="pos.anchor"
+    >
+      {{ tick.label }}
+    </text>
+  }
+
+  @if (mode() === 'line') {
+    @for (s of geometry().series; track s.key) {
+      <circle
+        class="sumi-line-chart__dot"
+        [attr.cx]="s.last.x"
+        [attr.cy]="s.last.y"
+        r="3"
+        [style.fill]="s.color"
+      />
+      <text
+        class="sumi-line-chart__end-label"
+        [attr.x]="s.last.x + 6"
+        [attr.y]="s.last.y + 3"
+        [style.fill]="s.color"
+      >
+        {{ s.last.value }}
+      </text>
+    }
+  } @else if (geometry().stackTotal) {
+    @let total = geometry().stackTotal!;
+    <circle class="sumi-line-chart__dot" [attr.cx]="total.x" [attr.cy]="total.y" r="3" />
+    <text class="sumi-line-chart__end-label" [attr.x]="total.x + 6" [attr.y]="total.y + 3">
+      {{ total.value }}
+    </text>
+  }
+</svg>
+
+@if (showLegend()) {
+  <sumi-legend [items]="legendItems()" />
+}
+
+@if (table()) {
+  <details class="sumi-line-chart__table">
+    <summary>Show as table</summary>
+    <sumi-data-table [columns]="tableColumns()" [rows]="tableRows()" />
+  </details>
+}

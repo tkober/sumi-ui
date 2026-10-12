@@ -3,8 +3,9 @@
  * docs/concept.md#statistik-komponenten). Maths (scales, ticks, path/segment
  * geometry) lives in pure, exported, unit-tested functions in `./math` —
  * components here only render. Every chart that is actually an SVG graphic
- * (`sumi-segmented-bar`, `sumi-sparkline`, `sumi-bar-chart`) carries
- * `role="img"` and a required `ariaLabel`, draws colours only from
+ * (`sumi-segmented-bar`, `sumi-sparkline`, `sumi-bar-chart`,
+ * `sumi-line-chart`) carries `role="img"` and a required `ariaLabel`, draws
+ * colours only from
  * `--sumi-*` tokens, and takes an optional `table` input that adds a
  * `sumi-data-table` fallback in a `<details>` ("Nie nur Farbe" in the
  * concept's Leitbild).
@@ -42,6 +43,8 @@ export {
   sunburstTextColor,
   sunburstLabelOrientation,
   arcLabelTangentialRotation,
+  formatLineChartDateLabel,
+  lineChartGeometry,
   type SumiPoint,
   type SparklineGeometry,
   type SegmentGeometry,
@@ -57,6 +60,11 @@ export {
   type DonutSegmentGeometry,
   type SumiSunburstNode,
   type SunburstSegmentGeometry,
+  type LineSeriesPointGeometry,
+  type LineSeriesGeometry,
+  type LineChartTick,
+  type LineChartEventGeometry,
+  type LineChartGeometry,
 } from './math';
 
 export { SumiStatTile } from './stat-tile/stat-tile';
@@ -68,6 +76,7 @@ export {
   type SumiBar,
   type SumiBarSeries,
   type SumiStackedRow,
+  type SumiBarSelectEvent,
 } from './bar-chart/bar-chart';
 export { SumiLegend, type SumiLegendItem } from './legend/legend';
 export { SumiRampLegend } from './ramp-legend/ramp-legend';
@@ -77,6 +86,13 @@ export { SumiCalendarHeatmap } from './calendar-heatmap/calendar-heatmap';
 export { SumiMatrixHeatmap, type SumiMatrixCellSelection } from './matrix-heatmap/matrix-heatmap';
 export { SumiDonut } from './donut/donut';
 export { SumiSunburst } from './sunburst/sunburst';
+export {
+  SumiLineChart,
+  type SumiLinePoint,
+  type SumiLineSeries,
+  type SumiChartEvent,
+} from './line-chart/line-chart';
+export { SumiProgressRow } from './progress-row/progress-row';
 
 import { SumiStatTile } from './stat-tile/stat-tile';
 import { SumiStatGrid } from './stat-grid/stat-grid';
@@ -91,6 +107,8 @@ import { SumiCalendarHeatmap } from './calendar-heatmap/calendar-heatmap';
 import { SumiMatrixHeatmap } from './matrix-heatmap/matrix-heatmap';
 import { SumiDonut } from './donut/donut';
 import { SumiSunburst } from './sunburst/sunburst';
+import { SumiLineChart } from './line-chart/line-chart';
+import { SumiProgressRow } from './progress-row/progress-row';
 
 /** Convenience array for `imports: [...SUMI_CHARTS]` in a standalone component. */
 export const SUMI_CHARTS = [
@@ -107,4 +125,6 @@ export const SUMI_CHARTS = [
   SumiMatrixHeatmap,
   SumiDonut,
   SumiSunburst,
+  SumiLineChart,
+  SumiProgressRow,
 ] as const;

@@ -1010,8 +1010,9 @@ again"`) let such an app use its own wording, and `actionDisabled`
    `sumi-ui/charts` (`SUMI_CHARTS`, see docs/concept.md#statistik-komponenten)
    is the statistics area: `sumi-stat-tile` + `sumi-stat-grid`,
    `sumi-segmented-bar`, `sumi-sparkline`, `sumi-bar-chart`,
-   `sumi-calendar-heatmap`, `sumi-matrix-heatmap`, `sumi-donut`,
-   `sumi-sunburst`, `sumi-legend`, `sumi-ramp-legend` and `sumi-data-table`.
+   `sumi-line-chart`, `sumi-progress-row`, `sumi-calendar-heatmap`,
+   `sumi-matrix-heatmap`, `sumi-donut`, `sumi-sunburst`, `sumi-legend`,
+   `sumi-ramp-legend` and `sumi-data-table`.
    The maths behind every chart — scales, ticks, sparkline/area paths,
    segment percentages, stacked bar offsets, sparse x-axis labels, the
    heatmaps' week grid and bucketing, donut/sunburst angle geometry — lives
@@ -1073,6 +1074,97 @@ again"`) let such an app use its own wording, and `actionDisabled`
    automatically, so they never collide at the chart's actual measured
    width (e.g. a narrow card); it never shows _more_ labels than
    `labelEvery` asked for, only fewer.
+
+   `sumi-bar-chart`'s `selectable` input (sumi-ui#76) turns every column —
+   a plain bar, or a whole stacked column, never an individual stacked
+   segment — into a keyboard-reachable `role="button"` hit target the full
+   plot height tall (so a short bar is just as easy to hit as a tall one),
+   and enables `barSelect` (`{ index, label }`, emitted on click, Enter and
+   Space):
+
+   ```html
+   <sumi-bar-chart
+     ariaLabel="Items available per level, 1 to 10"
+     [bars]="itemsPerLevel"
+     selectable
+     (barSelect)="openLevel($event)"
+   />
+   ```
+
+   Angular cannot reliably detect whether `(barSelect)` has a listener
+   bound, so `selectable` is an explicit opt-in rather than something
+   inferred from the output itself — without it, `sumi-bar-chart` renders
+   exactly as before, with no hit targets and no `role="button"`s. The
+   focus ring on a hit target is drawn with `stroke` rather than the
+   library's usual `box-shadow` formula (still from the same
+   `--sumi-focus-ring-base` token) because `box-shadow` does not reliably
+   paint on an SVG shape element — the same reasoning as `sumi-donut`'s
+   segment focus style.
+
+   `sumi-line-chart` (sumi-ui#76) is "items settled over time": 1–3
+   `series` plotted against a real time x-axis (`points`' `date`, a gap in
+   the dates is a gap in spacing, not silently compressed the way an
+   evenly spaced band would), either as independent `mode="line"`s
+   (default) or as a `mode="stacked-area"` (each series' share of the
+   stack, bottom-up in `series`' order). An optional dashed `events`
+   marker calls out e.g. a bulk import:
+
+   ```html
+   <sumi-line-chart
+     ariaLabel="Items settled over the last 90 days"
+     [points]="settledPoints"
+     [series]="[
+       { key: 'earned', label: 'Earned' },
+       { key: 'known', label: 'Marked as known' },
+     ]"
+     mode="stacked-area"
+     [events]="[{ date: '2024-09-19', label: 'import' }]"
+     table
+   />
+   ```
+
+   The y-axis max is called out top-left, like `sumi-bar-chart`'s own max
+   callout (the largest single series value in `'line'` mode, the tallest
+   stacked total in `'stacked-area'` mode); the last value of each line
+   (`'line'` mode) or of the stack top (`'stacked-area'` mode, a single
+   callout for the total rather than one per series) is called out at the
+   line's right end. `sumi-legend` appears once there are 2+ series. Dates
+   are parsed as UTC days (`parseISODate`'s convention, shared with
+   `sumi-calendar-heatmap`), never a local `new Date('yyyy-mm-dd')` getter,
+   so a chart never shifts by a day depending on the viewer's timezone.
+   The x-axis ticks are thinned with the same `axisLabelStep`/
+   `axisMinLabelSpacing` helpers `sumi-bar-chart` uses, applied to the
+   points' own index — screen spacing between ticks is uneven when dates
+   have gaps (a real time scale, not an evenly spaced band), but the
+   minimum-spacing check is based on each shown label's own estimated
+   width regardless of where it lands, so two labels still never collide.
+
+   `sumi-progress-row` (sumi-ui#76) is one row — a label, a reused
+   `sumi-segmented-bar` (`height="sm"`, never a second, duplicated bar
+   drawing) and a "x / y" value readout — for a dashboard like
+   kanji-trainer's Radicals/Kanji/Vocabulary progress (`segments` is the
+   same `SumiSegment[]` shape `sumi-segmented-bar` takes):
+
+   ```html
+   <sumi-progress-row
+     label="Radicals"
+     [segments]="[
+       { label: 'Seen', value: 48, color: 'var(--sumi-accent)' },
+       { label: 'Remaining', value: 2, color: 'var(--sumi-sunken)' },
+     ]"
+     [value]="48"
+     [total]="50"
+   />
+   ```
+
+   `ariaLabel` defaults to `"<label>: <value> of <total>"`, passed through
+   to the inner `sumi-segmented-bar`'s own required `ariaLabel`. Several
+   rows stacked keep their bars aligned via a shared
+   `--sumi-progress-row-label-width` CSS custom property (default `7rem`)
+   on a common ancestor, rather than each row sizing its own label column
+   from its own label's length; on a narrow container (a container query,
+   same recipe as `sumi-stat-grid`) the bar wraps onto its own line below
+   the label and value instead of squeezing all three into illegibility.
 
    `sumi-calendar-heatmap` and `sumi-matrix-heatmap` are the two "any
    values in a grid" charts (day activity as weeks x weekdays; anything
@@ -1190,12 +1282,14 @@ again"`) let such an app use its own wording, and `actionDisabled`
    `"Apprentice › Apprentice I"`).
 
    See `projects/showcase/src/app/pages/charts/charts.ts`/`.html` for all
-   ten components wired up against realistic example data (KPI tiles, SRS
-   distribution, a 30-session Elo sparkline, a 24h "coming up" chart with
-   the current hour highlighted, a stacked 7-day forecast, a 26-week
-   review calendar, a kana confidence matrix, a conjugation miss-rate
-   matrix, a katakana-reading outcome donut, a reviews-by-SRS-stage
-   sunburst and per-level coverage bars).
+   twelve components wired up against realistic example data (KPI tiles,
+   SRS distribution, a 30-session Elo sparkline, a 24h "coming up" chart
+   with the current hour highlighted, a stacked 7-day forecast, items
+   settled over 90 days with an import marker, a selectable "open a level"
+   bar chart, three dashboard progress rows, a 26-week review calendar, a
+   kana confidence matrix, a conjugation miss-rate matrix, a
+   katakana-reading outcome donut, a reviews-by-SRS-stage sunburst and
+   per-level coverage bars).
 
    ### Data table: selection and activation
 

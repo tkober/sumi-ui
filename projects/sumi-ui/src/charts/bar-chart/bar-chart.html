@@ -67,6 +67,23 @@
     [attr.y1]="plot().height - plot().bottom"
     [attr.y2]="plot().height - plot().bottom"
   />
+
+  @if (selectable()) {
+    @for (column of selectableColumns(); track $index; let i = $index) {
+      <rect
+        class="sumi-bar-chart__hit"
+        [attr.x]="column.x"
+        [attr.y]="plot().top"
+        [attr.width]="column.width"
+        [attr.height]="plot().height - plot().top - plot().bottom"
+        role="button"
+        tabindex="0"
+        [attr.aria-label]="column.label + ': ' + column.value"
+        (click)="onBarSelect(i, column.label)"
+        (keydown)="onBarKeydown($event, i, column.label)"
+      />
+    }
+  }
 </svg>
 
 @if (table()) {
