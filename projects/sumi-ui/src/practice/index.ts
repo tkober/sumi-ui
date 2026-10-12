@@ -30,6 +30,11 @@ export { SumiVerdictCard } from './verdict/verdict';
 export { SumiVerdictDetailsDirective } from './verdict/verdict-details.directive';
 export { SumiCountdownRing } from './countdown-ring/countdown-ring';
 export { SumiSessionBar } from './session-bar/session-bar';
+export {
+  SumiSessionProgress,
+  SUMI_SESSION_NARROW_BREAKPOINT,
+  type SumiSessionProgressSegment,
+} from './session-progress/session-progress';
 export { SumiSessionSummary } from './session-summary/session-summary';
 export { SumiSummaryTile } from './session-summary/summary-tile';
 export { SumiSessionGate } from './session-gate/session-gate';
@@ -45,6 +50,7 @@ import { SumiVerdictCard } from './verdict/verdict';
 import { SumiVerdictDetailsDirective } from './verdict/verdict-details.directive';
 import { SumiCountdownRing } from './countdown-ring/countdown-ring';
 import { SumiSessionBar } from './session-bar/session-bar';
+import { SumiSessionProgress } from './session-progress/session-progress';
 import { SumiSessionSummary } from './session-summary/session-summary';
 import { SumiSummaryTile } from './session-summary/summary-tile';
 import { SumiSessionGate } from './session-gate/session-gate';
@@ -61,6 +67,7 @@ export const SUMI_PRACTICE = [
   SumiVerdictDetailsDirective,
   SumiCountdownRing,
   SumiSessionBar,
+  SumiSessionProgress,
   SumiSessionSummary,
   SumiSummaryTile,
   SumiSessionGate,

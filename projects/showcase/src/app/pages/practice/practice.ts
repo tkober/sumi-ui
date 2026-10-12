@@ -12,6 +12,7 @@ import {
   SumiAnswerField,
   type SumiAnswerMode,
   type SumiFuriganaSegment,
+  type SumiSessionProgressSegment,
   type SumiVerdict,
   type SumiVerdictKind,
 } from 'sumi-ui/practice';
@@ -129,7 +130,15 @@ type SessionState = 'idle' | 'running' | 'ended';
  * a `sumi-session-summary` at the end. `sumi-session-bar` lives in the
  * shell's header itself via `*sumiShellFocusActions` (#27) rather than
  * inside this page's own markup — its answered/accuracy stay live and its
- * "End session" button calls this page's own `endSession()`. A
+ * "End session" button calls this page's own `endSession()`. Per sumi-ui#74,
+ * this round's `sumi-session-bar` now also demos `[done]` and
+ * `[showProgress]="false"`: `done` is simply `correct()` here (every card
+ * in this demo advances once settled, so "answered correctly" already is
+ * "made progress"), and the built-in bar is off because the round shows
+ * its own `sumi-session-progress` above the card instead, split into three
+ * demo batches (`progressSegments`) that fill in order as `correct()`
+ * grows — purely a showcase grouping, not a real batch boundary from the
+ * app. A
  * "Conversation-style ending" section demos `sumi-session-summary` without
  * `answered`/`correct` and `actionDisabled` on it and the wrapping gate
  * (sumi-ui#56) — a toggle flips between "analysing" and "ready". The
@@ -174,6 +183,22 @@ export class PracticePage {
   protected readonly answered = signal(0);
   protected readonly correct = signal(0);
   private heldOnce = false;
+
+  // --- sumi-session-progress (sumi-ui#74) -------------------------------
+  // Three demo batches over the four cards above, purely for the
+  // showcase (the real sizing comes from whatever the app batches by).
+  // `correct()` fills them in order: batch 1 first, then batch 2, etc.
+  private static readonly PROGRESS_BATCH_SIZES = [2, 1, 1];
+  private static readonly PROGRESS_BATCH_LABELS = ['Batch 1', 'Batch 2', 'Batch 3'];
+
+  protected readonly progressSegments = computed<SumiSessionProgressSegment[]>(() => {
+    let remaining = this.correct();
+    return PracticePage.PROGRESS_BATCH_SIZES.map((size, i) => {
+      const done = Math.max(0, Math.min(size, remaining));
+      remaining -= done;
+      return { size, done, label: PracticePage.PROGRESS_BATCH_LABELS[i] };
+    });
+  });
 
   protected readonly detailsOpen = signal(false);
   protected readonly log = signal<string[]>([]);
@@ -438,6 +463,18 @@ export class PracticePage {
       value: 'wood',
       verdict: { kind: 'retry', message: "Doesn't count — that's a real reading of 木." },
     },
+  ];
+
+  // --- sumi-session-progress standalone demos (sumi-ui#74) -------------
+  // Straight from the issue's own mockup numbers: a plain review queue
+  // (one segment, no batches) and a lesson quiz mid-way through batch 2.
+
+  protected readonly singleBarSegments: SumiSessionProgressSegment[] = [{ size: 254, done: 188 }];
+
+  protected readonly quizBatchSegments: SumiSessionProgressSegment[] = [
+    { size: 10, done: 10, label: 'Batch 1' },
+    { size: 10, done: 4, label: 'Batch 2' },
+    { size: 8, done: 0, label: 'Batch 3' },
   ];
 
   // --- "Other building blocks" section ---------------------------------

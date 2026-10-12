@@ -1,0 +1,63 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+.sumi-session-progress__bar {
+  display: grid;
+  gap: var(--sumi-space-1);
+}
+
+.sumi-session-progress__track {
+  display: flex;
+  align-items: center;
+  gap: var(--sumi-space-1);
+}
+
+.sumi-session-progress__segment {
+  position: relative;
+  flex-basis: 0;
+  min-width: 0;
+  height: 5px;
+  border-radius: var(--sumi-radius-pill);
+  background: var(--sumi-sunken);
+  overflow: hidden;
+}
+
+// Narrow screens (sumi-ui#74): this is the copy teleported into the shell
+// header's strip, see `SumiSessionProgress`'s own doc comment — one point
+// shorter than the 5px desktop bar, same as the narrow tab bar/icons
+// elsewhere in the shell.
+.sumi-session-progress__bar--narrow .sumi-session-progress__segment {
+  height: 4px;
+}
+
+.sumi-session-progress__fill {
+  height: 100%;
+  width: 0%;
+  background: var(--sumi-accent);
+  border-radius: var(--sumi-radius-pill);
+  transition: width 200ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sumi-session-progress__fill {
+    transition: none;
+  }
+}
+
+.sumi-session-progress__labels {
+  display: flex;
+  gap: var(--sumi-space-1);
+}
+
+.sumi-session-progress__label {
+  flex-basis: 0;
+  min-width: 0;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: var(--sumi-text-xs);
+  color: var(--sumi-muted);
+}

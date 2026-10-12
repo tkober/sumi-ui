@@ -1,7 +1,14 @@
 import { TestBed } from '@angular/core/testing';
 import { SumiSessionBar } from './session-bar';
 
-function render(inputs: { answered: number; correct: number; total?: number; remaining?: number }) {
+function render(inputs: {
+  answered: number;
+  correct: number;
+  total?: number;
+  remaining?: number;
+  done?: number;
+  showProgress?: boolean;
+}) {
   TestBed.configureTestingModule({ imports: [SumiSessionBar] });
   const fixture = TestBed.createComponent(SumiSessionBar);
   fixture.componentRef.setInput('answered', inputs.answered);
@@ -11,6 +18,12 @@ function render(inputs: { answered: number; correct: number; total?: number; rem
   }
   if (inputs.remaining != null) {
     fixture.componentRef.setInput('remaining', inputs.remaining);
+  }
+  if (inputs.done != null) {
+    fixture.componentRef.setInput('done', inputs.done);
+  }
+  if (inputs.showProgress != null) {
+    fixture.componentRef.setInput('showProgress', inputs.showProgress);
   }
   fixture.detectChanges();
   return fixture;
@@ -62,6 +75,38 @@ describe('SumiSessionBar', () => {
     const fixture = render({ answered: 5, correct: 5, total: 20 });
     const fill = host(fixture).querySelector('.sumi-session-bar__progress-fill') as HTMLElement;
     expect(fill.style.width).toBe('25%');
+  });
+
+  it('"done" (sumi-ui#74): counter shows done / total and the bar measures done, accuracy stays correct/answered', () => {
+    const fixture = render({ answered: 10, correct: 7, done: 6, total: 20 });
+    const el = host(fixture);
+    expect(text(el.querySelector('.sumi-session-bar__count'))).toBe('6 / 20');
+    expect(text(el.querySelector('.sumi-session-bar__accuracy'))).toBe('70%');
+    const fill = el.querySelector('.sumi-session-bar__progress-fill') as HTMLElement;
+    expect(fill.style.width).toBe('30%');
+  });
+
+  it('"done": total/remaining apply to done (total = done + remaining)', () => {
+    const fixture = render({ answered: 10, correct: 7, done: 6, remaining: 4 });
+    expect(text(host(fixture).querySelector('.sumi-session-bar__count'))).toBe('6 / 10');
+  });
+
+  it('without "done", counter and bar still measure answered (backwards compatible)', () => {
+    const fixture = render({ answered: 5, correct: 5, total: 20 });
+    expect(text(host(fixture).querySelector('.sumi-session-bar__count'))).toBe('5 / 20');
+    const fill = host(fixture).querySelector('.sumi-session-bar__progress-fill') as HTMLElement;
+    expect(fill.style.width).toBe('25%');
+  });
+
+  it('"showProgress" false removes the built-in bar even with a total', () => {
+    const fixture = render({ answered: 5, correct: 5, total: 20, showProgress: false });
+    expect(host(fixture).querySelector('.sumi-session-bar__progress')).toBeNull();
+    expect(text(host(fixture).querySelector('.sumi-session-bar__count'))).toBe('5 / 20');
+  });
+
+  it('"showProgress" defaults to true', () => {
+    const fixture = render({ answered: 5, correct: 5, total: 20 });
+    expect(host(fixture).querySelector('.sumi-session-bar__progress')).toBeTruthy();
   });
 
   it('emits end() when the "End session" button is clicked', () => {

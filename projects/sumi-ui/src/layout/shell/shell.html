@@ -1,60 +1,68 @@
 <a class="sumi-app-shell__skip-link" [attr.href]="'#' + mainId">Skip to content</a>
 
-<header class="sumi-app-shell__header">
-  <a class="sumi-app-shell__brand" routerLink="/">
-    <span class="sumi-app-shell__brand-glyph" lang="ja">{{ brand().glyph }}</span>
-    <span class="sumi-app-shell__brand-name">{{ brand().name }}</span>
-  </a>
+<div class="sumi-app-shell__sticky">
+  <header class="sumi-app-shell__header">
+    <a class="sumi-app-shell__brand" routerLink="/">
+      <span class="sumi-app-shell__brand-glyph" lang="ja">{{ brand().glyph }}</span>
+      <span class="sumi-app-shell__brand-name">{{ brand().name }}</span>
+    </a>
 
-  @if (!shell.focusMode()) {
-    <nav class="sumi-app-shell__nav" aria-label="Main">
-      @for (item of nav(); track item.link) {
-        <a
-          class="sumi-app-shell__nav-link"
-          [routerLink]="shell.navLock() ? null : item.link"
-          routerLinkActive="sumi-app-shell__nav-link--active"
-          [routerLinkActiveOptions]="{ exact: item.exact ?? false }"
-          [attr.aria-disabled]="shell.navLock() ? 'true' : null"
-          [attr.tabindex]="shell.navLock() ? -1 : null"
-        >
-          <sumi-icon [name]="item.icon" />
-          <span>{{ item.label }}</span>
-          @if (item.badge) {
-            <sumi-badge [tone]="item.badgeTone ?? 'accent'">{{ item.badge }}</sumi-badge>
-          }
-        </a>
-      }
-    </nav>
-  }
+    @if (!shell.focusMode()) {
+      <nav class="sumi-app-shell__nav" aria-label="Main">
+        @for (item of nav(); track item.link) {
+          <a
+            class="sumi-app-shell__nav-link"
+            [routerLink]="shell.navLock() ? null : item.link"
+            routerLinkActive="sumi-app-shell__nav-link--active"
+            [routerLinkActiveOptions]="{ exact: item.exact ?? false }"
+            [attr.aria-disabled]="shell.navLock() ? 'true' : null"
+            [attr.tabindex]="shell.navLock() ? -1 : null"
+          >
+            <sumi-icon [name]="item.icon" />
+            <span>{{ item.label }}</span>
+            @if (item.badge) {
+              <sumi-badge [tone]="item.badgeTone ?? 'accent'">{{ item.badge }}</sumi-badge>
+            }
+          </a>
+        }
+      </nav>
+    }
 
-  @if (shell.navLock()) {
-    <p class="sumi-app-shell__nav-lock-hint" role="status">{{ shell.navLock() }}</p>
-  }
+    @if (shell.navLock()) {
+      <p class="sumi-app-shell__nav-lock-hint" role="status">{{ shell.navLock() }}</p>
+    }
 
-  @if (shell.focusMode()) {
-    <div class="sumi-app-shell__focus-actions">
-      @if (shell.focusActions(); as focusActionsTemplate) {
-        <ng-container [ngTemplateOutlet]="focusActionsTemplate" />
-      } @else {
-        <ng-content select="[sumiShellFocusActions]" />
-      }
+    @if (shell.focusMode()) {
+      <div class="sumi-app-shell__focus-actions">
+        @if (shell.focusActions(); as focusActionsTemplate) {
+          <ng-container [ngTemplateOutlet]="focusActionsTemplate" />
+        } @else {
+          <ng-content select="[sumiShellFocusActions]" />
+        }
+      </div>
+    }
+
+    @if (!shell.focusMode() || keepActionsInFocusMode()) {
+      <div class="sumi-app-shell__actions">
+        <ng-content select="[sumiShellActions]" />
+      </div>
+    }
+
+    @if (!shell.focusMode()) {
+      <div class="sumi-app-shell__switcher">
+        <ng-content select="[sumiShellSwitcher]" />
+      </div>
+    }
+
+    <sumi-theme-toggle />
+  </header>
+
+  @if (shell.narrowStrip(); as narrowStripTemplate) {
+    <div class="sumi-app-shell__narrow-strip">
+      <ng-container [ngTemplateOutlet]="narrowStripTemplate" />
     </div>
   }
-
-  @if (!shell.focusMode() || keepActionsInFocusMode()) {
-    <div class="sumi-app-shell__actions">
-      <ng-content select="[sumiShellActions]" />
-    </div>
-  }
-
-  @if (!shell.focusMode()) {
-    <div class="sumi-app-shell__switcher">
-      <ng-content select="[sumiShellSwitcher]" />
-    </div>
-  }
-
-  <sumi-theme-toggle />
-</header>
+</div>
 
 <sumi-app-shell-tab-bar [nav]="nav()" />
 

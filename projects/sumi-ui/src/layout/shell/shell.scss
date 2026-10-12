@@ -21,10 +21,17 @@
   }
 }
 
-.sumi-app-shell__header {
+// Wraps the header and the narrow-screen strip (sumi-ui#74) so both stay
+// pinned together while the page scrolls — the strip has no sticky
+// position of its own, it just rides along directly under the header,
+// whatever the header's own height happens to be.
+.sumi-app-shell__sticky {
   position: sticky;
   top: env(safe-area-inset-top, 0px);
   z-index: 20;
+}
+
+.sumi-app-shell__header {
   display: flex;
   align-items: center;
   gap: var(--sumi-space-4);
@@ -142,6 +149,15 @@
   gap: var(--sumi-space-2);
   flex: 1;
   min-width: 0;
+}
+
+// Full-width strip a narrow-screen `sumi-session-progress` teleports into
+// (sumi-ui#74), directly under the header with no gap — the header's own
+// border-bottom sits between them, so there is no doubled border here.
+.sumi-app-shell__narrow-strip {
+  background: var(--sumi-surface);
+  border-bottom: 1px solid var(--sumi-line);
+  padding: var(--sumi-space-2) var(--sumi-space-3) var(--sumi-space-2);
 }
 
 .sumi-app-shell__main {

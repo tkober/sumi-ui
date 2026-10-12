@@ -770,6 +770,67 @@ successfully with `ng build` from a throwaway Angular 22 app):
    </div>
    ```
 
+   `done` (sumi-ui#74) separates *progress* from *accuracy*: without it,
+   the counter and the built-in bar both measure `answered`, exactly as
+   before. With it, the counter shows `done / total` and the bar fills
+   from `done` instead — `total`/`remaining` then describe `done`, so
+   `total = done + remaining`. `correct / answered` still drives the
+   accuracy percentage either way; a wrong answer counts for accuracy but
+   never advances `done`. `showProgress` (default `true`) drops the
+   built-in bar entirely — set it to `false` once an app places its own
+   `sumi-session-progress` instead, so the two bars are never both shown:
+
+   ```html
+   <sumi-session-bar
+     [answered]="answered()"
+     [correct]="correct()"
+     [done]="correct()"
+     [total]="total()"
+     [showProgress]="false"
+     (end)="endSession()"
+   />
+   ```
+
+   **`sumi-session-progress`** (sumi-ui#74) — the session-wide progress
+   bar above the practice card: proportional segments (e.g. batches or
+   review rounds), filling in `--sumi-accent` on a `--sumi-sunken` track,
+   with no visual difference between a finished and a currently-running
+   segment. `segments` is `{ size; done; label? }[]`, in whatever unit the
+   app counts progress in (e.g. questions); each segment's fill is
+   `done / size`, clamped to `[0, 1]`. `ariaLabel` is required —
+   `role="progressbar"` reports the summed `done`/`size` across every
+   segment. A single segment renders as one continuous bar with no labels
+   row; a labels row appears only once there is more than one segment
+   *and* at least one of them has a `label`, small and muted underneath,
+   with no segment highlighted:
+
+   ```html
+   <sumi-session-progress
+     ariaLabel="Session progress"
+     [segments]="[
+       { size: 10, done: 10, label: 'Batch 1' },
+       { size: 10, done: 4, label: 'Batch 2' },
+       { size: 8, done: 0, label: 'Batch 3' }
+     ]"
+   />
+   ```
+
+   The app includes it exactly once, right above the practice card, with
+   the same `max-width` as the card. On a wide screen it renders right
+   there; below 480px (the same width at which `sumi-session-bar`'s own
+   inline bar disappears, `SUMI_SESSION_NARROW_BREAKPOINT`) it instead
+   renders as a full-width strip directly under `sumi-app-shell`'s header,
+   pinned there while the page scrolls. It does this itself, with nothing
+   extra for the app to wire up: it holds its actual markup in an internal
+   `ng-template` and, on narrow screens only (a `matchMedia` listener, not
+   a route transition), registers that template with `SumiShell`'s
+   narrow-strip slot — the same `ngTemplateOutlet` register/unregister
+   mechanism `*sumiShellFocusActions` uses for the focus-actions area (see
+   "Focus-mode header actions" below) — instead of rendering it locally.
+   Either way there is exactly one `ngTemplateOutlet` instantiating that
+   template, so the app never ends up with two visible copies, placed once
+   or not.
+
    **`sumi-session-gate`** is the start/end screen container: `title`
    (optional — omit it when projected content, e.g. `sumi-session-summary`,
    already supplies its own heading), `text`, `actionLabel` and a `start`

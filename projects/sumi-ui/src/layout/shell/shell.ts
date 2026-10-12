@@ -52,6 +52,12 @@ export interface SumiNavItem {
  * the app switcher — on a phone it would otherwise overlap the
  * focus-actions area (e.g. a session bar). Pass `keepActionsInFocusMode`
  * for the rare app that wants its actions visible there anyway.
+ *
+ * Below the header sits a full-width strip (sumi-ui#74) that is empty and
+ * takes no space until `sumi-session-progress` registers itself into it —
+ * it does so on its own, on narrow screens only, see that component's own
+ * doc comment. The strip rides along with the header inside one shared
+ * sticky wrapper, so both stay pinned together while the page scrolls.
  */
 @Component({
   selector: 'sumi-app-shell',
