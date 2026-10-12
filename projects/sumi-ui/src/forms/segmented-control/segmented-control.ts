@@ -4,6 +4,7 @@ import {
   QueryList,
   ViewChildren,
   afterRenderEffect,
+  booleanAttribute,
   forwardRef,
   input,
   model,
@@ -40,14 +41,21 @@ export interface SumiSegmentedOption<T> {
  * allows) instead: a click/arrow move only commits when it returns `true`,
  * so a rejection never writes `value` and there is nothing to revert.
  *
- * Options never shrink or wrap (`flex: none`, `white-space: nowrap`): a
- * row that does not fit its container scrolls horizontally inside its own
- * box instead of squeezing or clipping labels, and the selected option is
- * scrolled into view whenever `value` changes. This is still a control
- * for a *small* fixed set of mutually exclusive options — past about
- * four or five, or when the options are really navigation rather than a
- * setting, reach for `<select>` (many options) or a row of chips
- * (multi-select, or options that come and go) instead; see the README.
+ * Options never wrap (`white-space: nowrap`). When the track has its
+ * normal, content-sized width (desktop, `fill` false), options also never
+ * shrink below their label (`flex: none`): a row that does not fit its
+ * container scrolls horizontally inside its own box instead of squeezing
+ * or clipping labels, and the selected option is scrolled into view
+ * whenever `value` changes. When the track is stretched instead — below
+ * 480px, or whenever the `fill` input is set — options share its width
+ * equally (`flex: 1 1 0`) rather than sticking to one side and leaving
+ * empty space, but still never shrink below their own label
+ * (`min-width: max-content`); a track too narrow even for that still
+ * scrolls rather than clipping. This is still a control for a *small*
+ * fixed set of mutually exclusive options — past about four or five, or
+ * when the options are really navigation rather than a setting, reach for
+ * `<select>` (many options) or a row of chips (multi-select, or options
+ * that come and go) instead; see the README.
  */
 @Component({
   selector: 'sumi-segmented-control',
@@ -62,11 +70,20 @@ export interface SumiSegmentedOption<T> {
   ],
   host: {
     class: 'sumi-segmented-control',
+    '[class.sumi-segmented-control--fill]': 'fill()',
   },
 })
 export class SumiSegmentedControl<T> implements FormValueControl<T>, ControlValueAccessor {
   readonly options = input<SumiSegmentedOption<T>[]>([]);
   readonly disabled = input(false);
+
+  /**
+   * Stretches the track to full width even above 480px, with options
+   * sharing that width equally — same rule the `@media (max-width: 480px)`
+   * case already applies (see the class doc comment). `false` by default,
+   * i.e. no change to the existing desktop behaviour.
+   */
+  readonly fill = input(false, { transform: booleanAttribute });
 
   // `model()` needs a value up front; there is no generically correct
   // default for an arbitrary `T`, so this starts out as `undefined` and is

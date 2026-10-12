@@ -2,6 +2,37 @@
 // styles itself via `:host` under default `ViewEncapsulation` — see the
 // issue's "composite controls are components" decision.
 
+// Shared by the `fill` input and the `@media (max-width: 480px)` block
+// below, so the two "track is stretched" cases cannot drift apart
+// (sumi-ui#78): the host and its track both go full width. Mixins, not
+// `@extend` placeholders, because one of the two call sites is itself
+// inside a media query and Sass refuses to `@extend` across that
+// boundary.
+@mixin stretched-track {
+  display: flex;
+  width: 100%;
+
+  > div {
+    width: 100%;
+  }
+}
+
+// Also shared between `fill` and the 480px block: once the track is
+// stretched, options share its width equally instead of sticking to one
+// side and leaving empty space (sumi-ui#78). `flex: 1 1 0` grows/shrinks
+// every option from a zero basis, so they end up equal; `min-width:
+// max-content` then stops an option from shrinking past its label. With
+// the global `box-sizing: border-box` (styles/_base.scss), a browser adds
+// the option's own padding to the label's intrinsic width before using it
+// as the border-box minimum, so the label still clears the padding on
+// both sides instead of touching the option's edge (verified in a real
+// browser, see sumi-ui#78) — this replaces the fixed `2.5rem` min-width
+// below, which would otherwise fight equal sizing on a long label.
+@mixin stretched-option {
+  flex: 1 1 0;
+  min-width: max-content;
+}
+
 :host {
   display: inline-flex;
   max-width: 100%;
@@ -19,6 +50,16 @@
     // `.sumi-segmented-control__option` below.
     overflow-x: auto;
     scrollbar-width: thin;
+  }
+}
+
+// New `fill` input (sumi-ui#78): stretch the track to full width at every
+// viewport size, not just below 480px, with the same equal-segment rule.
+:host(.sumi-segmented-control--fill) {
+  @include stretched-track;
+
+  > div > .sumi-segmented-control__option {
+    @include stretched-option;
   }
 }
 
@@ -68,15 +109,16 @@
 }
 
 // Full width on narrow screens, per docs/concept.md's "Daumen zuerst" —
-// the row itself stretches, but options still never shrink (see above),
-// so a row too wide for 100% scrolls instead of squeezing every option.
+// the row itself stretches and (sumi-ui#78) its options now share that
+// width equally instead of sticking to one side; a row too wide for 100%
+// still scrolls instead of squeezing every option (`min-width:
+// max-content` above stops at the label's own size).
 @media (max-width: 480px) {
   :host {
-    display: flex;
-    width: 100%;
+    @include stretched-track;
+  }
 
-    > div {
-      width: 100%;
-    }
+  .sumi-segmented-control__option {
+    @include stretched-option;
   }
 }

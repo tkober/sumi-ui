@@ -87,4 +87,30 @@ export class FormsPage {
     'Aug',
   ].map((label) => ({ value: label, label }));
   protected readonly manyOptionsValue = signal('Jan');
+
+  // sumi-ui#78: `fill` stretches the track to full width and shares it
+  // equally between options, on any viewport — `.demo__fill-box` below
+  // pins these to a phone-sized box so the effect shows up on desktop too.
+  protected readonly fillPositiveNegative: SumiSegmentedOption<string>[] = [
+    { value: 'positive', label: 'Positive' },
+    { value: 'negative', label: 'Negative' },
+  ];
+  protected readonly fillPositiveNegativeValue = signal('positive');
+
+  protected readonly fillTextEmoji: SumiSegmentedOption<string>[] = [
+    { value: 'text', label: 'Text' },
+    { value: 'emoji', label: 'Emoji' },
+    { value: 'text-emoji', label: 'Text + emoji' },
+  ];
+  protected readonly fillTextEmojiValue = signal('text');
+
+  // Long labels in a narrow `fill` box: still scrolls rather than
+  // squeezing or wrapping (sumi-ui#36's guarantee holds for `fill` too).
+  protected readonly fillCasualPolite: SumiSegmentedOption<string>[] = [
+    { value: 'casual-positive', label: 'Casual, positive' },
+    { value: 'casual-negative', label: 'Casual, negative' },
+    { value: 'polite-positive', label: 'Polite, positive' },
+    { value: 'polite-negative', label: 'Polite, negative' },
+  ];
+  protected readonly fillCasualPoliteValue = signal('casual-positive');
 }
