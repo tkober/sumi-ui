@@ -288,6 +288,18 @@ Tabellen-Fallback (siehe kanji-trainer Forecast).
   `sumi-prompt-card`s `kind`-Chip den Item-Typ zeigen (z. B. „Kanji“) statt
   „Reading“/„Meaning“ zu wiederholen.
 - Touch-Ziele mindestens 44 px, Safe-Area-Abstände für iOS.
+- **Session-Fortschritt** (sumi-ui#74): `sumi-session-progress` zeigt den
+  Fortschritt einer Session als eigenen, nach Batches/Runden unterteilten
+  Balken über der Karte — getrennt von `sumi-session-bar`s Zähler und
+  Trefferquote (dort trennt der neue Input `done` Fortschritt von
+  Trefferquote, `showProgress` schaltet deren eigenen Balken ab). Unter der
+  Breite, ab der `sumi-session-bar`s eingebauter Balken verschwindet
+  (480 px), erscheint `sumi-session-progress` stattdessen als volle Leiste
+  direkt unter dem Header von `sumi-app-shell`, mit der Kopfzeile stehend.
+  Dafür registriert sich die Komponente selbst (per `matchMedia`, nicht per
+  Direktive) in einem eigenen Slot von `SumiShell`, analog zum
+  Fokus-Actions-Slot für `*sumiShellFocusActions` — die App bindet den
+  Baustein nur einmal ein, ohne eigene Breakpoint-Logik.
 
 ## Tuschemotive
 
