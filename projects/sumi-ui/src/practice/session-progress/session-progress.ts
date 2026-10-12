@@ -11,7 +11,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { NgTemplateOutlet, isPlatformBrowser } from '@angular/common';
-import { SumiShell } from '../../layout/shell/shell.service';
+import { SumiShell } from 'sumi-ui/layout';
 
 /** One segment of `sumi-session-progress`, e.g. one batch or review round. */
 export interface SumiSessionProgressSegment {

@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { SumiAppShell } from '../../layout/shell/shell';
+import { SumiAppShell } from 'sumi-ui/layout';
 import { SumiSessionProgress, type SumiSessionProgressSegment } from './session-progress';
 
 function mockMatchMedia(matches: boolean) {
