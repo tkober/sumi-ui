@@ -47,8 +47,13 @@
   user-select: none;
 }
 
+// A 44px touch target without growing the pill itself: a min-height on the
+// control squashed the fixed-width track into a circle on phones. The
+// invisible hit area extends the control's box up and down instead.
 @media (pointer: coarse) {
-  .sumi-toggle__control {
-    min-height: 44px;
+  .sumi-toggle__control::after {
+    content: '';
+    position: absolute;
+    inset: -10px -4px;
   }
 }
