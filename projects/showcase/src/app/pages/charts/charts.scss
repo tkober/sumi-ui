@@ -75,3 +75,9 @@
   font-family: var(--sumi-font-display);
   font-size: var(--sumi-text-2xl);
 }
+
+.demo__progress-rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sumi-space-3);
+}

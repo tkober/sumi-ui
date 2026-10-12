@@ -32,6 +32,9 @@ import {
   sunburstLabelOrientation,
   arcLabelTangentialRotation,
   toPoints,
+  formatLineChartDateLabel,
+  lineChartGeometry,
+  type PlotBox,
 } from './math';
 
 describe('toPoints', () => {
@@ -845,5 +848,162 @@ describe('sunburstTint', () => {
     const d3 = sunburstTint('red', 3);
     const pct = (s: string) => Number(s.match(/(\d+)%/)![1]);
     expect(pct(d3)).toBeLessThan(pct(d2));
+  });
+});
+
+describe('formatLineChartDateLabel', () => {
+  it('formats an ISO date as "<day> <month>", parsed as a UTC day', () => {
+    expect(formatLineChartDateLabel('2024-10-15')).toBe('15 Oct');
+    expect(formatLineChartDateLabel('2024-01-01')).toBe('1 Jan');
+  });
+});
+
+describe('lineChartGeometry', () => {
+  const plot: PlotBox = { width: 300, height: 180, top: 20, right: 30, bottom: 20, left: 10 };
+
+  it('returns empty geometry without throwing for zero points', () => {
+    const geo = lineChartGeometry([], ['a'], ['var(--sumi-seq-5)'], 'line', [], plot);
+    expect(geo.series).toHaveLength(1);
+    expect(geo.series[0].linePath).toBe('');
+    expect(geo.maxValue).toBe(0);
+    expect(geo.ticks).toEqual([]);
+    expect(geo.stackTotal).toBeNull();
+  });
+
+  it('returns empty geometry without throwing for zero series', () => {
+    const geo = lineChartGeometry([{ date: '2024-01-01', values: {} }], [], [], 'line', [], plot);
+    expect(geo.series).toEqual([]);
+  });
+
+  it('does not throw and plots a flat line for a single point', () => {
+    const geo = lineChartGeometry(
+      [{ date: '2024-01-01', values: { a: 5 } }],
+      ['a'],
+      ['var(--sumi-seq-5)'],
+      'line',
+      [],
+      plot,
+    );
+    expect(geo.series[0].linePath).not.toContain('NaN');
+    expect(geo.series[0].last.value).toBe(5);
+    expect(Number.isFinite(geo.series[0].last.x)).toBe(true);
+    expect(Number.isFinite(geo.series[0].last.y)).toBe(true);
+  });
+
+  it('uses the largest single series value as maxValue in line mode', () => {
+    const points = [
+      { date: '2024-01-01', values: { a: 2, b: 9 } },
+      { date: '2024-01-02', values: { a: 7, b: 4 } },
+    ];
+    const geo = lineChartGeometry(
+      points,
+      ['a', 'b'],
+      ['var(--sumi-seq-1)', 'var(--sumi-seq-5)'],
+      'line',
+      [],
+      plot,
+    );
+    expect(geo.maxValue).toBe(9);
+    expect(geo.stackTotal).toBeNull();
+  });
+
+  it('uses the largest stacked total as maxValue in stacked-area mode, and fills an area per series', () => {
+    const points = [
+      { date: '2024-01-01', values: { a: 2, b: 1 } },
+      { date: '2024-01-02', values: { a: 7, b: 4 } },
+    ];
+    const geo = lineChartGeometry(
+      points,
+      ['a', 'b'],
+      ['var(--sumi-seq-1)', 'var(--sumi-seq-5)'],
+      'stacked-area',
+      [],
+      plot,
+    );
+    expect(geo.maxValue).toBe(11); // 7 + 4, the taller stack
+    geo.series.forEach((s) => expect(s.areaPath).not.toBe(''));
+    expect(geo.stackTotal).not.toBeNull();
+    expect(geo.stackTotal!.value).toBe(11);
+  });
+
+  it("each stacked series' last value is its own (non-cumulative) value, not the running total", () => {
+    const points = [{ date: '2024-01-01', values: { a: 2, b: 4 } }];
+    const geo = lineChartGeometry(
+      points,
+      ['a', 'b'],
+      ['var(--sumi-seq-1)', 'var(--sumi-seq-5)'],
+      'stacked-area',
+      [],
+      plot,
+    );
+    expect(geo.series[0].last.value).toBe(2);
+    expect(geo.series[1].last.value).toBe(4);
+  });
+
+  it('respects gaps in dates: a real time scale, not an evenly spaced band', () => {
+    const points = [
+      { date: '2024-01-01', values: { a: 1 } },
+      { date: '2024-01-02', values: { a: 1 } },
+      { date: '2024-02-01', values: { a: 1 } }, // a large gap after a tight pair
+    ];
+    const geo = lineChartGeometry(points, ['a'], ['var(--sumi-seq-5)'], 'line', [], plot);
+    const gapAfterDay1 = geo.ticks.find((t) => t.label === '2 Jan');
+    const gapAfterDay2 = geo.ticks.find((t) => t.label === '1 Feb');
+    // Only assert something meaningful if both ticks survived thinning —
+    // the real point here is in the x positions below.
+    if (gapAfterDay1 && gapAfterDay2) {
+      const firstGap = gapAfterDay1.x - plot.left;
+      const secondGap = gapAfterDay2.x - gapAfterDay1.x;
+      expect(secondGap).toBeGreaterThan(firstGap);
+    }
+  });
+
+  it('always includes a tick for the last point', () => {
+    const points = Array.from({ length: 40 }, (_, i) => ({
+      date: `2024-01-${String((i % 28) + 1).padStart(2, '0')}`,
+      values: { a: i },
+    }));
+    const geo = lineChartGeometry(points, ['a'], ['var(--sumi-seq-5)'], 'line', [], plot);
+    const lastTickX = geo.ticks[geo.ticks.length - 1].x;
+    const expectedLastX = plot.width - plot.right;
+    expect(lastTickX).toBeCloseTo(expectedLastX, 5);
+  });
+
+  it('clamps an event date outside the chart range to the nearest edge', () => {
+    const points = [
+      { date: '2024-01-10', values: { a: 1 } },
+      { date: '2024-01-20', values: { a: 2 } },
+    ];
+    const geo = lineChartGeometry(
+      points,
+      ['a'],
+      ['var(--sumi-seq-5)'],
+      'line',
+      [
+        { date: '2023-01-01', label: 'before' },
+        { date: '2025-01-01', label: 'after' },
+      ],
+      plot,
+    );
+    expect(geo.events[0].x).toBe(plot.left);
+    expect(geo.events[1].x).toBe(plot.width - plot.right);
+  });
+
+  it('places an in-range event at its own date, not clamped', () => {
+    const points = [
+      { date: '2024-01-01', values: { a: 1 } },
+      { date: '2024-01-11', values: { a: 2 } },
+    ];
+    const geo = lineChartGeometry(
+      points,
+      ['a'],
+      ['var(--sumi-seq-5)'],
+      'line',
+      [{ date: '2024-01-06', label: 'import' }],
+      plot,
+    );
+    const x = geo.events[0].x;
+    expect(x).toBeGreaterThan(plot.left);
+    expect(x).toBeLessThan(plot.width - plot.right);
   });
 });

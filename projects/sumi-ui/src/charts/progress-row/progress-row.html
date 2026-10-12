@@ -1,0 +1,10 @@
+<div class="sumi-progress-row__row">
+  <span class="sumi-progress-row__label">{{ label() }}</span>
+  <sumi-segmented-bar
+    class="sumi-progress-row__bar"
+    [ariaLabel]="resolvedAriaLabel()"
+    [segments]="segments()"
+    height="sm"
+  />
+  <span class="sumi-progress-row__value sumi-tabular">{{ value() }} / {{ total() }}</span>
+</div>

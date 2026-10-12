@@ -37,6 +37,24 @@
   stroke-width: 1;
 }
 
+.sumi-bar-chart__hit {
+  fill: transparent;
+  cursor: pointer;
+
+  // `box-shadow` (the global `:focus-visible` rule's focus ring) does not
+  // reliably paint on an SVG shape element, so the ring here is drawn with
+  // `stroke` instead, using the same `--sumi-focus-ring-base` token the
+  // box-shadow formula is built from (see `_tokens.scss`) — a visible
+  // focus style from the library's own focus ring colour, just drawn the
+  // way SVG needs it (same reasoning as `sumi-donut`'s segment focus
+  // style).
+  &:focus-visible {
+    outline: none;
+    stroke: var(--sumi-focus-ring-base);
+    stroke-width: 3;
+  }
+}
+
 .sumi-bar-chart__table {
   margin-top: var(--sumi-space-2);
 }

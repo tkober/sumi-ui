@@ -1,0 +1,55 @@
+// `container-type` establishes :host as the size-containment context the
+// container query below measures; the actual grid lives on an inner
+// `.sumi-progress-row__row` wrapper instead of directly on `:host`, same
+// reasoning as `sumi-stat-grid` (a container query can never match the
+// element that establishes its own containment context).
+:host {
+  display: block;
+  container-type: inline-size;
+  container-name: sumi-progress-row;
+}
+
+.sumi-progress-row__row {
+  display: grid;
+  // The label column is a fixed width, shared via a custom property
+  // rather than hard-coded here, so several rows stacked (kanji-trainer's
+  // Radicals/Kanji/Vocabulary) keep their bars aligned regardless of how
+  // long any one row's own label is — set
+  // `--sumi-progress-row-label-width` on a common ancestor to override.
+  grid-template-columns: var(--sumi-progress-row-label-width, 7rem) 1fr auto;
+  grid-template-areas: 'label bar value';
+  align-items: center;
+  gap: var(--sumi-space-3);
+}
+
+.sumi-progress-row__label {
+  grid-area: label;
+  font-size: var(--sumi-text-sm);
+  color: var(--sumi-text-2);
+  overflow-wrap: break-word;
+}
+
+.sumi-progress-row__bar {
+  grid-area: bar;
+  min-width: 0;
+}
+
+.sumi-progress-row__value {
+  grid-area: value;
+  font-size: var(--sumi-text-sm);
+  color: var(--sumi-muted);
+  white-space: nowrap;
+}
+
+// Below this width the label + bar + value no longer fit on one line
+// without crowding the bar down to a sliver — the bar instead wraps onto
+// its own row, full width, below the label/value pair.
+@container sumi-progress-row (max-width: 420px) {
+  .sumi-progress-row__row {
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      'label value'
+      'bar bar';
+    row-gap: var(--sumi-space-1);
+  }
+}

@@ -1,7 +1,13 @@
 import { Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
-import { SumiBarChart, type SumiBar, type SumiBarSeries, type SumiStackedRow } from './bar-chart';
+import {
+  SumiBarChart,
+  type SumiBar,
+  type SumiBarSelectEvent,
+  type SumiBarSeries,
+  type SumiStackedRow,
+} from './bar-chart';
 
 @Component({
   imports: [SumiBarChart],
@@ -15,6 +21,8 @@ import { SumiBarChart, type SumiBar, type SumiBarSeries, type SumiStackedRow } f
       [table]="table()"
       [labelHeader]="labelHeader()"
       [valueHeader]="valueHeader()"
+      [selectable]="selectable()"
+      (barSelect)="selected.set($event)"
     />
   `,
 })
@@ -30,6 +38,8 @@ class HostComponent {
   readonly table = signal(false);
   readonly labelHeader = signal('Label');
   readonly valueHeader = signal('Value');
+  readonly selectable = signal(false);
+  readonly selected = signal<SumiBarSelectEvent | null>(null);
 }
 
 function setup() {
@@ -303,5 +313,85 @@ describe('SumiBarChart', () => {
       'Guru',
       'Total',
     ]);
+  });
+});
+
+describe('SumiBarChart selectable/barSelect (sumi-ui#76)', () => {
+  it('renders no hit targets when selectable is off', () => {
+    const fixture = setup();
+    expect(fixture.nativeElement.querySelectorAll('.sumi-bar-chart__hit').length).toBe(0);
+  });
+
+  it('renders one focusable, labelled hit target per bar when selectable', () => {
+    const fixture = setup();
+    fixture.componentInstance.selectable.set(true);
+    fixture.detectChanges();
+    const hits = [
+      ...fixture.nativeElement.querySelectorAll('.sumi-bar-chart__hit'),
+    ] as HTMLElement[];
+    expect(hits.length).toBe(3);
+    expect(hits[1].getAttribute('role')).toBe('button');
+    expect(hits[1].getAttribute('tabindex')).toBe('0');
+    expect(hits[1].getAttribute('aria-label')).toBe('09:00: 9');
+  });
+
+  it('emits barSelect with the index and label on click', () => {
+    const fixture = setup();
+    fixture.componentInstance.selectable.set(true);
+    fixture.detectChanges();
+    const hits = [
+      ...fixture.nativeElement.querySelectorAll('.sumi-bar-chart__hit'),
+    ] as HTMLElement[];
+    hits[1].dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    fixture.detectChanges();
+    expect(fixture.componentInstance.selected()).toEqual({ index: 1, label: '09:00' });
+  });
+
+  it('emits barSelect on Enter and Space, and ignores other keys', () => {
+    const fixture = setup();
+    fixture.componentInstance.selectable.set(true);
+    fixture.detectChanges();
+    const hits = [
+      ...fixture.nativeElement.querySelectorAll('.sumi-bar-chart__hit'),
+    ] as HTMLElement[];
+
+    hits[0].dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    fixture.detectChanges();
+    expect(fixture.componentInstance.selected()).toEqual({ index: 0, label: '08:00' });
+
+    fixture.componentInstance.selected.set(null);
+    hits[2].dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true }));
+    fixture.detectChanges();
+    expect(fixture.componentInstance.selected()).toEqual({ index: 2, label: '10:00' });
+
+    fixture.componentInstance.selected.set(null);
+    hits[0].dispatchEvent(new KeyboardEvent('keydown', { key: 'a', bubbles: true }));
+    fixture.detectChanges();
+    expect(fixture.componentInstance.selected()).toBeNull();
+  });
+
+  it('selects a whole stacked column (its total), not an individual segment', () => {
+    const fixture = setup();
+    fixture.componentInstance.bars.set(undefined);
+    fixture.componentInstance.rows.set([
+      { label: 'Mon', values: { a: 2, b: 3 } },
+      { label: 'Tue', values: { a: 1, b: 1 } },
+    ]);
+    fixture.componentInstance.series.set([
+      { key: 'a', label: 'A' },
+      { key: 'b', label: 'B' },
+    ]);
+    fixture.componentInstance.selectable.set(true);
+    fixture.detectChanges();
+
+    const hits = [
+      ...fixture.nativeElement.querySelectorAll('.sumi-bar-chart__hit'),
+    ] as HTMLElement[];
+    expect(hits.length).toBe(2); // one per column, not one per segment
+    expect(hits[0].getAttribute('aria-label')).toBe('Mon: 5'); // 2 + 3
+
+    hits[0].dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    fixture.detectChanges();
+    expect(fixture.componentInstance.selected()).toEqual({ index: 0, label: 'Mon' });
   });
 });
