@@ -85,4 +85,16 @@ describe('SumiStatTile', () => {
     const host: HTMLElement = fixture.nativeElement.querySelector('sumi-stat-tile');
     expect(host.classList.contains('sumi-stat-tile--emphasis')).toBe(true);
   });
+
+  it('fills a stretched host, so tiles in one grid row have equal height', () => {
+    setup();
+    // jsdom does no layout, so check the rule rather than measured heights.
+    const rule = Array.from(document.styleSheets)
+      .flatMap((s) => Array.from(s.cssRules ?? []))
+      .find(
+        (r): r is CSSStyleRule =>
+          r instanceof CSSStyleRule && r.selectorText?.startsWith('.sumi-stat-tile__inner'),
+      );
+    expect(rule?.style.height).toBe('100%');
+  });
 });

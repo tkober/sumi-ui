@@ -10,9 +10,13 @@
   container-name: sumi-stat-grid;
 }
 
+// `grid-auto-rows: 1fr` keeps every row as tall as the tallest one, so a
+// 2 x 2 grid whose second row has a wrapping label still shows four
+// equal tiles (each tile fills its cell, see stat-tile.scss).
 .sumi-stat-grid__grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  grid-auto-rows: 1fr;
   gap: var(--sumi-space-3);
 }
 

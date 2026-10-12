@@ -92,4 +92,15 @@ describe('SumiStatGrid tile-count columns (sumi-ui#36)', () => {
     );
     expect(sixColumnRule?.cssText).toContain('960px');
   });
+
+  it('makes every row as tall as the tallest, so wrapped labels keep tiles equal', () => {
+    TestBed.configureTestingModule({ imports: [HostComponent] });
+    TestBed.createComponent(HostComponent).detectChanges();
+    const sheet = stylesheetContaining('sumi-stat-grid__grid');
+    const base = Array.from(sheet!.cssRules).find(
+      (rule): rule is CSSStyleRule =>
+        rule instanceof CSSStyleRule && /^\.sumi-stat-grid__grid(\[|$)/.test(rule.selectorText),
+    );
+    expect(base?.style.gridAutoRows).toBe('1fr');
+  });
 });
