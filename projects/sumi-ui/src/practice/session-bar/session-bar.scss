@@ -42,7 +42,11 @@
 }
 
 // Compact on narrow screens: the progress bar is the first to go, the
-// stats stay — they are the useful part on a phone.
+// stats stay — they are the useful part on a phone. 480px is also
+// `SUMI_SESSION_NARROW_BREAKPOINT` in session-progress.ts (sumi-ui#74) —
+// the width below which `sumi-session-progress` teleports into the shell
+// header's strip instead of rendering above the practice card. Shared on
+// purpose; change both together.
 @media (max-width: 480px) {
   .sumi-session-bar__progress {
     display: none;
