@@ -31,7 +31,7 @@ export interface SumiAccentColors {
 }
 
 /** Named accent presets, one per app (see docs/concept.md#tokens). */
-export type SumiAccentPreset = 'ai' | 'yamabuki' | 'asagi' | 'fuji' | 'beni';
+export type SumiAccentPreset = 'ai' | 'yamabuki' | 'asagi' | 'fuji' | 'beni' | 'tokiwa';
 
 /**
  * Preset accent values. `onAccent` picks whichever of white or the theme's
@@ -67,6 +67,29 @@ export const SUMI_ACCENT_PRESETS: Record<SumiAccentPreset, SumiAccentColors> = {
   beni: {
     light: { accent: '#c62828', onAccent: '#ffffff', accentInk: '#c62828' },
     dark: { accent: '#ef5350', onAccent: '#151513', accentInk: '#ef5350' },
+    focusRing: { light: '#546e7a', dark: '#90a4ae' },
+  },
+  // jp-reading-practice's preset. Light is the traditional tokiwa-iro
+  // (常磐色, "evergreen") #007b43 unchanged; dark is a brighter, more
+  // saturated green so it still reaches 4.5:1 on the dark surfaces (see
+  // docs/concept.md#tokens, the measured numbers are duplicated there).
+  // Measured (see accent.spec.ts, contrastRatio): accentInk #007b43 on
+  // --sumi-bg/--sumi-surface (light) = 4.79:1 / 5.14:1; onAccent #ffffff on
+  // #007b43 = 5.37:1; accentInk #22c378 on --sumi-bg/--sumi-surface (dark) =
+  // 7.96:1 / 7.36:1; onAccent #151513 (white fails at 2.30:1, same reason
+  // as ai/asagi/fuji's dark ink) on #22c378 = 7.96:1. Both accents also
+  // clear the 3:1 focus-ring bar against their themes' bg/surface by a wide
+  // margin (same two numbers as above, since the focus ring and accentInk
+  // share a colour here).
+  //
+  // Neutral focusRing, same as beni and for the mirrored reason: green is
+  // what --sumi-correct means. ΔE76 to --sumi-correct is only 12.9 (light),
+  // so a green ring or typing border on a field nobody has answered yet
+  // would read as "correct" before the answer is in. The ring and the
+  // answer field's typing border use beni's neutral blue-grey instead.
+  tokiwa: {
+    light: { accent: '#007b43', onAccent: '#ffffff', accentInk: '#007b43' },
+    dark: { accent: '#22c378', onAccent: '#151513', accentInk: '#22c378' },
     focusRing: { light: '#546e7a', dark: '#90a4ae' },
   },
 };

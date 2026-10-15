@@ -17,7 +17,7 @@ const MIN_CONTRAST = 4.5;
 // above.
 const MIN_FOCUS_CONTRAST = 3;
 
-const PRESET_NAMES: SumiAccentPreset[] = ['ai', 'yamabuki', 'asagi', 'fuji', 'beni'];
+const PRESET_NAMES: SumiAccentPreset[] = ['ai', 'yamabuki', 'asagi', 'fuji', 'beni', 'tokiwa'];
 
 describe('SUMI_ACCENT_PRESETS', () => {
   it.each(PRESET_NAMES)(
@@ -67,9 +67,9 @@ describe('SUMI_ACCENT_PRESETS', () => {
     );
   });
 
-  it('beni is the only preset with a focusRing override', () => {
+  it('only the presets that collide with a verdict colour override focusRing', () => {
     for (const name of PRESET_NAMES) {
-      if (name === 'beni') {
+      if (name === 'beni' || name === 'tokiwa') {
         expect(SUMI_ACCENT_PRESETS[name].focusRing).toBeDefined();
       } else {
         expect(SUMI_ACCENT_PRESETS[name].focusRing).toBeUndefined();
@@ -77,16 +77,29 @@ describe('SUMI_ACCENT_PRESETS', () => {
     }
   });
 
-  it("beni's focusRing reaches 3:1 on --sumi-bg and --sumi-surface, in both themes", () => {
-    const { focusRing } = SUMI_ACCENT_PRESETS.beni;
-    expect(focusRing).toBeDefined();
-    expect(contrastRatio(focusRing!.light, BG_LIGHT)).toBeGreaterThanOrEqual(MIN_FOCUS_CONTRAST);
-    expect(contrastRatio(focusRing!.light, SURFACE_LIGHT)).toBeGreaterThanOrEqual(
-      MIN_FOCUS_CONTRAST,
+  it('tokiwa dark needs the dark ink too: white fails 4.5:1 on its bright green fill', () => {
+    const { accent } = SUMI_ACCENT_PRESETS.tokiwa.dark;
+    expect(contrastRatio('#ffffff', accent)).toBeLessThan(MIN_CONTRAST);
+    expect(contrastRatio(SUMI_ACCENT_PRESETS.tokiwa.dark.onAccent, accent)).toBeGreaterThanOrEqual(
+      MIN_CONTRAST,
     );
-    expect(contrastRatio(focusRing!.dark, BG_DARK)).toBeGreaterThanOrEqual(MIN_FOCUS_CONTRAST);
-    expect(contrastRatio(focusRing!.dark, SURFACE_DARK)).toBeGreaterThanOrEqual(MIN_FOCUS_CONTRAST);
   });
+
+  it.each(['beni', 'tokiwa'] as const)(
+    "%s's neutral focusRing reaches 3:1 on --sumi-bg and --sumi-surface, in both themes",
+    (name) => {
+      const { focusRing } = SUMI_ACCENT_PRESETS[name];
+      expect(focusRing).toBeDefined();
+      expect(contrastRatio(focusRing!.light, BG_LIGHT)).toBeGreaterThanOrEqual(MIN_FOCUS_CONTRAST);
+      expect(contrastRatio(focusRing!.light, SURFACE_LIGHT)).toBeGreaterThanOrEqual(
+        MIN_FOCUS_CONTRAST,
+      );
+      expect(contrastRatio(focusRing!.dark, BG_DARK)).toBeGreaterThanOrEqual(MIN_FOCUS_CONTRAST);
+      expect(contrastRatio(focusRing!.dark, SURFACE_DARK)).toBeGreaterThanOrEqual(
+        MIN_FOCUS_CONTRAST,
+      );
+    },
+  );
 });
 
 describe('resolveAccent', () => {

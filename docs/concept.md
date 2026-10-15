@@ -91,14 +91,17 @@ eines Presets auch eigene Werte übergeben.
 | katakana-reading         | `yamabuki` 山吹 Goldgelb | `#c98a0b` | `#e4b24a` | `waves` 波     |
 | jp-conversation-practice | `asagi` 浅葱 Blaugrün    | `#1f7a80` | `#5fbcc1` | `clouds` 雲    |
 | jp-conjugation           | `beni` 紅 Scharlachrot   | `#c62828` | `#ef5350` | `bamboo` 竹    |
+| jp-reading-practice      | `tokiwa` 常磐 Immergrün  | `#007b43` | `#22c378` | `moon` 月      |
 
 Die Motiv-Spalte ist vorläufig: `clouds` gibt es unter den in sumi-ui#16
 umgesetzten Landschaften (siehe [Tuschemotive](#tuschemotive)) nicht mehr.
 Die endgültige Zuordnung von Landschaft und Muster pro App folgt in
-sumi-ui#25.
+sumi-ui#25. jp-reading-practice startet mit den Platzhaltern `moon`,
+`sayagata` und `fukurou`.
 
 Die Akzente liegen bewusst weit weg von Rot und Grün. Rot und Grün bedeuten nur
-„falsch“ und „richtig“.
+„falsch“ und „richtig“. Zwei Presets weichen davon bewusst ab, `beni` und
+`tokiwa`, beide unten begründet.
 
 **Ausnahme: `beni`.** jp-conjugation bekommt auf Wunsch sein ursprüngliches
 Rot zurück, obwohl `--sumi-wrong` (`#b3261e`) fast auf demselben Farbton
@@ -118,6 +121,13 @@ dark }`; `beni` setzt es auf ein neutrales Blaugrau (`#546e7a` /
 - Die Chart-Rampe `--sumi-seq-*` wird bei `beni` rot, weil sie vom Akzent
   abgeleitet ist. Das ist für jp-conjugation gewollt: eine Fehlerquoten-Matrix
   (siehe `sumi-matrix-heatmap`), bei der „mehr Rot“ zu „mehr falsch“ passt.
+
+**Ausnahme: `tokiwa`.** jp-reading-practice bekommt `tokiwa` (常磐色,
+Immergrün, `#007b43` hell / `#22c378` dunkel), weil Grün die letzte freie
+Farbfamilie ist (sumi-ui#82). Grün bedeutet aber „richtig“: `tokiwa` liegt hell
+nur ΔE76 12,9 von `--sumi-correct` entfernt. Deshalb gilt dieselbe Regel wie
+bei `beni`: neutraler Fokusring (`#546e7a` / `#90a4ae`), damit ein Eingabefeld
+beim Tippen nicht schon nach „richtig“ aussieht.
 
 Für Charts gibt es eine sequentielle Rampe `--sumi-seq-0` bis `--sumi-seq-5`,
 abgeleitet vom Akzent. In Dark läuft sie umgekehrt, also „mehr“ wird heller.
