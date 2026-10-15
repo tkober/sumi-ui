@@ -85,20 +85,23 @@ Akzente: `--sumi-accent`, `--sumi-accent-soft`, `--sumi-on-accent`. Die
 Bibliothek liefert die vier Akzente als benannte Presets. Eine App kann statt
 eines Presets auch eigene Werte übergeben.
 
-| App                      | Preset                   | Light     | Dark      | Motiv          |
-| ------------------------ | ------------------------ | --------- | --------- | -------------- |
-| kanji-trainer            | `ai` 藍 Indigo           | `#2b4c7e` | `#8fa9d6` | `mountains` 山 |
-| katakana-reading         | `yamabuki` 山吹 Goldgelb | `#c98a0b` | `#e4b24a` | `waves` 波     |
-| jp-conversation-practice | `asagi` 浅葱 Blaugrün    | `#1f7a80` | `#5fbcc1` | `clouds` 雲    |
-| jp-conjugation           | `beni` 紅 Scharlachrot   | `#c62828` | `#ef5350` | `bamboo` 竹    |
+| App                      | Preset                   | Light     | Dark      | Motiv          | Muster              | Begleiter      |
+| ------------------------ | ------------------------ | --------- | --------- | -------------- | ------------------- | -------------- |
+| kanji-trainer            | `ai` 藍 Indigo           | `#2b4c7e` | `#8fa9d6` | `mountains` 山 | –                   | –              |
+| katakana-reading         | `yamabuki` 山吹 Goldgelb | `#c98a0b` | `#e4b24a` | `waves` 波     | –                   | –              |
+| jp-conversation-practice | `asagi` 浅葱 Blaugrün    | `#1f7a80` | `#5fbcc1` | `clouds` 雲    | –                   | –              |
+| jp-conjugation           | `beni` 紅 Scharlachrot   | `#c62828` | `#ef5350` | `bamboo` 竹    | –                   | –              |
+| jp-reading-practice      | `tokiwa` 常磐 Immergrün  | `#007b43` | `#22c378` | `moon` 月      | `sayagata` 紗綾形   | `fukurou` 梟   |
 
 Die Motiv-Spalte ist vorläufig: `clouds` gibt es unter den in sumi-ui#16
-umgesetzten Landschaften (siehe [Tuschemotive](#tuschemotive)) nicht mehr.
-Die endgültige Zuordnung von Landschaft und Muster pro App folgt in
-sumi-ui#25.
+umgesetzten Landschaften (siehe [Tuschemotive](#tuschemotive)) nicht mehr. Die
+Muster- und Begleiter-Spalten sind bislang nur für jp-reading-practice
+gefüllt — ein Platzhalter wie Motiv, Preset selbst feststeht. Die endgültige
+Zuordnung von Landschaft, Muster und Begleiter pro App folgt in sumi-ui#25.
 
 Die Akzente liegen bewusst weit weg von Rot und Grün. Rot und Grün bedeuten nur
-„falsch“ und „richtig“.
+„falsch“ und „richtig“. Zwei Presets weichen davon bewusst ab, `beni` und
+`tokiwa`, beide unten begründet.
 
 **Ausnahme: `beni`.** jp-conjugation bekommt auf Wunsch sein ursprüngliches
 Rot zurück, obwohl `--sumi-wrong` (`#b3261e`) fast auf demselben Farbton
@@ -118,6 +121,23 @@ dark }`; `beni` setzt es auf ein neutrales Blaugrau (`#546e7a` /
 - Die Chart-Rampe `--sumi-seq-*` wird bei `beni` rot, weil sie vom Akzent
   abgeleitet ist. Das ist für jp-conjugation gewollt: eine Fehlerquoten-Matrix
   (siehe `sumi-matrix-heatmap`), bei der „mehr Rot“ zu „mehr falsch“ passt.
+
+**Ausnahme: `tokiwa`.** jp-reading-practice bekommt `tokiwa` (常磐色,
+traditionelles Immergrün/Tannengrün, `#007b43` hell / `#22c378` dunkel) als
+zweite bewusste Abweichung von der Regel oben: Bei fünf bereits belegten
+Presets (`ai`, `yamabuki`, `asagi`, `fuji`, `beni`) ist Grün die letzte noch
+freie Familie (sumi-ui#82). Anders als `beni` braucht `tokiwa` aber **keinen**
+neutralen Fokusring und keine Sonderbehandlung im Eingabefeld: Der Preset
+liegt in Farbton und Sättigung deutlich weiter von `--sumi-correct` entfernt,
+als `beni` es je von `--sumi-wrong` war. Gemessen in ΔE76 (siehe
+`accent.spec.ts`): `tokiwa` liegt 12,9 (hell) bzw. 29,1 (dunkel) von
+`--sumi-correct` entfernt, mit 7–9° Farbtonabstand und deutlich höherer
+Sättigung (kühleres, kräftigeres Blaugrün statt `--sumi-correct`s wärmerem,
+blasserem Kiefergrün); `beni` dagegen liegt nur ΔE76 6,7 und 1–2° von
+`--sumi-wrong` entfernt — fast derselbe Farbton, nur heller/dunkler. `tokiwa`
+liest sich deshalb als eigenständige Farbe statt als Variante von „richtig“
+und bleibt beim akzentfarbenen Fokusring und Eingabefeld-Rahmen, wie jeder
+andere Preset außer `beni`.
 
 Für Charts gibt es eine sequentielle Rampe `--sumi-seq-0` bis `--sumi-seq-5`,
 abgeleitet vom Akzent. In Dark läuft sie umgekehrt, also „mehr“ wird heller.
