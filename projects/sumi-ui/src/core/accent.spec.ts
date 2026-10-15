@@ -67,9 +67,9 @@ describe('SUMI_ACCENT_PRESETS', () => {
     );
   });
 
-  it('beni is the only preset with a focusRing override', () => {
+  it('only the presets that collide with a verdict colour override focusRing', () => {
     for (const name of PRESET_NAMES) {
-      if (name === 'beni') {
+      if (name === 'beni' || name === 'tokiwa') {
         expect(SUMI_ACCENT_PRESETS[name].focusRing).toBeDefined();
       } else {
         expect(SUMI_ACCENT_PRESETS[name].focusRing).toBeUndefined();
@@ -85,53 +85,21 @@ describe('SUMI_ACCENT_PRESETS', () => {
     );
   });
 
-  it('tokiwa is clearly distinguishable from --sumi-correct, unlike beni from --sumi-wrong', () => {
-    // Literal values from _tokens.scss (see the constants' own comment
-    // above for why these are duplicated rather than imported).
-    const CORRECT_LIGHT = '#2f6b3a';
-    const CORRECT_DARK = '#8cc694';
-    const WRONG_LIGHT = '#b3261e';
-    // ΔE76 between beni's accent and --sumi-wrong (light) is ~6.7, on
-    // almost the same hue (34° vs 36°) — the near-miss that justifies
-    // beni's focusRing exception (see accent.ts). tokiwa sits much
-    // farther from --sumi-correct, so no such exception is needed.
-    const deltaE76 = (hexA: string, hexB: string): number => {
-      // Minimal sRGB -> Lab conversion, just for this comparison (not
-      // exported from contrast.ts, which only needs WCAG luminance).
-      const toLinear = (c: number) =>
-        c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
-      const lab = (hex: string) => {
-        const r = toLinear(parseInt(hex.slice(1, 3), 16) / 255);
-        const g = toLinear(parseInt(hex.slice(3, 5), 16) / 255);
-        const b = toLinear(parseInt(hex.slice(5, 7), 16) / 255);
-        const x = (r * 0.4124564 + g * 0.3575761 + b * 0.1804375) / 0.95047;
-        const y = r * 0.2126729 + g * 0.7151522 + b * 0.072175;
-        const z = (r * 0.0193339 + g * 0.119192 + b * 0.9503041) / 1.08883;
-        const f = (t: number) => (t > 0.008856 ? Math.cbrt(t) : (t * 903.3 + 16) / 116);
-        const [fx, fy, fz] = [f(x), f(y), f(z)];
-        return [116 * fy - 16, 500 * (fx - fy), 200 * (fy - fz)];
-      };
-      const [l1, a1, b1] = lab(hexA);
-      const [l2, a2, b2] = lab(hexB);
-      return Math.sqrt((l1 - l2) ** 2 + (a1 - a2) ** 2 + (b1 - b2) ** 2);
-    };
-    const beniVsWrong = deltaE76(SUMI_ACCENT_PRESETS.beni.light.accent, WRONG_LIGHT);
-    const tokiwaVsCorrectLight = deltaE76(SUMI_ACCENT_PRESETS.tokiwa.light.accent, CORRECT_LIGHT);
-    const tokiwaVsCorrectDark = deltaE76(SUMI_ACCENT_PRESETS.tokiwa.dark.accent, CORRECT_DARK);
-    expect(tokiwaVsCorrectLight).toBeGreaterThan(beniVsWrong);
-    expect(tokiwaVsCorrectDark).toBeGreaterThan(beniVsWrong);
-  });
-
-  it("beni's focusRing reaches 3:1 on --sumi-bg and --sumi-surface, in both themes", () => {
-    const { focusRing } = SUMI_ACCENT_PRESETS.beni;
-    expect(focusRing).toBeDefined();
-    expect(contrastRatio(focusRing!.light, BG_LIGHT)).toBeGreaterThanOrEqual(MIN_FOCUS_CONTRAST);
-    expect(contrastRatio(focusRing!.light, SURFACE_LIGHT)).toBeGreaterThanOrEqual(
-      MIN_FOCUS_CONTRAST,
-    );
-    expect(contrastRatio(focusRing!.dark, BG_DARK)).toBeGreaterThanOrEqual(MIN_FOCUS_CONTRAST);
-    expect(contrastRatio(focusRing!.dark, SURFACE_DARK)).toBeGreaterThanOrEqual(MIN_FOCUS_CONTRAST);
-  });
+  it.each(['beni', 'tokiwa'] as const)(
+    "%s's neutral focusRing reaches 3:1 on --sumi-bg and --sumi-surface, in both themes",
+    (name) => {
+      const { focusRing } = SUMI_ACCENT_PRESETS[name];
+      expect(focusRing).toBeDefined();
+      expect(contrastRatio(focusRing!.light, BG_LIGHT)).toBeGreaterThanOrEqual(MIN_FOCUS_CONTRAST);
+      expect(contrastRatio(focusRing!.light, SURFACE_LIGHT)).toBeGreaterThanOrEqual(
+        MIN_FOCUS_CONTRAST,
+      );
+      expect(contrastRatio(focusRing!.dark, BG_DARK)).toBeGreaterThanOrEqual(MIN_FOCUS_CONTRAST);
+      expect(contrastRatio(focusRing!.dark, SURFACE_DARK)).toBeGreaterThanOrEqual(
+        MIN_FOCUS_CONTRAST,
+      );
+    },
+  );
 });
 
 describe('resolveAccent', () => {

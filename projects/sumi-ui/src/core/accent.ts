@@ -82,18 +82,15 @@ export const SUMI_ACCENT_PRESETS: Record<SumiAccentPreset, SumiAccentColors> = {
   // margin (same two numbers as above, since the focus ring and accentInk
   // share a colour here).
   //
-  // No focusRing override, unlike beni: tokiwa sits far enough from
-  // --sumi-correct in both hue and chroma to read as a different colour
-  // rather than a near-miss of "correct" — unlike beni, which sits on
-  // almost the same hue as --sumi-wrong (ΔE76 6.7, 2° apart in light) and
-  // needed a neutral ring for exactly that reason. tokiwa vs
-  // --sumi-correct: ΔE76 12.9 light / 29.1 dark, hue 152°/155° (tokiwa, a
-  // cooler, more saturated teal-green) vs 145°/146° (correct's warmer,
-  // more muted pine-green) — a clearer separation than beni ever had from
-  // wrong, so the default accent-coloured ring and typing border are kept.
+  // Neutral focusRing, same as beni and for the mirrored reason: green is
+  // what --sumi-correct means. ΔE76 to --sumi-correct is only 12.9 (light),
+  // so a green ring or typing border on a field nobody has answered yet
+  // would read as "correct" before the answer is in. The ring and the
+  // answer field's typing border use beni's neutral blue-grey instead.
   tokiwa: {
     light: { accent: '#007b43', onAccent: '#ffffff', accentInk: '#007b43' },
     dark: { accent: '#22c378', onAccent: '#151513', accentInk: '#22c378' },
+    focusRing: { light: '#546e7a', dark: '#90a4ae' },
   },
 };
 
