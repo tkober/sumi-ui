@@ -155,10 +155,18 @@
       turns it into a named size container, so <code>sumi-session-summary</code>'s tiles become one
       row of four and its <code>[sumiSummaryDetails]</code> slot (sumi-ui#85) can hold whole
       sections — plain app markup, the library only spaces them out.
+      <code>secondaryActionLabel</code>/<code>secondaryActionCount</code> (sumi-ui#102, for
+      kanji-trainer#85 "Review mistakes") add a second button next to "Practice again".
     </p>
 
     <sumi-session-gate width="wide" [showAction]="false" companion="tsuru">
-      <sumi-session-summary [durationMs]="1593000" timePosition="last">
+      <sumi-session-summary
+        [durationMs]="1593000"
+        timePosition="last"
+        secondaryActionLabel="Review mistakes"
+        [secondaryActionCount]="5"
+        (secondaryAction)="onReviewMistakes()"
+      >
         <sumi-hanko sumiSummaryArt characters="合格" label="Passed" />
         <div sumiSummaryTile label="Items">100</div>
         <div sumiSummaryTile label="Correct">95 <small>(95%)</small></div>
@@ -199,6 +207,7 @@
         </section>
       </sumi-session-summary>
     </sumi-session-gate>
+    <p class="demo__note">Secondary action clicked: {{ reviewMistakesClicks() }}</p>
   </section>
 
   <section class="demo">

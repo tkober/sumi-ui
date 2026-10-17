@@ -865,6 +865,25 @@ successfully with `ng build` from a throwaway Angular 22 app):
    `showAction` is `false` (the ended state) — e.g. while a background
    analysis is still running.
 
+   The gate's `Enter` registration has no `target` of its own (it is
+   meant to fire from anywhere on the page), so it sets `SumiHotkeys`'
+   `ignoreActivatableWithin` to its own host element (sumi-ui#102): while
+   the event target is a button, link or `role="button"` element *inside
+   the gate*, the registration steps aside and lets that control's own
+   native `Enter`/`Space` activation run instead — otherwise it would
+   `preventDefault()` that activation away. This matters once
+   `sumi-session-summary` has a second button (`secondaryActionLabel`,
+   below): `Enter` on that button fires only its own `secondaryAction`,
+   never `start`. `Enter` on the gate's own button, or on
+   `sumi-session-summary`'s primary one, still ends up calling
+   `start`/`restart` — just via that button's native activation instead of
+   the hotkey directly. The exception is scoped to the gate's own host
+   rather than every button on the page: Chrome keeps focus on a clicked
+   link after an in-app navigation (e.g. a header nav link), so an unscoped
+   exception would make `Enter` silently do nothing right after clicking
+   one, instead of starting the next screen's session — outside the gate,
+   `Enter` on a focused button/link still works exactly as before.
+
    `width` (sumi-ui#85, default `"narrow"`) widens the content column to
    `min(100%, 680px)` instead of the default 420px, and makes it a named
    CSS size container (`sumi-session-gate`) — for an ended state whose
@@ -941,6 +960,36 @@ again"`) let such an app use its own wording, and `actionDisabled`
    `aria-busy="true"`, a disabled click does nothing) while e.g. a
    background analysis is still running — pair it with the wrapping
    `sumi-session-gate`'s own `actionDisabled` so `Enter` is locked too:
+
+   `secondaryActionLabel` (sumi-ui#102, for kanji-trainer#85 "Review
+   mistakes") adds a second button next to the primary one — e.g. "Review
+   mistakes", to start a practice round over just this session's mistakes.
+   Omit it (the default) for no button and no layout change, not even an
+   extra wrapper around the primary button. `secondaryActionCount` renders
+   a small muted number after the label (e.g. "Review mistakes 5",
+   accessible-name included); it is shown for any value, including `0` —
+   whether a `0` count should hide the button at all is the app's call via
+   `secondaryActionLabel`, not this component's. `actionDisabled` only ever
+   guards the primary button; the secondary one is never disabled by it.
+   `Enter` keeps activating the primary action exactly as before — the
+   secondary is a plain button (`sumiButton variant="secondary"`), reached
+   by `Tab` and activated by `Enter`/`Space` like any other; see
+   `sumi-session-gate`'s `ignoreActivatableWithin` note above for how its
+   page-scoped `Enter` stays out of the way of that native activation:
+
+   ```html
+   <sumi-session-gate [showAction]="false" (start)="startSession()">
+     <sumi-session-summary
+       [answered]="answered()"
+       [correct]="correct()"
+       [durationMs]="durationMs()"
+       secondaryActionLabel="Review mistakes"
+       [secondaryActionCount]="mistakeCount()"
+       (restart)="startSession()"
+       (secondaryAction)="reviewMistakes()"
+     />
+   </sumi-session-gate>
+   ```
 
    ```html
    <sumi-session-gate

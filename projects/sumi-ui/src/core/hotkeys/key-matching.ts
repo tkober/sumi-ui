@@ -120,3 +120,22 @@ export function isEditableTarget(target: EventTarget | null): boolean {
   }
   return target.isContentEditable === true || target.getAttribute('contenteditable') === 'true';
 }
+
+const ACTIVATABLE_TAGS = new Set(['BUTTON', 'A']);
+
+/**
+ * Whether `target` already activates itself on `Enter`/`Space` — a button,
+ * a link, or a `role="button"` element. Backs `SumiHotkeyDef.ignoreActivatableWithin`
+ * (sumi-ui#102): a broad, no-`target` registration (e.g. a gate's
+ * page-scoped "start session" `Enter`) must not steal the key away from
+ * some other, already-focused control that handles it natively.
+ */
+export function isActivatableTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) {
+    return false;
+  }
+  if (ACTIVATABLE_TAGS.has(target.tagName)) {
+    return true;
+  }
+  return target.getAttribute('role') === 'button';
+}

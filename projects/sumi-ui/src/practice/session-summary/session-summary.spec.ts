@@ -13,6 +13,8 @@ function render(inputs: {
   headline?: string;
   actionLabel?: string;
   actionDisabled?: boolean;
+  secondaryActionLabel?: string;
+  secondaryActionCount?: number;
 }) {
   TestBed.configureTestingModule({ imports: [SumiSessionSummary] });
   const fixture = TestBed.createComponent(SumiSessionSummary);
@@ -40,6 +42,12 @@ function render(inputs: {
   }
   if (inputs.actionDisabled != null) {
     fixture.componentRef.setInput('actionDisabled', inputs.actionDisabled);
+  }
+  if (inputs.secondaryActionLabel != null) {
+    fixture.componentRef.setInput('secondaryActionLabel', inputs.secondaryActionLabel);
+  }
+  if (inputs.secondaryActionCount != null) {
+    fixture.componentRef.setInput('secondaryActionCount', inputs.secondaryActionCount);
   }
   fixture.detectChanges();
   return fixture;
@@ -328,5 +336,93 @@ describe('SumiSessionSummary', () => {
     const fixture = render({ answered: 0, correct: 0, durationMs: 0 });
     expect(tileValue(fixture, 1).textContent).not.toContain('NaN');
     expect(tileValue(fixture, 1).textContent).toContain('0%');
+  });
+
+  describe('secondary action (sumi-ui#102)', () => {
+    it('renders no second button, and the primary button as the sole, direct-child button, when secondaryActionLabel is unset', () => {
+      const fixture = render({ durationMs: 1000 });
+      const el = host(fixture);
+      expect(el.querySelectorAll('button').length).toBe(1);
+      expect(el.querySelector('.sumi-session-summary__actions')).toBeNull();
+      // Same DOM position as before this feature existed: a direct child of
+      // the host (`el` itself is the <sumi-session-summary> element), not
+      // nested in some new wrapper.
+      expect(Array.from(el.children)).toContain(el.querySelector('button'));
+    });
+
+    it('renders a secondary button, inside an actions wrapper alongside the primary one, when secondaryActionLabel is set', () => {
+      const fixture = render({ durationMs: 1000, secondaryActionLabel: 'Review mistakes' });
+      const el = host(fixture);
+      const wrapper = el.querySelector('.sumi-session-summary__actions');
+      expect(wrapper).toBeTruthy();
+      const buttons = wrapper!.querySelectorAll('button');
+      expect(buttons.length).toBe(2);
+      expect(buttons[0].textContent?.trim()).toBe('Practice again');
+      expect(buttons[1].textContent?.trim()).toBe('Review mistakes');
+    });
+
+    it('omits the count when secondaryActionCount is unset', () => {
+      const fixture = render({ durationMs: 1000, secondaryActionLabel: 'Review mistakes' });
+      const el = host(fixture);
+      expect(el.querySelector('.sumi-session-summary__secondary-count')).toBeNull();
+      expect(el.querySelector('button:last-of-type')?.textContent?.trim()).toBe('Review mistakes');
+    });
+
+    it('shows the count after the label, e.g. "Review mistakes 5", when set', () => {
+      const fixture = render({
+        durationMs: 1000,
+        secondaryActionLabel: 'Review mistakes',
+        secondaryActionCount: 5,
+      });
+      const el = host(fixture);
+      expect(el.querySelector('.sumi-session-summary__secondary-count')?.textContent?.trim()).toBe(
+        '5',
+      );
+      expect(
+        el.querySelector('button:last-of-type')?.textContent?.replace(/\s+/g, ' ').trim(),
+      ).toBe('Review mistakes 5');
+    });
+
+    it('still shows the count when it is 0, rather than treating it like "unset"', () => {
+      const fixture = render({
+        durationMs: 1000,
+        secondaryActionLabel: 'Review mistakes',
+        secondaryActionCount: 0,
+      });
+      expect(
+        host(fixture).querySelector('.sumi-session-summary__secondary-count')?.textContent?.trim(),
+      ).toBe('0');
+    });
+
+    it('emits secondaryAction, not restart, when the secondary button is clicked', () => {
+      const fixture = render({ durationMs: 1000, secondaryActionLabel: 'Review mistakes' });
+      let secondaryFired = 0;
+      let restarted = 0;
+      fixture.componentInstance.secondaryAction.subscribe(() => secondaryFired++);
+      fixture.componentInstance.restart.subscribe(() => restarted++);
+
+      host(fixture)
+        .querySelector('button:last-of-type')!
+        .dispatchEvent(new Event('click', { bubbles: true }));
+
+      expect(secondaryFired).toBe(1);
+      expect(restarted).toBe(0);
+    });
+
+    it('leaves the secondary button enabled when actionDisabled is true — it only guards the primary one', () => {
+      const fixture = render({
+        durationMs: 1000,
+        secondaryActionLabel: 'Review mistakes',
+        actionDisabled: true,
+      });
+      const buttons = host(fixture).querySelectorAll('button');
+      expect((buttons[0] as HTMLButtonElement).disabled).toBe(true);
+      expect((buttons[1] as HTMLButtonElement).disabled).toBe(false);
+
+      let secondaryFired = 0;
+      fixture.componentInstance.secondaryAction.subscribe(() => secondaryFired++);
+      buttons[1].dispatchEvent(new Event('click', { bubbles: true }));
+      expect(secondaryFired).toBe(1);
+    });
   });
 });

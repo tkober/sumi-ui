@@ -1,4 +1,9 @@
-import { eventMatchesHotkey, isEditableTarget, parseKeys } from './key-matching';
+import {
+  eventMatchesHotkey,
+  isActivatableTarget,
+  isEditableTarget,
+  parseKeys,
+} from './key-matching';
 
 function keyEvent(overrides: Partial<KeyboardEvent> & { key: string }): KeyboardEvent {
   return {
@@ -117,5 +122,24 @@ describe('isEditableTarget', () => {
   it('is false for a plain element, null or non-elements', () => {
     expect(isEditableTarget(document.createElement('button'))).toBe(false);
     expect(isEditableTarget(null)).toBe(false);
+  });
+});
+
+describe('isActivatableTarget', () => {
+  it('is true for a button or a link', () => {
+    expect(isActivatableTarget(document.createElement('button'))).toBe(true);
+    expect(isActivatableTarget(document.createElement('a'))).toBe(true);
+  });
+
+  it('is true for a role="button" element', () => {
+    const div = document.createElement('div');
+    div.setAttribute('role', 'button');
+    expect(isActivatableTarget(div)).toBe(true);
+  });
+
+  it('is false for a plain element, an input, null or non-elements', () => {
+    expect(isActivatableTarget(document.createElement('div'))).toBe(false);
+    expect(isActivatableTarget(document.createElement('input'))).toBe(false);
+    expect(isActivatableTarget(null)).toBe(false);
   });
 });
