@@ -1,0 +1,39 @@
+<button
+  type="button"
+  class="sumi-side-panel__backdrop"
+  aria-label="Close"
+  tabindex="-1"
+  (click)="requestClose()"
+></button>
+
+<div class="sumi-side-panel__panel">
+  <div
+    #panelRef
+    class="sumi-side-panel__content"
+    role="dialog"
+    aria-modal="true"
+    [attr.aria-label]="title()"
+    (keydown)="onPanelKeydown($event)"
+  >
+    <div class="sumi-side-panel__header">
+      <h2 class="sumi-side-panel__title">{{ title() }}</h2>
+      <button
+        type="button"
+        sumiButton
+        variant="ghost"
+        size="sm"
+        class="sumi-side-panel__close"
+        aria-label="Close"
+        (click)="requestClose()"
+      >
+        <sumi-icon name="close" />
+      </button>
+    </div>
+
+    <div class="sumi-side-panel__body">
+      <ng-content></ng-content>
+    </div>
+
+    <ng-content select="[sumiSidePanelFooter]"></ng-content>
+  </div>
+</div>

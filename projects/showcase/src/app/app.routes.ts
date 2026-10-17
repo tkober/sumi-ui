@@ -23,6 +23,10 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/layout/layout').then((m) => m.LayoutPage),
   },
   {
+    path: 'overlays',
+    loadComponent: () => import('./pages/overlays/overlays').then((m) => m.OverlaysPage),
+  },
+  {
     path: 'motifs',
     loadComponent: () => import('./pages/motifs/motifs').then((m) => m.MotifsPage),
   },

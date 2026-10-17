@@ -1482,6 +1482,116 @@ again"`) let such an app use its own wording, and `actionDisabled`
    custom-header examples, and the Charts page's "Items list" section for
    one opened from a `sumi-data-table` row.
 
+   ### Popover
+
+   `sumi-popover` (sumi-ui#95, `sumi-ui/layout`) is an overlay anchored to
+   an element — e.g. a tapped word in running text — rather than centred
+   like `sumi-dialog`:
+
+   ```html
+   <span #wordEl lang="ja" (click)="lookUp(wordEl)">濡れても</span>
+
+   <sumi-popover [(open)]="lookupOpen" [anchor]="anchorEl()" title="濡れても">
+     <p>to get wet (te-form + "even if")</p>
+     <div sumiPopoverActions>
+       <button type="button" sumiButton variant="secondary" size="sm">Explain word</button>
+     </div>
+   </sumi-popover>
+   ```
+
+   - `open` is a `model<boolean>()`, same convention as `sumi-dialog`.
+     `anchor` is a plain `HTMLElement` input, not a trigger directive: the
+     same popover instance is re-anchored to a different element on every
+     lookup (a different word each time), so the app just updates `anchor`
+     (and the projected content) rather than this component owning a
+     trigger element of its own.
+   - Prefers opening below the anchor, flips above only once the panel's
+     own measured height genuinely does not fit in the space below, stays
+     within the viewport horizontally, and either way never overlaps the
+     anchor — the gap always stays on the side facing it. Repositions on
+     window resize and on scroll anywhere in the page (a capturing
+     listener, since `scroll` does not bubble).
+   - Below 720px it ignores the computed position entirely and docks as a
+     full-width bottom sheet with a grab handle instead, the same switch
+     `sumi-session-progress` makes between an inline bar and the shell's
+     header strip.
+   - The header is either the `title` input or content projected with
+     `[sumiPopoverHeader]` (`SumiPopoverHeader`) for anything richer — e.g.
+     the word, its reading and a JLPT badge side by side — never both, a
+     projected header wins if both are given, same as `sumi-dialog`'s
+     `[sumiDialogHeader]`. The close button is always there either way.
+     `[sumiPopoverActions]` is an optional trailing slot for a row of
+     buttons that wraps on its own.
+   - Esc and a click outside close it (a full-viewport transparent
+     backdrop — the same click that opens the popover on a *different*
+     anchor never reaches it, see the component's own doc comment on
+     `requestClose`, so re-anchoring to another word just moves the
+     popover instead of closing and reopening it); focus moves to the
+     panel's first focusable element on open and back to the anchor on
+     close, and `Tab`/`Shift+Tab` stay inside the panel while it is open.
+   - `sumi-dialog` already covers a centred modal with a native focus
+     trap; this is for content that belongs *next to* something on screen
+     and does not block the rest of the page. It does not replace
+     `sumi-dialog` for anything that should.
+
+   See the Overlays showcase page's "Popover" section for a live example
+   over running Japanese text.
+
+   ### Side panel
+
+   `sumi-side-panel` (sumi-ui#96, `sumi-ui/layout`) docks next to the
+   page's own content on a wide screen and becomes a full-height sheet
+   below 720px — the chat-about-this-text panel's shape:
+
+   ```html
+   <div class="row" style="display: flex; align-items: stretch">
+     <div class="content">…reading text…</div>
+
+     <sumi-side-panel [(open)]="chatOpen" title="Ask about this text">
+       <p>…chat messages…</p>
+       <div sumiSidePanelFooter>
+         <textarea sumiTextarea sumiSubmitOnEnter (sumiSubmitOnEnter)="send($event)"></textarea>
+         <button type="button" sumiButton variant="primary" size="sm" (click)="send(draft)">
+           Send
+         </button>
+       </div>
+     </sumi-side-panel>
+   </div>
+   ```
+
+   - The content area makes room for it on a wide screen — nothing is
+     covered. The host is `display: contents`, so its own children, not
+     the host itself, are the real flex item: place `sumi-side-panel`
+     directly inside a `display: flex` row alongside the content it sits
+     next to. It is always in the DOM (never `@if`-gated by the app) so
+     `open` can transition with a slide; closed, its flex item has
+     `width: 0` and `overflow: hidden`, reserving no space — no manual
+     padding on the app's side, unlike the app-local prototype this
+     replaces (which was `position: fixed` and needed the app to reserve
+     its width by hand).
+   - It handles `sumi-app-shell`'s sticky header itself, without
+     measuring anything: the header already publishes its rendered height
+     as `--sumi-shell-sticky-height` on `documentElement` (sumi-ui#87), so
+     the panel's own `position: sticky; top: var(--sumi-shell-sticky-height)`
+     plus a height of `calc(100vh - var(--sumi-shell-sticky-height))`
+     keeps it flush below the header and filling the rest of the
+     viewport, with no `ResizeObserver` of its own (the prototype's own —
+     see side-panel.scss's comment for why `sumi-app-shell__main` being a
+     plain, non-scrolling container is what makes this work).
+   - `open` is a `model<boolean>()`, `title` a required string. Esc and
+     the close button both close it; outside click only does on the
+     narrow sheet, where a backdrop exists — there is nothing to click
+     "outside" to on a docked desktop panel that never covers the
+     content. Focus moves to the panel's first focusable element on open
+     and back to whatever had it before on close, and `Tab`/`Shift+Tab`
+     stay inside the panel while it is open.
+   - The default slot is the body (scrolls on its own); `[sumiSidePanelFooter]`
+     is a trailing slot for e.g. a chat composer, typically paired with
+     `sumiSubmitOnEnter` (`SumiSubmitOnEnterDirective`, `sumi-ui/forms`).
+
+   See the Overlays showcase page's "Side panel" section for a live
+   example with a short chat.
+
    ### Progress
 
    `sumi-progress` (sumi-ui#66, `sumi-ui/layout`) is a progress bar, e.g.
