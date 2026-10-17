@@ -287,6 +287,88 @@
   </section>
 
   <section class="demo">
+    <h2>Reading (sumi-ui#94, #97, #100)</h2>
+    <p>
+      From jp-reading-practice's approved design (issue #6): tappable ruby text with an on-demand
+      reading peek, a reading-mode <code>sumi-session-bar</code> (extended rather than duplicated —
+      see its own doc comment for the sumi-ui#100 reasoning), and a multiple-choice comprehension
+      question using <code>sumi-verdict</code>'s colours.
+    </p>
+
+    <h3>Reading text (sumi-ui#94)</h3>
+    <p>
+      Hover or focus a known word (has a reading, not already <code>unknown</code>) for about half a
+      second to peek its reading, or long-press on touch. Tap/click or <kbd>Enter</kbd> activates a
+      word; arrow keys move between words, in addition to <kbd>Tab</kbd>. 雨 is marked
+      <code>unknown</code> and always shows its reading.
+    </p>
+    <sumi-reading-text
+      [paragraphs]="readingParagraphs"
+      [selectedWordId]="selectedReadingWordId()"
+      (wordActivated)="onReadingWordActivated($event)"
+      (readingPeeked)="onReadingPeeked($event)"
+    />
+    <div class="demo__log">
+      <h3>Last activated / peeked</h3>
+      <p>{{ readingLog() || '(tap, hover or peek a word above)' }}</p>
+    </div>
+
+    <h3>Reading session bar (sumi-ui#100)</h3>
+    <p>
+      No <code>answered</code>/<code>correct</code> — a reading session has nothing to grade while
+      it runs — so this gives only <code>elapsed</code> and <code>showPause</code>, turns the
+      built-in "End session" button off (<code>[showEndSession]="false"</code>; a reading session
+      ends through its own "Done reading" button elsewhere on the page instead), and projects an
+      extra "Ask about this text" action wrapped for the icon-only collapse. Narrow the window below
+      720px to see both actions drop to icon-only.
+    </p>
+    <sumi-session-bar
+      class="demo__reading-bar"
+      [elapsed]="readingElapsedLabel()"
+      [showPause]="true"
+      [paused]="readingPaused()"
+      [showEndSession]="false"
+      (pauseToggle)="toggleReadingPause()"
+    >
+      <button
+        type="button"
+        class="demo__reading-chat"
+        sumiSessionBarActions
+        (click)="onReadingChatToggle()"
+      >
+        <sumi-icon name="chat" />
+        <span sumiSessionBarActionLabel>Ask about this text</span>
+      </button>
+    </sumi-session-bar>
+
+    <h3>Choice question (sumi-ui#97)</h3>
+    <p>
+      Pairs with a question text and a progress line (e.g. <code>sumi-session-progress</code> or a
+      plain "Question N of M") next to it, not inside it — see its own doc comment. Select a tile,
+      or press <kbd>1</kbd>-<kbd>4</kbd>/<kbd>A</kbd>-<kbd>D</kbd>.
+    </p>
+    <p class="demo__question-text">What did the writer eat at Omicho Market?</p>
+    <sumi-choice-question
+      [options]="choiceOptions"
+      [selectedId]="choiceSelectedId()"
+      [correctId]="choiceCorrectId()"
+      (optionSelected)="onChoiceSelected($event)"
+    />
+    @if (choiceCorrectId(); as c) {
+      <sumi-verdict
+        class="demo__verdict"
+        [kind]="choiceSelectedId() === c ? 'correct' : 'wrong'"
+        [message]="choiceVerdictMessage()"
+      />
+      <div class="demo__actions">
+        <button type="button" sumiButton variant="ghost" size="sm" (click)="resetChoiceQuestion()">
+          Try again
+        </button>
+      </div>
+    }
+  </section>
+
+  <section class="demo">
     <h2>Other building blocks</h2>
 
     <h3>Furigana</h3>

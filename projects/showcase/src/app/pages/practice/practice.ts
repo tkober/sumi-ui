@@ -6,12 +6,16 @@ import {
   SumiShellFocusActionsDirective,
 } from 'sumi-ui/layout';
 import { SumiButtonDirective, SumiSegmentedControl, SumiToggle } from 'sumi-ui/forms';
-import { SUMI_KEYS, SumiHotkeys, injectHotkey } from 'sumi-ui/core';
+import { SUMI_KEYS, SumiHotkeys, SumiIcon, injectHotkey } from 'sumi-ui/core';
 import {
   SUMI_PRACTICE,
   SumiAnswerField,
   type SumiAnswerMode,
+  type SumiChoiceOption,
   type SumiFuriganaSegment,
+  type SumiReadingParagraph,
+  type SumiReadingWord,
+  type SumiReadingWordActivateEvent,
   type SumiSessionProgressSegment,
   type SumiVerdict,
   type SumiVerdictKind,
@@ -97,6 +101,43 @@ const FURIGANA_SAMPLE: SumiFuriganaSegment[] = [
   { base: 'する' },
 ];
 
+/** Reading text demo (sumi-ui#94): a mix of known words with a reading
+ *  (peekable), one `unknown` word (always shown, 猫 — not actually covered
+ *  by the other three cards above), and plain kana with nothing to peek. */
+const READING_PARAGRAPHS: readonly SumiReadingParagraph[] = [
+  [
+    { id: 'r1', text: '今日', reading: 'きょう' },
+    { id: 'r2', text: 'は' },
+    { id: 'r3', text: '雨', reading: 'あめ', unknown: true },
+    { id: 'r4', text: 'です' },
+    { id: 'r5', text: '。' },
+  ],
+  [
+    { id: 'r6', text: '散歩', reading: 'さんぽ' },
+    { id: 'r7', text: 'に' },
+    { id: 'r8', text: '行き', reading: 'いき' },
+    { id: 'r9', text: 'ました' },
+    { id: 'r10', text: '。' },
+  ],
+];
+
+/** Choice question demo (sumi-ui#97), modelled on the approved design's
+ *  "Omicho Market" question. */
+const CHOICE_OPTIONS: SumiChoiceOption[] = [
+  { id: 'a', text: 'Fresh fish' },
+  { id: 'b', text: 'Soba noodles' },
+  { id: 'c', text: 'Only sushi' },
+  { id: 'd', text: 'Nothing — the market was closed' },
+];
+const CHOICE_CORRECT_ID = 'a';
+
+function formatElapsed(ms: number): string {
+  const totalSeconds = Math.floor(ms / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+}
+
 /** "Wide summary with details" demo (sumi-ui#85) — a stage-card grid for [sumiSummaryDetails]. */
 const REACHED_STAGES: { label: string; count: number }[] = [
   { label: 'Guru', count: 14 },
@@ -181,6 +222,7 @@ type SessionState = 'idle' | 'running' | 'ended';
     SumiSegmentedControl,
     SumiToggle,
     SumiHanko,
+    SumiIcon,
     SumiFocusModeDirective,
     SumiShellFocusActionsDirective,
     ...SUMI_PRACTICE,
@@ -258,7 +300,36 @@ export class PracticePage {
   protected readonly sessionDurationMs = signal(0);
   private sessionStartedAt = 0;
 
+  // --- Reading (sumi-ui#94, #97, #100) ----------------------------------
+
+  protected readonly readingParagraphs = READING_PARAGRAPHS;
+  protected readonly selectedReadingWordId = signal<string | null>(null);
+  protected readonly readingLog = signal('');
+
+  protected readonly readingPaused = signal(false);
+  private readonly readingElapsedMs = signal(0);
+  protected readonly readingElapsedLabel = computed(() => formatElapsed(this.readingElapsedMs()));
+  private readingTimerHandle: ReturnType<typeof setInterval> | undefined;
+
+  protected readonly choiceOptions = CHOICE_OPTIONS;
+  protected readonly choiceSelectedId = signal<string | null>(null);
+  protected readonly choiceCorrectId = signal<string | null>(null);
+  protected readonly choiceVerdictMessage = computed(() => {
+    if (this.choiceSelectedId() === CHOICE_CORRECT_ID) {
+      return undefined;
+    }
+    const correct = CHOICE_OPTIONS.find((option) => option.id === CHOICE_CORRECT_ID);
+    return `Correct answer: ${correct?.text}`;
+  });
+
   constructor() {
+    this.readingTimerHandle = setInterval(() => {
+      if (!this.readingPaused()) {
+        this.readingElapsedMs.update((ms) => ms + 1000);
+      }
+    }, 1000);
+    this.destroyRef.onDestroy(() => clearInterval(this.readingTimerHandle));
+
     // Kept from #10/#11, exactly as before: bare F/? only become hotkeys once
     // a verdict is on screen. `sumi-verdict` now registers `F` itself (scope
     // `feedback`), so this page only still owns `?`.
@@ -389,6 +460,35 @@ export class PracticePage {
 
   private logHotkey(label: string): void {
     this.log.update((entries) => [label, ...entries].slice(0, 6));
+  }
+
+  // --- Reading (sumi-ui#94, #97, #100) ----------------------------------
+
+  protected onReadingWordActivated(event: SumiReadingWordActivateEvent): void {
+    this.selectedReadingWordId.set(event.word.id);
+    this.readingLog.set(`Activated "${event.word.text}"`);
+  }
+
+  protected onReadingPeeked(word: SumiReadingWord): void {
+    this.readingLog.set(`Peeked "${word.text}" (${word.reading})`);
+  }
+
+  protected onReadingChatToggle(): void {
+    this.readingLog.set('Ask about this text clicked');
+  }
+
+  protected toggleReadingPause(): void {
+    this.readingPaused.update((paused) => !paused);
+  }
+
+  protected onChoiceSelected(id: string): void {
+    this.choiceSelectedId.set(id);
+    this.choiceCorrectId.set(CHOICE_CORRECT_ID);
+  }
+
+  protected resetChoiceQuestion(): void {
+    this.choiceSelectedId.set(null);
+    this.choiceCorrectId.set(null);
   }
 
   private startTimerFor(card: Card): void {
