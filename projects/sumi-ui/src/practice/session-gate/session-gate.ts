@@ -54,13 +54,30 @@ import { SumiInkBackdrop } from 'sumi-ui/layout';
  * its `Enter` registration — e.g. a conversation app keeps the ended
  * state's action locked until a background analysis finishes, so `Enter`
  * must not jump ahead early even though `showAction` is `false` there.
+ *
+ * `width` (sumi-ui#85) widens the content column from the default 420px
+ * to 680px — for an ended state whose projected `sumi-session-summary`
+ * carries a `[sumiSummaryDetails]` slot (stage-card grids, tables, charts)
+ * that needs more room than a handful of centred tiles. `'narrow'` (the
+ * default) renders byte-for-byte as before. `'wide'`:
+ *
+ * ```html
+ * <sumi-session-gate width="wide" [showAction]="false" companion="tsuru" (start)="startSession()">
+ *   <sumi-session-summary ...>
+ *     <div sumiSummaryDetails>...</div>
+ *   </sumi-session-summary>
+ * </sumi-session-gate>
+ * ```
  */
 @Component({
   selector: 'sumi-session-gate',
   templateUrl: './session-gate.html',
   styleUrl: './session-gate.scss',
   imports: [SumiButtonDirective, SumiInkBackdrop],
-  host: { class: 'sumi-session-gate' },
+  host: {
+    class: 'sumi-session-gate',
+    '[class.sumi-session-gate--wide]': "width() === 'wide'",
+  },
 })
 export class SumiSessionGate {
   /** Omit it when the projected content supplies its own heading (see above). */
@@ -90,6 +107,8 @@ export class SumiSessionGate {
    * `false`.
    */
   readonly actionDisabled = input(false);
+  /** Widens `.sumi-session-gate__content` to 680px. See the doc comment above. */
+  readonly width = input<'narrow' | 'wide'>('narrow');
 
   readonly start = output<void>();
 

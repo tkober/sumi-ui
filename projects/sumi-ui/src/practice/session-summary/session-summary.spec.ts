@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { SumiSessionSummary } from './session-summary';
 import { SumiSummaryTile } from './summary-tile';
@@ -163,6 +163,67 @@ describe('SumiSessionSummary', () => {
     expect(
       tiles[5].querySelector('dd')?.classList.contains('sumi-session-summary__tile-value--down'),
     ).toBe(true);
+  });
+
+  it('renders a projected [sumiSummaryDetails] section inside .sumi-session-summary__details, after the tiles and before the button, and keeps a projected tile in the <dl>', () => {
+    @Component({
+      imports: [SumiSessionSummary, SumiSummaryTile],
+      template: `
+        <sumi-session-summary [durationMs]="20000">
+          <div sumiSummaryTile label="Items">100</div>
+          <section sumiSummaryDetails>By type</section>
+        </sumi-session-summary>
+      `,
+    })
+    class Host {}
+
+    TestBed.configureTestingModule({ imports: [Host] });
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const el = fixture.nativeElement as HTMLElement;
+
+    const details = el.querySelector('.sumi-session-summary__details');
+    expect(details?.querySelector('section')?.textContent).toBe('By type');
+    // The projected tile lands in the <dl>, not the details wrapper.
+    expect(details?.querySelector('[sumiSummaryTile]')).toBeNull();
+    expect(el.querySelector('.sumi-session-summary__tiles [sumiSummaryTile]')).toBeTruthy();
+
+    // DOM order: tiles, then details, then the action button.
+    const children = Array.from(el.querySelector('sumi-session-summary')!.children);
+    const tilesIndex = children.indexOf(el.querySelector('.sumi-session-summary__tiles')!);
+    const detailsIndex = children.indexOf(details!);
+    const buttonIndex = children.indexOf(el.querySelector('button')!);
+    expect(tilesIndex).toBeLessThan(detailsIndex);
+    expect(detailsIndex).toBeLessThan(buttonIndex);
+  });
+
+  it('puts the Time tile after projected tiles when timePosition is "last", first by default', () => {
+    @Component({
+      imports: [SumiSessionSummary, SumiSummaryTile],
+      template: `
+        <sumi-session-summary [durationMs]="20000" [timePosition]="position()">
+          <div sumiSummaryTile label="Items">100</div>
+        </sumi-session-summary>
+      `,
+    })
+    class Host {
+      position = signal<'first' | 'last'>('first');
+    }
+
+    TestBed.configureTestingModule({ imports: [Host] });
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const el = fixture.nativeElement as HTMLElement;
+    const labels = () =>
+      Array.from(el.querySelectorAll('.sumi-session-summary__tiles dt')).map((dt) =>
+        dt.textContent?.trim(),
+      );
+
+    expect(labels()).toEqual(['Time', 'Items']);
+
+    fixture.componentInstance.position.set('last');
+    fixture.detectChanges();
+    expect(labels()).toEqual(['Items', 'Time']);
   });
 
   it('omits the Answered/Correct tiles when both are unset, but keeps Time and projected tiles', () => {

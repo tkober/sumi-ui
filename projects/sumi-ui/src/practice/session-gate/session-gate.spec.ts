@@ -17,6 +17,7 @@ function dispatchEnter(target: EventTarget): void {
       actionLabel="Start session"
       [showAction]="showAction()"
       [actionDisabled]="actionDisabled()"
+      [width]="width()"
       (start)="startCount.set(startCount() + 1)"
     >
       <input class="field" />
@@ -27,6 +28,7 @@ class HostComponent {
   title = signal<string | undefined>('Ready to practice?');
   showAction = signal(true);
   actionDisabled = signal(false);
+  width = signal<'narrow' | 'wide'>('narrow');
   startCount = signal(0);
 }
 
@@ -85,6 +87,21 @@ describe('SumiSessionGate', () => {
     fixture.detectChanges();
 
     expect(host.querySelector('.sumi-session-gate__title')).toBeNull();
+  });
+
+  it('has no sumi-session-gate--wide class by default (narrow)', () => {
+    const { host } = create();
+    expect(host.querySelector('sumi-session-gate')?.classList).not.toContain(
+      'sumi-session-gate--wide',
+    );
+  });
+
+  it('adds the sumi-session-gate--wide class when width is "wide"', () => {
+    const { fixture, host } = create();
+    fixture.componentInstance.width.set('wide');
+    fixture.detectChanges();
+
+    expect(host.querySelector('sumi-session-gate')?.classList).toContain('sumi-session-gate--wide');
   });
 
   it('renders no companion by default', () => {

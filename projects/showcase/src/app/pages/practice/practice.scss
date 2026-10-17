@@ -127,3 +127,75 @@ sumi-toggle {
 .demo__conversation-gate {
   display: block;
 }
+
+// "Wide summary with details" (sumi-ui#85): showcase-local styles for the
+// two [sumiSummaryDetails] sections — sumi-session-summary only spaces and
+// left-aligns them, the content inside is this page's own markup.
+.demo__wide-details-section {
+  // An unnamed container, independent of sumi-session-gate's own named
+  // one, so the stage-card grid below reacts to this section's own width
+  // rather than the whole gate's.
+  container-type: inline-size;
+  // The page's generic section spacing would add to the details slot's own
+  // gap; the slot spaces these sections itself.
+  margin: 0;
+
+  h3 {
+    margin: 0 0 var(--sumi-space-3);
+    font-size: var(--sumi-text-sm);
+    color: var(--sumi-muted);
+  }
+}
+
+.demo__stage-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--sumi-space-3);
+}
+
+// Collapses to two columns once the section itself is narrower than
+// ~480px, independently of how many columns the tiles above use.
+@container (max-width: 480px) {
+  .demo__stage-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.demo__stage-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sumi-space-1);
+  padding: var(--sumi-space-3);
+  border: 1px solid var(--sumi-line);
+  border-radius: var(--sumi-radius);
+  background: var(--sumi-surface);
+}
+
+.demo__stage-value {
+  font-size: var(--sumi-text-xl);
+  font-weight: 600;
+}
+
+.demo__stage-label {
+  font-size: var(--sumi-text-xs);
+  color: var(--sumi-muted);
+}
+
+.demo__type-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--sumi-text-sm);
+
+  th,
+  td {
+    padding: var(--sumi-space-2) var(--sumi-space-3);
+    text-align: left;
+    border-bottom: 1px solid var(--sumi-line);
+  }
+
+  th {
+    color: var(--sumi-muted);
+    font-weight: 500;
+  }
+}
