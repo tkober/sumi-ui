@@ -1,0 +1,12 @@
+<!--
+  No whitespace around the text: Angular collapses it to a single space
+  rather than dropping it, and a space between two words of running
+  Japanese reads as a gap (今日 は 雨 です).
+-->
+@if (reading(); as r) {
+  <ruby
+    >{{ base() }}<rt [class.sumi-ruby-word__rt--hidden]="!show()">{{ r }}</rt></ruby
+  >
+} @else {
+  <ng-container>{{ base() }}</ng-container>
+}

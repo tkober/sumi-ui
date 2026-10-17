@@ -1,0 +1,23 @@
+<div class="sumi-choice-question__grid" role="radiogroup" [attr.aria-label]="ariaLabel()">
+  @for (option of options(); track option.id; let index = $index) {
+    <button
+      type="button"
+      class="sumi-choice-question__tile"
+      [class.sumi-choice-question__tile--selected]="option.id === selectedId() && !answered()"
+      [class.sumi-choice-question__tile--correct]="toneFor(option) === 'correct'"
+      [class.sumi-choice-question__tile--wrong]="toneFor(option) === 'wrong'"
+      role="radio"
+      [attr.aria-checked]="option.id === selectedId()"
+      [disabled]="answered()"
+      (click)="onSelect(option.id)"
+    >
+      <span class="sumi-choice-question__letter">{{ letterFor(index) }}</span>
+      <span class="sumi-choice-question__text">{{ option.text }}</span>
+      @if (toneFor(option) === 'correct') {
+        <sumi-icon class="sumi-choice-question__icon" name="check" />
+      } @else if (toneFor(option) === 'wrong') {
+        <sumi-icon class="sumi-choice-question__icon" name="cross" />
+      }
+    </button>
+  }
+</div>

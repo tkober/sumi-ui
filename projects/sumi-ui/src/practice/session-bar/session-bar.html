@@ -1,12 +1,18 @@
-<div class="sumi-session-bar__stats">
-  <span class="sumi-session-bar__count sumi-tabular">
-    {{ progressCount() }}
-    @if (totalCount(); as t) {
-      <span> / {{ t }}</span>
-    }
-  </span>
-  <span class="sumi-session-bar__accuracy sumi-tabular">{{ accuracy() }}%</span>
-</div>
+@if (elapsed(); as t) {
+  <span class="sumi-session-bar__timer sumi-tabular" aria-label="Elapsed time">{{ t }}</span>
+}
+
+@if (hasStats()) {
+  <div class="sumi-session-bar__stats">
+    <span class="sumi-session-bar__count sumi-tabular">
+      {{ progressCount() }}
+      @if (totalCount(); as t) {
+        <span> / {{ t }}</span>
+      }
+    </span>
+    <span class="sumi-session-bar__accuracy sumi-tabular">{{ accuracy() }}%</span>
+  </div>
+}
 
 @if (progress(); as p) {
   <div class="sumi-session-bar__progress">
@@ -14,13 +20,33 @@
   </div>
 }
 
-<button
-  type="button"
-  sumiButton
-  variant="ghost"
-  size="sm"
-  class="sumi-session-bar__end"
-  (click)="end.emit()"
->
-  End session
-</button>
+<div class="sumi-session-bar__actions">
+  <ng-content select="[sumiSessionBarActions]" />
+
+  @if (showPause()) {
+    <button
+      type="button"
+      class="sumi-session-bar__pause"
+      [attr.aria-pressed]="paused()"
+      [attr.aria-label]="paused() ? 'Resume' : 'Pause'"
+      title="{{ paused() ? 'Resume' : 'Pause' }}"
+      (click)="pauseToggle.emit()"
+    >
+      <sumi-icon [name]="paused() ? 'play' : 'pause'" />
+      <span class="sumi-session-bar__action-label">{{ paused() ? 'Resume' : 'Pause' }}</span>
+    </button>
+  }
+
+  @if (showEndSession()) {
+    <button
+      type="button"
+      sumiButton
+      variant="ghost"
+      size="sm"
+      class="sumi-session-bar__end"
+      (click)="end.emit()"
+    >
+      End session
+    </button>
+  }
+</div>

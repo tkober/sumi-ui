@@ -1,5 +1,6 @@
 import { Component, inject, input } from '@angular/core';
 import { SumiFurigana } from './furigana.service';
+import { SumiRubyWord } from './ruby-word';
 
 /** One segment of furigana text: plain text, or a base with its reading. */
 export interface SumiFuriganaSegment {
@@ -13,8 +14,9 @@ export interface SumiFuriganaSegment {
  * `FuriganaText`/`furigana-text.ts`, adapted to the `{ base, reading }`
  * segment shape used across Sumi UI.
  *
- * Hiding the readings keeps `rt` in place (`visibility: hidden`), not
- * removed, so toggling furigana never reflows the surrounding layout.
+ * The actual ruby markup and the hidden-but-laid-out CSS trick live in
+ * `SumiRubyWord` (sumi-ui#94), shared with `sumi-reading-text`'s per-word
+ * reading peek rather than kept as two ruby implementations.
  *
  * ```html
  * <sumi-furigana [segments]="[{ base: '食べる', reading: 'たべる' }]" />
@@ -24,6 +26,7 @@ export interface SumiFuriganaSegment {
   selector: 'sumi-furigana',
   templateUrl: './furigana-text.html',
   styleUrl: './furigana-text.scss',
+  imports: [SumiRubyWord],
   host: { class: 'sumi-furigana', lang: 'ja' },
 })
 export class SumiFuriganaText {

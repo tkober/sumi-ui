@@ -1,4 +1,5 @@
 import { Component, computed, input, output } from '@angular/core';
+import { SumiIcon } from 'sumi-ui/core';
 import { SumiButtonDirective } from 'sumi-ui/forms';
 
 /**
@@ -30,6 +31,52 @@ import { SumiButtonDirective } from 'sumi-ui/forms';
  *   (end)="endSession()"
  * />
  * ```
+ *
+ * **Quiz-less sessions (sumi-ui#100).** `answered`/`correct` are optional:
+ * a session with no answered/correct notion at all (e.g. a reading
+ * session, which has nothing to grade while it runs) simply gives neither,
+ * and the "N / total" counter and accuracy both disappear — there is no
+ * `showStats` flag to flip, the stats block just needs something to show.
+ * `elapsed` adds a plain elapsed-time display next to (or instead of) the
+ * stats, `showPause` + `paused` + `(pauseToggle)` add a built-in icon
+ * pause/resume button, and `showEndSession` (default `true`, so every
+ * existing quiz usage is unaffected) can turn the "End session" button
+ * off — a reading session ends through its own "Done reading" button
+ * elsewhere on the page, not a header action. Anything else an app wants
+ * next to these — a reading session's "Ask about this text" — is
+ * projected into `[sumiSessionBarActions]`:
+ *
+ * ```html
+ * <sumi-session-bar
+ *   *sumiShellFocusActions
+ *   [elapsed]="elapsedLabel()"
+ *   [showPause]="true"
+ *   [paused]="paused()"
+ *   [showEndSession]="false"
+ *   (pauseToggle)="togglePause()"
+ * >
+ *   <button type="button" sumiSessionBarActions (click)="chatToggle.emit()">
+ *     <sumi-icon name="chat" />
+ *     <span sumiSessionBarActionLabel>Ask about this text</span>
+ *   </button>
+ * </sumi-session-bar>
+ * ```
+ *
+ * Wrapping a projected action's text in `[sumiSessionBarActionLabel]`
+ * (plain class marker, no directive needed) collapses it to icon-only
+ * below 720px, same breakpoint and same mechanism as the built-in pause
+ * button — see session-bar.scss. An app that skips the wrapper just never
+ * goes icon-only, which is a reasonable choice too for an action that only
+ * exists above 720px to begin with.
+ *
+ * Extending this component rather than adding a second,
+ * reading-specific one was the sumi-ui#100 call: all of kanji-trainer's,
+ * katakana-reading's and jp-conjugation's existing usages pass only
+ * `answered`/`correct`/`(end)` (optionally `done`/`remaining`/
+ * `showProgress`), none of which changed shape, so every one of them
+ * keeps compiling and rendering exactly as before with zero edits on
+ * their side — the new inputs/slot are all additive and default to the
+ * old behaviour.
  *
  * A routed page registers it in the shell's header with
  * `*sumiShellFocusActions` (see `SumiShellFocusActionsDirective`,
@@ -64,20 +111,37 @@ import { SumiButtonDirective } from 'sumi-ui/forms';
   selector: 'sumi-session-bar',
   templateUrl: './session-bar.html',
   styleUrl: './session-bar.scss',
-  imports: [SumiButtonDirective],
+  imports: [SumiButtonDirective, SumiIcon],
   host: { class: 'sumi-session-bar' },
 })
 export class SumiSessionBar {
-  readonly answered = input.required<number>();
-  readonly correct = input.required<number>();
+  readonly answered = input<number>();
+  readonly correct = input<number>();
   readonly total = input<number>();
   readonly remaining = input<number>();
   /** Progress, separate from `answered`/accuracy — see the class doc comment. */
   readonly done = input<number>();
   /** Hides the built-in bar, e.g. once the app places its own `sumi-session-progress`. */
   readonly showProgress = input(true);
+  /** A plain elapsed-time label, e.g. `"3:12"` — shown as-is, this
+   *  component does no timekeeping of its own. */
+  readonly elapsed = input<string>();
+  /** Opt-in built-in pause/resume icon button — off by default, see the
+   *  class doc comment. */
+  readonly showPause = input(false);
+  readonly paused = input(false);
+  /** Whether the built-in "End session" button shows at all (default
+   *  `true`, so every existing quiz usage is unaffected) — see the class
+   *  doc comment. */
+  readonly showEndSession = input(true);
 
   readonly end = output<void>();
+  readonly pauseToggle = output<void>();
+
+  /** Whether there is anything to show in the "N / total, NN%" stats
+   *  block — both `answered`/`correct` are needed together, same as
+   *  before `done` existed. */
+  protected readonly hasStats = computed(() => this.answered() != null && this.correct() != null);
 
   /** `done` when given, otherwise `answered` — what the counter and bar measure. */
   protected readonly progressCount = computed(() => this.done() ?? this.answered());
@@ -89,12 +153,14 @@ export class SumiSessionBar {
       return total;
     }
     const remaining = this.remaining();
-    return remaining != null ? this.progressCount() + remaining : null;
+    const progressCount = this.progressCount();
+    return remaining != null && progressCount != null ? progressCount + remaining : null;
   });
 
   protected readonly accuracy = computed(() => {
     const answered = this.answered();
-    return answered > 0 ? Math.round((this.correct() / answered) * 100) : 0;
+    const correct = this.correct();
+    return answered && answered > 0 ? Math.round(((correct ?? 0) / answered) * 100) : 0;
   });
 
   /** `0`–`100`, or `null` when there is no total to measure progress against. */
@@ -103,9 +169,10 @@ export class SumiSessionBar {
       return null;
     }
     const total = this.totalCount();
-    if (!total) {
+    const progressCount = this.progressCount();
+    if (!total || progressCount == null) {
       return null;
     }
-    return Math.max(0, Math.min(100, (this.progressCount() / total) * 100));
+    return Math.max(0, Math.min(100, (progressCount / total) * 100));
   });
 }

@@ -41,6 +41,18 @@ export { SumiSessionGate } from './session-gate/session-gate';
 export { SumiFurigana } from './furigana/furigana.service';
 export { SumiFuriganaText, type SumiFuriganaSegment } from './furigana/furigana-text';
 export { SumiFuriganaToggle } from './furigana/furigana-toggle';
+export { SumiRubyWord } from './furigana/ruby-word';
+export { SumiSessionBarActionLabelDirective } from './session-bar/session-bar-action-label.directive';
+export {
+  SumiReadingText,
+  SUMI_READING_PEEK_DWELL_MS,
+  SUMI_READING_LONG_PRESS_MS,
+  SUMI_READING_LONG_PRESS_CANCEL_PX,
+  type SumiReadingWord,
+  type SumiReadingParagraph,
+  type SumiReadingWordActivateEvent,
+} from './reading-text/reading-text';
+export { SumiChoiceQuestion, type SumiChoiceOption } from './choice-question/choice-question';
 
 import { SumiHoldFocus } from './hold-focus';
 import { SumiAnswerField } from './answer-field/answer-field';
@@ -56,6 +68,10 @@ import { SumiSummaryTile } from './session-summary/summary-tile';
 import { SumiSessionGate } from './session-gate/session-gate';
 import { SumiFuriganaText } from './furigana/furigana-text';
 import { SumiFuriganaToggle } from './furigana/furigana-toggle';
+import { SumiRubyWord } from './furigana/ruby-word';
+import { SumiSessionBarActionLabelDirective } from './session-bar/session-bar-action-label.directive';
+import { SumiReadingText } from './reading-text/reading-text';
+import { SumiChoiceQuestion } from './choice-question/choice-question';
 
 /** Convenience array for `imports: [...SUMI_PRACTICE]` in a standalone component. */
 export const SUMI_PRACTICE = [
@@ -67,10 +83,14 @@ export const SUMI_PRACTICE = [
   SumiVerdictDetailsDirective,
   SumiCountdownRing,
   SumiSessionBar,
+  SumiSessionBarActionLabelDirective,
   SumiSessionProgress,
   SumiSessionSummary,
   SumiSummaryTile,
   SumiSessionGate,
   SumiFuriganaText,
   SumiFuriganaToggle,
+  SumiRubyWord,
+  SumiReadingText,
+  SumiChoiceQuestion,
 ] as const;
