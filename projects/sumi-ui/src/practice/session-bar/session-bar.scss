@@ -5,6 +5,13 @@
   min-width: 0;
 }
 
+.sumi-session-bar__timer {
+  font-size: var(--sumi-text-md);
+  font-weight: 600;
+  min-width: 3em;
+  flex: none;
+}
+
 .sumi-session-bar__stats {
   display: flex;
   align-items: baseline;
@@ -37,8 +44,78 @@
   transition: width 150ms ease;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .sumi-session-bar__progress-fill {
+    transition: none;
+  }
+}
+
+// Holds the projected `[sumiSessionBarActions]` content, the built-in
+// pause button and the built-in "End session" button — never wraps, so a
+// handful of small, fixed-size buttons always fit next to the timer/stats
+// (see the `@media` block below for how they go icon-only to help with
+// that below 720px).
+.sumi-session-bar__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sumi-space-2);
+  flex-wrap: nowrap;
+  flex: none;
+  margin-left: auto;
+}
+
+.sumi-session-bar__pause {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sumi-space-2);
+  border: none;
+  border-radius: var(--sumi-radius-sm);
+  background: transparent;
+  color: var(--sumi-text-2);
+  font: inherit;
+  font-size: var(--sumi-text-sm);
+  padding: var(--sumi-space-1) var(--sumi-space-2);
+  cursor: pointer;
+
+  sumi-icon {
+    width: 18px;
+    height: 18px;
+  }
+
+  &:hover {
+    background: var(--sumi-sunken);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--sumi-focus-ring);
+  }
+
+  &[aria-pressed='true'] {
+    color: var(--sumi-accent-ink);
+    background: var(--sumi-accent-soft);
+  }
+}
+
 .sumi-session-bar__end {
   flex: none;
+}
+
+// Below 720px (the same breakpoint sumi-app-shell collapses its own nav
+// into a tab bar at, see docs/concept.md#layout-und-mobil): the built-in
+// pause button and any projected action wrapping its text in
+// `[sumiSessionBarActionLabel]` drop to icon-only, with `aria-label`/
+// `title` carrying the name instead — a handful of icon buttons always
+// fit next to the brand, where their text labels would force a wrap.
+// `[sumiSessionBarActionLabel]`'s content is plain projected content, not
+// a child component, so — like `sumi-card`'s header/footer — it needs
+// `::ng-deep` to be reached from this component's own stylesheet; the
+// built-in pause button's own label is reached either way since it is
+// not projected, but the rule is written once to cover both.
+@media (max-width: 720px) {
+  ::ng-deep .sumi-session-bar__action-label {
+    display: none;
+  }
 }
 
 // Compact on narrow screens: the progress bar is the first to go, the

@@ -39,6 +39,8 @@ describe('SumiIcon', () => {
       'keyboard',
       'apps',
       'chevron-down',
+      'pause',
+      'play',
     ];
 
     const fixture = TestBed.createComponent(HostComponent);

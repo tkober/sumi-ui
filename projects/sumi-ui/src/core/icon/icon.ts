@@ -31,7 +31,9 @@ export type SumiIconName =
   | 'warning'
   | 'keyboard'
   | 'apps'
-  | 'chevron-down';
+  | 'chevron-down'
+  | 'pause'
+  | 'play';
 
 /**
  * A small inline-SVG icon, sized by `font-size` via `width/height: 1em` and
