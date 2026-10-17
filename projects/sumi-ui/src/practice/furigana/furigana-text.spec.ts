@@ -33,7 +33,7 @@ describe('SumiFuriganaText', () => {
     fixture.detectChanges();
 
     expect(host.querySelector('ruby')).toBeNull();
-    expect(host.querySelector('span')?.textContent).toBe('plain text');
+    expect(host.querySelector('sumi-ruby-word')?.textContent?.trim()).toBe('plain text');
   });
 
   it('renders mixed segments in order', () => {
@@ -55,7 +55,7 @@ describe('SumiFuriganaText', () => {
     fixture.detectChanges();
 
     const rt = host.querySelector('rt')!;
-    expect(rt.classList.contains('sumi-furigana__rt--hidden')).toBe(true);
+    expect(rt.classList.contains('sumi-ruby-word__rt--hidden')).toBe(true);
     expect(rt.textContent).toBe('たべる'); // still rendered, just hidden
   });
 
@@ -67,6 +67,6 @@ describe('SumiFuriganaText', () => {
     furigana.visible.set(true);
     fixture.detectChanges();
 
-    expect(host.querySelector('rt')!.classList.contains('sumi-furigana__rt--hidden')).toBe(false);
+    expect(host.querySelector('rt')!.classList.contains('sumi-ruby-word__rt--hidden')).toBe(false);
   });
 });

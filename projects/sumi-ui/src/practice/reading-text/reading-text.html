@@ -1,0 +1,26 @@
+@for (paragraph of paragraphs(); track $index; let paragraphIndex = $index) {
+  <p class="sumi-reading-text__paragraph">
+    @for (word of paragraph; track word.id; let wordIndex = $index) {
+      <span
+        #wordRef
+        role="button"
+        tabindex="0"
+        class="sumi-reading-text__word"
+        [class.sumi-reading-text__word--selected]="word.id === selectedWordId()"
+        [class.sumi-reading-text__word--pressing]="word.id === pressingWordId()"
+        [attr.aria-pressed]="word.id === selectedWordId()"
+        (click)="onActivate(word, $event)"
+        (keydown)="onKeydown($event, word, flatIndex(paragraphIndex, wordIndex))"
+        (pointerenter)="onPointerEnter($event, word)"
+        (pointerleave)="onPointerLeave($event, word)"
+        (pointerdown)="onPointerDown($event, word)"
+        (pointermove)="onPointerMove($event, word)"
+        (pointerup)="onPointerUp($event, word)"
+        (pointercancel)="onPointerCancel(word)"
+        (focus)="onFocus(word)"
+        (blur)="onBlur(word)"
+        ><sumi-ruby-word [base]="word.text" [reading]="readingFor(word)"
+      /></span>
+    }
+  </p>
+}
