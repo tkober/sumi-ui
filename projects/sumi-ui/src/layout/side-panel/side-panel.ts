@@ -65,6 +65,9 @@ import { focusFirst, trapTabKey } from '../overlay-focus';
     class: 'sumi-side-panel-host',
     '[class.sumi-side-panel-host--open]': 'open()',
     '[attr.inert]': "!open() ? '' : null",
+    // `title` is an input: a static title="…" would otherwise also stay on
+    // the host element as a native browser tooltip over the whole component.
+    '[attr.title]': 'null',
   },
   imports: [SumiButtonDirective, SumiIcon],
 })

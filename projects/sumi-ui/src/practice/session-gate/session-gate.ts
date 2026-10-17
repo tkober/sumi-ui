@@ -92,6 +92,9 @@ import { SumiInkBackdrop } from 'sumi-ui/layout';
   host: {
     class: 'sumi-session-gate',
     '[class.sumi-session-gate--wide]': "width() === 'wide'",
+    // `title` is an input: a static title="…" would otherwise also stay on
+    // the host element as a native browser tooltip over the whole component.
+    '[attr.title]': 'null',
   },
 })
 export class SumiSessionGate {
