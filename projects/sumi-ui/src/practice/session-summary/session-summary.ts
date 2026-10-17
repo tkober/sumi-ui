@@ -45,6 +45,11 @@ function formatDuration(ms: number): string {
  * label="…">` into the default slot; it lands after the built-in tiles and
  * looks the same (`SumiSummaryTile`, sumi-ui#48).
  *
+ * `timePosition="last"` (sumi-ui#85) moves the built-in Time tile after
+ * the projected app tiles, for an app whose own tiles replace
+ * Answered/Correct and should come first; `'first'` (default) keeps the
+ * order above.
+ *
  * `[sumiSummaryDetails]` (sumi-ui#85) is a slot for whole sections —
  * e.g. a stage-card grid, a table, bars, a collapsible chart — between the
  * tiles and the action button. The sections are the app's own markup; this
@@ -130,6 +135,14 @@ export class SumiSessionSummary {
    * running. A disabled click does nothing. Defaults to `false`.
    */
   readonly actionDisabled = input(false);
+  /**
+   * Where the built-in Time tile sits: `'first'` (the default, right after
+   * Answered/Correct, as it always has) or `'last'`, after any projected
+   * app tiles — for an app whose own tiles replace Answered/Correct and
+   * should come before the duration, e.g. kanji-trainer's
+   * Items/Correct/Answers/Time row (sumi-ui#85).
+   */
+  readonly timePosition = input<'first' | 'last'>('first');
 
   readonly restart = output<void>();
 

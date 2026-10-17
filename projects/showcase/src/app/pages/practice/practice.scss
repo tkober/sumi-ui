@@ -136,6 +136,9 @@ sumi-toggle {
   // one, so the stage-card grid below reacts to this section's own width
   // rather than the whole gate's.
   container-type: inline-size;
+  // The page's generic section spacing would add to the details slot's own
+  // gap; the slot spaces these sections itself.
+  margin: 0;
 
   h3 {
     margin: 0 0 var(--sumi-space-3);

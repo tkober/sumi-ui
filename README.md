@@ -682,10 +682,10 @@ successfully with `ng build` from a throwaway Angular 22 app):
    directly:
 
    | Tone                 | White on `tone` | White on `tone` darkened 20% toward black |
-   | --------------------- | ---------------- | ------------------------------------------ |
-   | Radical `#00a1f1`     | 2.85:1 (fails)   | 4.95:1                                      |
-   | Kanji `#f100a1`       | 4.00:1 (fails)   | 6.61:1                                      |
-   | Vocabulary `#a100f1`  | 5.55:1 (passes)  | 8.67:1                                      |
+   | -------------------- | --------------- | ----------------------------------------- |
+   | Radical `#00a1f1`    | 2.85:1 (fails)  | 4.95:1                                    |
+   | Kanji `#f100a1`      | 4.00:1 (fails)  | 6.61:1                                    |
+   | Vocabulary `#a100f1` | 5.55:1 (passes) | 8.67:1                                    |
 
    The prompt text and `meta` line are unaffected by `appearance` — they
    stay in `--sumi-text`/`--sumi-text-2` either way.
@@ -770,7 +770,7 @@ successfully with `ng build` from a throwaway Angular 22 app):
    </div>
    ```
 
-   `done` (sumi-ui#74) separates *progress* from *accuracy*: without it,
+   `done` (sumi-ui#74) separates _progress_ from _accuracy_: without it,
    the counter and the built-in bar both measure `answered`, exactly as
    before. With it, the counter shows `done / total` and the bar fills
    from `done` instead — `total`/`remaining` then describe `done`, so
@@ -801,7 +801,7 @@ successfully with `ng build` from a throwaway Angular 22 app):
    `role="progressbar"` reports the summed `done`/`size` across every
    segment. A single segment renders as one continuous bar with no labels
    row; a labels row appears only once there is more than one segment
-   *and* at least one of them has a `label`, small and muted underneath,
+   _and_ at least one of them has a `label`, small and muted underneath,
    with no segment highlighted:
 
    ```html
@@ -895,7 +895,11 @@ characters="合格" label="Passed" />`. Its own `restart` output drives
 
    ```html
    <sumi-session-gate width="wide" [showAction]="false" (start)="startSession()">
-     <sumi-session-summary [answered]="answered()" [correct]="correct()" [durationMs]="durationMs()">
+     <sumi-session-summary
+       [answered]="answered()"
+       [correct]="correct()"
+       [durationMs]="durationMs()"
+     >
        <sumi-hanko sumiSummaryArt characters="合格" label="Passed" />
        <section sumiSummaryDetails>
          <h3>Reached a new stage</h3>
@@ -904,6 +908,11 @@ characters="合格" label="Passed" />`. Its own `restart` output drives
      </sumi-session-summary>
    </sumi-session-gate>
    ```
+
+   `timePosition="last"` (sumi-ui#85) moves the built-in Time tile after
+   the projected app tiles instead of right after Answered/Correct — for an
+   app whose own tiles replace Answered/Correct and should come first, e.g.
+   Items/Correct/Answers/Time. The default `'first'` keeps today's order.
 
    `answered`/`correct` are optional (sumi-ui#56): a non-quiz app (e.g.
    jp-conversation-practice, graded by the API afterwards rather than

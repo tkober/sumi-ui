@@ -19,7 +19,9 @@
       {{ correct() }} <small>({{ accuracy() }}%)</small>
     </div>
   }
-  <div sumiSummaryTile label="Time">{{ duration() }}</div>
+  @if (timePosition() === 'first') {
+    <div sumiSummaryTile label="Time">{{ duration() }}</div>
+  }
   @if (hasDelta()) {
     <div sumiSummaryTile [label]="deltaLabel() ?? 'Change'" [trend]="deltaTrend()">
       {{ delta()! > 0 ? '+' : '' }}{{ delta() }}
@@ -27,6 +29,9 @@
   }
   <!-- Extra tiles from the app: <div sumiSummaryTile label="…">…</div> (sumi-ui#48). -->
   <ng-content />
+  @if (timePosition() === 'last') {
+    <div sumiSummaryTile label="Time">{{ duration() }}</div>
+  }
 </dl>
 
 <div class="sumi-session-summary__details">
