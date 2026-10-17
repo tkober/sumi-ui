@@ -107,17 +107,17 @@ const FURIGANA_SAMPLE: SumiFuriganaSegment[] = [
 const READING_PARAGRAPHS: readonly SumiReadingParagraph[] = [
   [
     { id: 'r1', text: '今日', reading: 'きょう' },
-    { id: 'r2', text: 'は' },
+    { id: 'r2', text: 'は', plain: true },
     { id: 'r3', text: '雨', reading: 'あめ', unknown: true },
     { id: 'r4', text: 'です' },
-    { id: 'r5', text: '。' },
+    { id: 'r5', text: '。', plain: true },
   ],
   [
     { id: 'r6', text: '散歩', reading: 'さんぽ' },
-    { id: 'r7', text: 'に' },
+    { id: 'r7', text: 'に', plain: true },
     { id: 'r8', text: '行き', reading: 'いき' },
     { id: 'r9', text: 'ました' },
-    { id: 'r10', text: '。' },
+    { id: 'r10', text: '。', plain: true },
   ],
 ];
 

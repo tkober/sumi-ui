@@ -300,11 +300,12 @@
       Hover or focus a known word (has a reading, not already <code>unknown</code>) for about half a
       second to peek its reading, or long-press on touch. Tap/click or <kbd>Enter</kbd> activates a
       word; arrow keys move between words, in addition to <kbd>Tab</kbd>. 雨 is marked
-      <code>unknown</code> and always shows its reading. <code>wordActivated</code>'s
-      <code>element</code> (sumi-ui#108) is the activated word's own span — meant for
-      <code>sumi-popover</code>'s <code>[anchor]</code> (see the "Overlays" page); this page has
-      none nearby, so the log below just shows the element's own text instead, to prove it is the
-      right one.
+      <code>unknown</code> and always shows its reading. The particles and 。 are
+      <code>plain</code> (sumi-ui#108): plain running text, not focusable or tappable.
+      <code>wordActivated</code>'s <code>element</code> (sumi-ui#108) is the activated word's own
+      span — meant for <code>sumi-popover</code>'s <code>[anchor]</code> (see the "Overlays" page);
+      this page has none nearby, so the log below just shows the element's own text instead, to
+      prove it is the right one.
     </p>
     <sumi-reading-text
       [paragraphs]="readingParagraphs"

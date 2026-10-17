@@ -337,3 +337,63 @@ describe('SumiReadingText — running text', () => {
     expect(paragraph.textContent).toBe('散歩です猫');
   });
 });
+
+describe('SumiReadingText — plain tokens (sumi-ui#108)', () => {
+  const PLAIN_PARAGRAPHS: readonly SumiReadingParagraph[] = [
+    [
+      KNOWN_WORD,
+      { id: 'p1', text: 'に', plain: true },
+      KANA_WORD,
+      { id: 'p2', text: '。', plain: true },
+    ],
+  ];
+
+  function renderPlain() {
+    const fixture = render();
+    fixture.componentInstance.paragraphs.set(PLAIN_PARAGRAPHS);
+    fixture.detectChanges();
+    return fixture;
+  }
+
+  it('renders a plain token as running text, not as a focusable word', () => {
+    const fixture = renderPlain();
+    const host = fixture.nativeElement as HTMLElement;
+    const words = Array.from(host.querySelectorAll<HTMLElement>('.sumi-reading-text__word'));
+    expect(words.map((span) => span.textContent?.trim())).toEqual(['散歩', 'です']);
+    const plain = Array.from(host.querySelectorAll<HTMLElement>('.sumi-reading-text__plain'));
+    expect(plain.map((span) => span.textContent?.trim())).toEqual(['に', '。']);
+    for (const span of plain) {
+      expect(span.getAttribute('role')).toBeNull();
+      expect(span.getAttribute('tabindex')).toBeNull();
+    }
+  });
+
+  it('a click on a plain token activates nothing', () => {
+    const fixture = renderPlain();
+    const plain = (fixture.nativeElement as HTMLElement).querySelector<HTMLElement>(
+      '.sumi-reading-text__plain',
+    )!;
+    plain.click();
+    expect(fixture.componentInstance.activated.length).toBe(0);
+  });
+
+  it('arrow keys skip plain tokens', () => {
+    const fixture = renderPlain();
+    const first = wordSpan(fixture, '散歩');
+    const second = wordSpan(fixture, 'です');
+    first.focus();
+
+    keydown(first, 'ArrowRight');
+
+    expect(document.activeElement).toBe(second);
+  });
+
+  it('keeps running text without gaps around plain tokens', () => {
+    const fixture = renderPlain();
+    const paragraph = (fixture.nativeElement as HTMLElement)
+      .querySelector('.sumi-reading-text__paragraph')!
+      .cloneNode(true) as HTMLElement;
+    paragraph.querySelectorAll('rt').forEach((rt) => rt.remove());
+    expect(paragraph.textContent).toBe('散歩にです。');
+  });
+});
