@@ -1,0 +1,37 @@
+<div class="sumi-share-slider__track" role="group" [attr.aria-label]="ariaLabel()">
+  <div class="sumi-share-slider__bar">
+    @for (segment of segments(); track segment.label) {
+      <div
+        class="sumi-share-slider__segment"
+        [style.width.%]="segment.value"
+        [style.background]="segment.color"
+      ></div>
+    }
+  </div>
+
+  @for (boundary of boundaries(); track boundary.index) {
+    <input
+      type="range"
+      class="sumi-share-slider__handle"
+      [attr.min]="boundary.min"
+      [attr.max]="boundary.max"
+      [step]="step()"
+      [attr.aria-label]="boundary.ariaLabel"
+      [attr.aria-valuetext]="boundary.ariaValueText"
+      [disabled]="disabled()"
+      [value]="boundary.value"
+      [style.--sumi-share-slider-thumb-offset.px]="boundary.stackOffsetPx"
+      (input)="onBoundaryInput(boundary.index, $any($event.target).value)"
+    />
+  }
+</div>
+
+<ul class="sumi-share-slider__legend">
+  @for (segment of segments(); track segment.label) {
+    <li class="sumi-share-slider__legend-item">
+      <span class="sumi-share-slider__swatch" [style.background]="segment.color"></span>
+      <span class="sumi-share-slider__legend-label">{{ segment.label }}</span>
+      <span class="sumi-share-slider__legend-value">{{ segment.value }}%</span>
+    </li>
+  }
+</ul>
