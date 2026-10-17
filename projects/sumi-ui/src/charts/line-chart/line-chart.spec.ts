@@ -18,6 +18,10 @@ import {
       [mode]="mode()"
       [events]="events()"
       [table]="table()"
+      [unit]="unit()"
+      [startDate]="startDate()"
+      [endDate]="endDate()"
+      [gaps]="gaps()"
     />
   `,
 })
@@ -34,6 +38,10 @@ class HostComponent {
   readonly mode = signal<'line' | 'stacked-area'>('line');
   readonly events = signal<SumiChartEvent[]>([]);
   readonly table = signal(false);
+  readonly unit = signal('');
+  readonly startDate = signal<string | undefined>(undefined);
+  readonly endDate = signal<string | undefined>(undefined);
+  readonly gaps = signal(false);
 }
 
 function setup() {
@@ -51,6 +59,23 @@ function forceMeasuredWidth(fixture: ReturnType<typeof setup>, width: number): v
     .componentInstance as unknown as { measuredWidth: { set: (v: number) => void } };
   chart.measuredWidth.set(width);
   fixture.detectChanges();
+}
+
+/** Each plotted point's screen x (sumi-ui#106's hover lookup table), read
+ *  straight off the component's own `geometry()` so a spec never has to
+ *  hand-compute the scale itself. */
+function pointScreenXs(fixture: ReturnType<typeof setup>): number[] {
+  const chart = fixture.debugElement.query(By.directive(SumiLineChart))
+    .componentInstance as unknown as { geometry: () => { pointScreens: { x: number }[] } };
+  return chart.geometry().pointScreens.map((p) => p.x);
+}
+
+function tooltipText(fixture: ReturnType<typeof setup>): string | null {
+  return fixture.nativeElement.querySelector('sumi-chart-tooltip')?.textContent?.trim() ?? null;
+}
+
+function overlay(fixture: ReturnType<typeof setup>): HTMLElement {
+  return fixture.nativeElement.querySelector('.sumi-line-chart__tip-overlay');
 }
 
 describe('SumiLineChart', () => {
@@ -183,5 +208,156 @@ describe('SumiLineChart', () => {
       fixture.detectChanges();
       forceMeasuredWidth(fixture, 400);
     }).not.toThrow();
+  });
+
+  it('removes the <title> element from each line — the native tooltip is replaced by the instant one', () => {
+    const fixture = setup();
+    forceMeasuredWidth(fixture, 400);
+    expect(fixture.nativeElement.querySelector('title')).toBeNull();
+  });
+});
+
+describe('SumiLineChart instant tooltip (sumi-ui#106)', () => {
+  it('single series: snaps to the nearest point on pointermove (mouse) and hides on pointerleave', () => {
+    const fixture = setup();
+    fixture.componentInstance.series.set([{ key: 'earned', label: 'Earned' }]);
+    fixture.componentInstance.unit.set(' %');
+    fixture.detectChanges();
+    forceMeasuredWidth(fixture, 400);
+
+    const xs = pointScreenXs(fixture);
+    overlay(fixture).dispatchEvent(
+      new PointerEvent('pointermove', { pointerType: 'mouse', clientX: xs[1] }),
+    );
+    fixture.detectChanges();
+    expect(tooltipText(fixture)).toBe('5 % · 2 Jan');
+
+    overlay(fixture).dispatchEvent(new PointerEvent('pointerleave', { pointerType: 'mouse' }));
+    fixture.detectChanges();
+    expect(tooltipText(fixture)).toBeNull();
+  });
+
+  it('several series (line mode): date first, then one line per series', () => {
+    const fixture = setup();
+    fixture.detectChanges();
+    forceMeasuredWidth(fixture, 400);
+
+    const xs = pointScreenXs(fixture);
+    overlay(fixture).dispatchEvent(
+      new PointerEvent('pointermove', { pointerType: 'mouse', clientX: xs[2] }),
+    );
+    fixture.detectChanges();
+    const text = tooltipText(fixture);
+    expect(text).toContain('3 Jan');
+    expect(text).toContain('Earned: 9');
+    expect(text).toContain('Marked as known: 3');
+    expect(text).not.toContain('Total');
+  });
+
+  it("stacked-area: adds a Total line of the point's series sum", () => {
+    const fixture = setup();
+    fixture.componentInstance.mode.set('stacked-area');
+    fixture.detectChanges();
+    forceMeasuredWidth(fixture, 400);
+
+    const xs = pointScreenXs(fixture);
+    overlay(fixture).dispatchEvent(
+      new PointerEvent('pointermove', { pointerType: 'mouse', clientX: xs[2] }),
+    );
+    fixture.detectChanges();
+    const text = tooltipText(fixture);
+    expect(text).toContain('Total: 12'); // 9 + 3
+  });
+
+  it('draws a vertical guide and one dot per series at the hovered point', () => {
+    const fixture = setup();
+    fixture.detectChanges();
+    forceMeasuredWidth(fixture, 400);
+
+    const xs = pointScreenXs(fixture);
+    overlay(fixture).dispatchEvent(
+      new PointerEvent('pointermove', { pointerType: 'mouse', clientX: xs[1] }),
+    );
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.sumi-line-chart__tip-guide')).toBeTruthy();
+    expect(fixture.nativeElement.querySelectorAll('.sumi-line-chart__tip-dot').length).toBe(2);
+  });
+
+  it('with gaps and a fixed range, hovering a day with no point shows nothing', () => {
+    const fixture = setup();
+    fixture.componentInstance.points.set([
+      { date: '2024-01-01', values: { earned: 1, known: 0 } },
+      // 2024-01-02 and 2024-01-03 are gaps; 2024-01-04 resumes.
+      { date: '2024-01-04', values: { earned: 4, known: 1 } },
+    ]);
+    fixture.componentInstance.startDate.set('2024-01-01');
+    fixture.componentInstance.endDate.set('2024-01-04');
+    fixture.componentInstance.gaps.set(true);
+    fixture.detectChanges();
+    forceMeasuredWidth(fixture, 400);
+
+    const xs = pointScreenXs(fixture); // [day1, day4]
+    const midGapX = (xs[0] + xs[1]) / 2; // ~day 2.5, closer to neither actual point by more than half a day
+    overlay(fixture).dispatchEvent(
+      new PointerEvent('pointermove', { pointerType: 'mouse', clientX: midGapX }),
+    );
+    fixture.detectChanges();
+    expect(tooltipText(fixture)).toBeNull();
+
+    // But right at (or very near) an actual point, it still shows.
+    overlay(fixture).dispatchEvent(
+      new PointerEvent('pointermove', { pointerType: 'mouse', clientX: xs[0] }),
+    );
+    fixture.detectChanges();
+    expect(tooltipText(fixture)).not.toBeNull();
+  });
+
+  it('without a fixed range, always snaps to the nearest point regardless of gaps', () => {
+    const fixture = setup();
+    fixture.componentInstance.points.set([
+      { date: '2024-01-01', values: { earned: 1, known: 0 } },
+      { date: '2024-01-20', values: { earned: 4, known: 1 } },
+    ]);
+    fixture.componentInstance.gaps.set(true);
+    fixture.detectChanges();
+    forceMeasuredWidth(fixture, 400);
+
+    const xs = pointScreenXs(fixture);
+    const midway = (xs[0] + xs[1]) / 2;
+    overlay(fixture).dispatchEvent(
+      new PointerEvent('pointermove', { pointerType: 'mouse', clientX: midway }),
+    );
+    fixture.detectChanges();
+    expect(tooltipText(fixture)).not.toBeNull();
+  });
+
+  it('a touch tap (pointerup) keeps the tooltip open until an outside tap', () => {
+    const fixture = setup();
+    fixture.detectChanges();
+    forceMeasuredWidth(fixture, 400);
+
+    const xs = pointScreenXs(fixture);
+    overlay(fixture).dispatchEvent(
+      new PointerEvent('pointerup', { pointerType: 'touch', clientX: xs[0], bubbles: true }),
+    );
+    fixture.detectChanges();
+    expect(tooltipText(fixture)).not.toBeNull();
+
+    document.body.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+    fixture.detectChanges();
+    expect(tooltipText(fixture)).toBeNull();
+  });
+
+  it('ignores a touch pointermove (only pointerup opens/moves a touch tooltip)', () => {
+    const fixture = setup();
+    fixture.detectChanges();
+    forceMeasuredWidth(fixture, 400);
+
+    const xs = pointScreenXs(fixture);
+    overlay(fixture).dispatchEvent(
+      new PointerEvent('pointermove', { pointerType: 'touch', clientX: xs[0] }),
+    );
+    fixture.detectChanges();
+    expect(tooltipText(fixture)).toBeNull();
   });
 });

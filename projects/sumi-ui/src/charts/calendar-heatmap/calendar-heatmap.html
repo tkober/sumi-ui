@@ -15,7 +15,7 @@
       </text>
     }
   </svg>
-  <div class="sumi-calendar-heatmap__scroll" #scroll>
+  <div class="sumi-calendar-heatmap__scroll" #scroll (scroll)="onScroll()">
     <svg
       class="sumi-calendar-heatmap__svg"
       [attr.viewBox]="'0 0 ' + svgWidth() + ' ' + svgHeight()"
@@ -37,19 +37,27 @@
       @for (cell of geometry().cells; track cell.date) {
         <rect
           class="sumi-calendar-heatmap__cell"
+          [class.sumi-calendar-heatmap__cell--active]="tip.data()?.date === cell.date"
           [attr.x]="cellX(cell.week)"
           [attr.y]="cellY(cell.weekday)"
           [attr.width]="geometry().cellSize"
           [attr.height]="geometry().cellSize"
           [attr.rx]="2"
           [style.fill]="fill(cell.bucket)"
-        >
-          <title>{{ cell.title }}</title>
-        </rect>
+          (pointerenter)="showTip($event, cell)"
+          (pointerleave)="hideTip($event)"
+          (pointerup)="showTip($event, cell)"
+        />
       }
     </svg>
   </div>
 </div>
+
+@if (tip.data(); as t) {
+  <sumi-chart-tooltip [anchor]="tip.anchor()" [hostWidth]="measuredWidth()">
+    <strong>{{ t.value === 0 ? 'No' : t.value }} {{ unit() }}</strong> · {{ dayLabel(t.date) }}
+  </sumi-chart-tooltip>
+}
 
 <sumi-ramp-legend class="sumi-calendar-heatmap__legend" minLabel="Less" maxLabel="More" />
 

@@ -250,31 +250,9 @@ describe('SumiBarChart', () => {
     expect(rows.length).toBe(3);
   });
 
-  it("titles a stacked segment with the series' label, not its key", () => {
+  it('renders no <title> elements — the native tooltip is replaced by the instant one', () => {
     const fixture = setup();
-    fixture.componentInstance.bars.set(undefined);
-    fixture.componentInstance.rows.set([{ label: 'Mon', values: { a: 2, b: 3 } }]);
-    fixture.componentInstance.series.set([
-      { key: 'a', label: 'Apprentice' },
-      { key: 'b', label: 'Guru' },
-    ]);
-    fixture.detectChanges();
-    const titles = [
-      ...fixture.nativeElement.querySelectorAll('rect.sumi-bar-chart__bar title'),
-    ] as HTMLElement[];
-    expect(titles.map((t) => t.textContent)).toEqual(['Mon / Apprentice: 2', 'Mon / Guru: 3']);
-  });
-
-  it('falls back to the key when a stacked segment has no matching series', () => {
-    const fixture = setup();
-    fixture.componentInstance.bars.set(undefined);
-    fixture.componentInstance.rows.set([{ label: 'Mon', values: { a: 2, stale: 3 } }]);
-    fixture.componentInstance.series.set([{ key: 'a', label: 'Apprentice' }]);
-    fixture.detectChanges();
-    const titles = [
-      ...fixture.nativeElement.querySelectorAll('rect.sumi-bar-chart__bar title'),
-    ] as HTMLElement[];
-    expect(titles.map((t) => t.textContent)).toEqual(['Mon / Apprentice: 2']);
+    expect(fixture.nativeElement.querySelector('title')).toBeNull();
   });
 
   it('defaults the table headers to Label/Value', () => {
@@ -317,9 +295,15 @@ describe('SumiBarChart', () => {
 });
 
 describe('SumiBarChart selectable/barSelect (sumi-ui#76)', () => {
-  it('renders no hit targets when selectable is off', () => {
+  it('renders one (non-focusable, unlabelled) hit target per bar even when selectable is off (sumi-ui#106: the tooltip hover target)', () => {
     const fixture = setup();
-    expect(fixture.nativeElement.querySelectorAll('.sumi-bar-chart__hit').length).toBe(0);
+    const hits = [
+      ...fixture.nativeElement.querySelectorAll('.sumi-bar-chart__hit'),
+    ] as HTMLElement[];
+    expect(hits.length).toBe(3);
+    expect(hits[0].getAttribute('role')).toBeNull();
+    expect(hits[0].getAttribute('tabindex')).toBeNull();
+    expect(hits[0].classList.contains('sumi-bar-chart__hit--selectable')).toBe(false);
   });
 
   it('renders one focusable, labelled hit target per bar when selectable', () => {
@@ -333,6 +317,16 @@ describe('SumiBarChart selectable/barSelect (sumi-ui#76)', () => {
     expect(hits[1].getAttribute('role')).toBe('button');
     expect(hits[1].getAttribute('tabindex')).toBe('0');
     expect(hits[1].getAttribute('aria-label')).toBe('09:00: 9');
+  });
+
+  it('ignores a click when not selectable (the hit target exists only for the tooltip)', () => {
+    const fixture = setup();
+    const hits = [
+      ...fixture.nativeElement.querySelectorAll('.sumi-bar-chart__hit'),
+    ] as HTMLElement[];
+    hits[1].dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    fixture.detectChanges();
+    expect(fixture.componentInstance.selected()).toBeNull();
   });
 
   it('emits barSelect with the index and label on click', () => {
@@ -393,5 +387,112 @@ describe('SumiBarChart selectable/barSelect (sumi-ui#76)', () => {
     hits[0].dispatchEvent(new MouseEvent('click', { bubbles: true }));
     fixture.detectChanges();
     expect(fixture.componentInstance.selected()).toEqual({ index: 0, label: 'Mon' });
+  });
+});
+
+describe('SumiBarChart instant tooltip (sumi-ui#106)', () => {
+  function tooltipText(fixture: ReturnType<typeof setup>): string | null {
+    return (
+      fixture.nativeElement
+        .querySelector('sumi-chart-tooltip')
+        ?.textContent?.replace(/\s+/g, ' ')
+        .trim() ?? null
+    );
+  }
+
+  it('single series: shows "<value> · <label>" on pointerenter (mouse), and hides on pointerleave', () => {
+    const fixture = setup();
+    const hits = [
+      ...fixture.nativeElement.querySelectorAll('.sumi-bar-chart__hit'),
+    ] as HTMLElement[];
+    hits[1].dispatchEvent(new PointerEvent('pointerenter', { pointerType: 'mouse' }));
+    fixture.detectChanges();
+    expect(tooltipText(fixture)).toBe('9 · 09:00');
+
+    hits[1].dispatchEvent(new PointerEvent('pointerleave', { pointerType: 'mouse' }));
+    fixture.detectChanges();
+    expect(tooltipText(fixture)).toBeNull();
+  });
+
+  it('stacked: shows the column label, then one line per series', () => {
+    const fixture = setup();
+    fixture.componentInstance.bars.set(undefined);
+    fixture.componentInstance.rows.set([{ label: 'Mon', values: { a: 2, b: 3 } }]);
+    fixture.componentInstance.series.set([
+      { key: 'a', label: 'Apprentice' },
+      { key: 'b', label: 'Guru' },
+    ]);
+    fixture.detectChanges();
+    const hits = [
+      ...fixture.nativeElement.querySelectorAll('.sumi-bar-chart__hit'),
+    ] as HTMLElement[];
+    hits[0].dispatchEvent(new PointerEvent('pointerenter', { pointerType: 'mouse' }));
+    fixture.detectChanges();
+    const text = tooltipText(fixture);
+    expect(text).toContain('Mon');
+    expect(text).toContain('Apprentice: 2');
+    expect(text).toContain('Guru: 3');
+  });
+
+  it('stacked: only lists series actually in `series` — an extra value key in `rows` is ignored', () => {
+    const fixture = setup();
+    fixture.componentInstance.bars.set(undefined);
+    fixture.componentInstance.rows.set([{ label: 'Mon', values: { a: 2, stale: 3 } }]);
+    fixture.componentInstance.series.set([{ key: 'a', label: 'Apprentice' }]);
+    fixture.detectChanges();
+    const hits = [
+      ...fixture.nativeElement.querySelectorAll('.sumi-bar-chart__hit'),
+    ] as HTMLElement[];
+    hits[0].dispatchEvent(new PointerEvent('pointerenter', { pointerType: 'mouse' }));
+    fixture.detectChanges();
+    const text = tooltipText(fixture);
+    expect(text).toContain('Apprentice: 2');
+    expect(text).not.toContain('stale');
+  });
+
+  it('marks the active column/stack with the active class', () => {
+    const fixture = setup();
+    const hits = [
+      ...fixture.nativeElement.querySelectorAll('.sumi-bar-chart__hit'),
+    ] as HTMLElement[];
+    hits[1].dispatchEvent(new PointerEvent('pointerenter', { pointerType: 'mouse' }));
+    fixture.detectChanges();
+    const bars = [...fixture.nativeElement.querySelectorAll('.sumi-bar-chart__bar')];
+    const active = bars.filter((b) => b.classList.contains('sumi-bar-chart__bar--active'));
+    expect(active.length).toBe(1);
+  });
+
+  it('shows on focus and hides on blur for a selectable, focused column', () => {
+    const fixture = setup();
+    fixture.componentInstance.selectable.set(true);
+    fixture.detectChanges();
+    const hits = [
+      ...fixture.nativeElement.querySelectorAll('.sumi-bar-chart__hit'),
+    ] as HTMLElement[];
+    hits[2].dispatchEvent(new FocusEvent('focus'));
+    fixture.detectChanges();
+    expect(tooltipText(fixture)).toBe('5 · 10:00');
+
+    hits[2].dispatchEvent(new FocusEvent('blur'));
+    fixture.detectChanges();
+    expect(tooltipText(fixture)).toBeNull();
+  });
+
+  it('a touch tap keeps the tooltip open until an outside tap', () => {
+    const fixture = setup();
+    const hits = [
+      ...fixture.nativeElement.querySelectorAll('.sumi-bar-chart__hit'),
+    ] as HTMLElement[];
+    hits[0].dispatchEvent(new PointerEvent('pointerup', { pointerType: 'touch', bubbles: true }));
+    fixture.detectChanges();
+    expect(tooltipText(fixture)).toBe('3 · 08:00');
+
+    hits[0].dispatchEvent(new PointerEvent('pointerleave', { pointerType: 'touch' }));
+    fixture.detectChanges();
+    expect(tooltipText(fixture)).toBe('3 · 08:00');
+
+    document.body.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+    fixture.detectChanges();
+    expect(tooltipText(fixture)).toBeNull();
   });
 });

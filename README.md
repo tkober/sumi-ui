@@ -1439,7 +1439,7 @@ again"`) let such an app use its own wording, and `actionDisabled`
 
    `sumi-calendar-heatmap`'s cell size is computed from its measured
    container width (clamped 10–16px) so the grid fills the width without
-   stretching its `<title>` text; a grid that does not fit `weeks` columns
+   stretching its cells; a grid that does not fit `weeks` columns
    even at the minimum size scrolls horizontally inside its own container,
    pre-scrolled to the newest week. `sumi-matrix-heatmap` renders as a CSS
    grid rather than an SVG — a `(row, column)` pair missing from `cells`
@@ -1476,6 +1476,45 @@ again"`) let such an app use its own wording, and `actionDisabled`
      table
    />
    ```
+
+   **Instant tooltip** (sumi-ui#106): `sumi-calendar-heatmap`, `sumi-bar-chart`
+   and `sumi-line-chart` show their values through a GitHub-style dark bubble
+   centred above the hovered/tapped/focused mark instead of the browser's own
+   `<title>` tooltip (shown after a ~1s delay, and never on touch — the
+   `<title>` elements these three charts used are gone; `sumi-matrix-heatmap`
+   and `sumi-donut`/`sumi-sunburst` still use the native one). It shows
+   without delay on `pointerenter` and hides on `pointerleave` (mouse/pen); a
+   touch tap shows it and keeps it open until a tap elsewhere, a tap on
+   another mark (which moves it) or any scroll; `sumi-bar-chart`'s
+   `selectable` hit targets also show it on keyboard focus — this issue adds
+   no new tab stop anywhere else. The active mark gets a visible outline
+   (never colour alone): the heatmap cell or bar(s) get a `--sumi-text`
+   stroke, the line chart gets a thin vertical guide plus a filled dot on
+   each series at that point. Content:
+
+   - **`sumi-calendar-heatmap`**: `"<strong>42 reviews</strong> · Tue 14 Oct"`
+     (`"<strong>No reviews</strong> · …"` for a 0-value cell).
+   - **`sumi-bar-chart`**: `"<strong>9</strong> · 09:00"` for a plain bar; a
+     stacked column's bubble lists the column label in bold, then one line
+     per series with a small colour swatch (`"Guru: 8"`).
+   - **`sumi-line-chart`**: hovering/tapping anywhere over the plot snaps to
+     the nearest point by x; with `gaps` and a fixed `startDate`/`endDate`,
+     a day with no point shows nothing instead of snapping to a neighbour
+     that could be weeks away (otherwise it is always the nearest point).
+     A single series shows `"<strong>55</strong> · 5 Sep"`; 2+ series (either
+     `mode`) show the date, then one line per series with its colour swatch,
+     plus a `"Total: …"` line in `'stacked-area'` mode.
+
+   The bubble itself (`sumi-chart-tooltip`, internal — not exported from
+   `sumi-ui/charts`) and the interaction state machine behind it
+   (`ChartTooltipController`, in the same internal `charts/tooltip/` folder)
+   are shared by all three, so a future chart can reuse both instead of
+   growing its own tooltip. The bubble measures its own rendered width (never
+   estimates it) and clamps itself horizontally inside its host with the
+   pure `tooltipPlacement` in `charts/math.ts`, shifting its arrow by the
+   clamp offset so the arrow still points at the mark; `sumi-line-chart`'s
+   nearest-point lookup is the similarly pure `nearestLinePointIndex`, also
+   in `charts/math.ts`.
 
    `sumi-donut` and `sumi-sunburst` are the "parts of a whole" charts —
    `sumi-segmented-bar`'s angular siblings for when the whole itself (a

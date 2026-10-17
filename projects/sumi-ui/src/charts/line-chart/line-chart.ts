@@ -11,12 +11,18 @@ import {
 import {
   formatLineChartDateLabel,
   lineChartGeometry,
+  nearestLinePointIndex,
   rampColor,
   type LineChartTick,
   type PlotBox,
 } from '../math';
 import { SumiLegend, type SumiLegendItem } from '../legend/legend';
 import { SumiDataTable, type SumiTableColumn, type SumiTableRow } from '../data-table/data-table';
+import { SumiChartTooltip } from '../tooltip/chart-tooltip';
+import {
+  ChartTooltipController,
+  type SumiChartTooltipAnchor,
+} from '../tooltip/chart-tooltip-controller';
 import { observeWidth } from '../util/observe-width';
 
 /** One point of `sumi-line-chart`'s `points` input: an ISO `yyyy-mm-dd`
@@ -86,11 +92,18 @@ const PAD = { top: 22, right: 34, bottom: 20, left: 4 };
  * />
  * ```
  */
+/** One hovered/tapped point's instant tooltip data (sumi-ui#106): just the
+ *  index into `points()`/`geometry().pointScreens` — the template reads
+ *  the date/values straight from those. */
+interface LineTip {
+  index: number;
+}
+
 @Component({
   selector: 'sumi-line-chart',
   templateUrl: './line-chart.html',
   styleUrl: './line-chart.scss',
-  imports: [SumiLegend, SumiDataTable],
+  imports: [SumiLegend, SumiDataTable, SumiChartTooltip],
   host: { class: 'sumi-line-chart' },
 })
 export class SumiLineChart {
@@ -141,6 +154,15 @@ export class SumiLineChart {
   private readonly hostRef = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly destroyRef = inject(DestroyRef);
   protected readonly measuredWidth = signal(FALLBACK_WIDTH);
+
+  /** The instant tooltip (sumi-ui#106): a transparent overlay over the
+   *  plot area tracks the pointer and snaps to the nearest point by x
+   *  (see `updateTipAt`/`nearestLinePointIndex`); no keyboard wiring here
+   *  — the overlay is not a tab stop, and this issue adds no new one. */
+  protected readonly tip = new ChartTooltipController<LineTip>(
+    () => this.hostRef.nativeElement,
+    this.destroyRef,
+  );
 
   constructor() {
     afterNextRender(() => {
@@ -237,6 +259,74 @@ export class SumiLineChart {
     }
     return columns;
   });
+
+  /** Mouse/pen: tracked continuously via `pointermove`. Touch: a tap
+   *  (`pointerup`) snaps once and stays, same as the other charts'
+   *  marks; `pointerup` also runs for a mouse click, which just
+   *  re-snaps to the same point `pointermove` already found — harmless. */
+  protected onPointerMove(event: PointerEvent): void {
+    if (event.pointerType !== 'mouse' && event.pointerType !== 'pen') {
+      return; // touch moves without a tap would otherwise fire this too
+    }
+    this.updateTipAt(event, event.clientX);
+  }
+
+  /** A touch tap opens on `pointerup`, never `pointerdown`: a swipe that
+   *  turns into a scroll ends in `pointercancel` instead, so scrolling past
+   *  a chart on a phone does not flash a tooltip. */
+  protected onPointerUp(event: PointerEvent): void {
+    this.updateTipAt(event, event.clientX);
+  }
+
+  protected onPointerLeave(event: PointerEvent): void {
+    this.tip.hide(event);
+  }
+
+  /** Finds the nearest plotted point to `clientX` and shows/hides the
+   *  tooltip accordingly. With `gaps` and a fixed range, a pointer over a
+   *  day with no point (further than half a day's screen width from the
+   *  nearest one) shows nothing instead of snapping to a point that could
+   *  be weeks away — see `nearestLinePointIndex`'s own doc comment.
+   *  Without a fixed range, every x in the plot is nearest to some real
+   *  point, so there is no such gap to guard against. */
+  private updateTipAt(event: PointerEvent, clientX: number): void {
+    const geo = this.geometry();
+    if (geo.pointScreens.length === 0) {
+      return;
+    }
+    const hostRect = this.hostRef.nativeElement.getBoundingClientRect();
+    const pointerX = clientX - hostRect.left;
+    const hasExplicitRange = this.startDate() != null || this.endDate() != null;
+    const maxDistance = this.gaps() && hasExplicitRange ? geo.dayWidthPx / 2 : undefined;
+    const index = nearestLinePointIndex(
+      pointerX,
+      geo.pointScreens.map((p) => p.x),
+      maxDistance,
+    );
+    if (index === null) {
+      this.tip.dismiss();
+      return;
+    }
+    this.tip.show(event, { index }, this.anchorFor(index));
+  }
+
+  /** The topmost dot at point `index` — the lowest screen y across every
+   *  series (SVG y grows downward, so "topmost" is the smallest one). */
+  private anchorFor(index: number): SumiChartTooltipAnchor {
+    const point = this.geometry().pointScreens[index];
+    return { x: point.x, y: Math.min(...Object.values(point.y)) };
+  }
+
+  protected readonly dateLabel = (index: number): string =>
+    formatLineChartDateLabel(this.points()[index].date);
+
+  protected pointValue(index: number, key: string): number {
+    return this.points()[index].values[key] ?? 0;
+  }
+
+  protected pointTotal(index: number): number {
+    return this.series().reduce((sum, s) => sum + this.pointValue(index, s.key), 0);
+  }
 
   protected readonly tableRows = computed<SumiTableRow[]>(() => {
     // `unit` only ever suffixes a value, never the date column, and only

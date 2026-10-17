@@ -1,5 +1,10 @@
 :host {
   display: block;
+  // The instant tooltip (sumi-ui#106) positions itself absolutely within
+  // this element — its `anchor` is computed straight from the plot's own
+  // geometry (see bar-chart.ts's `anchorFor`), which already shares the
+  // SVG's 1-unit-equals-1-CSS-px coordinate system with this host.
+  position: relative;
 }
 
 .sumi-bar-chart__svg {
@@ -25,6 +30,13 @@
   fill: var(--sumi-accent);
 }
 
+// The hovered/tapped/focused column's bar (or every segment of its stack,
+// sumi-ui#106's instant tooltip) — a visible outline, not colour alone.
+.sumi-bar-chart__bar--active {
+  stroke: var(--sumi-text);
+  stroke-width: 1.5;
+}
+
 .sumi-bar-chart__label {
   font-family: var(--sumi-font-ui);
   font-variant-numeric: tabular-nums;
@@ -37,8 +49,17 @@
   stroke-width: 1;
 }
 
+// Always rendered now, one per column — sumi-ui#106's instant tooltip
+// needs a hover/tap target the full plot height tall even when the chart
+// is not `selectable`. Only `--selectable` gets the pointer cursor and a
+// focus ring; a non-selectable chart gets no tab stop at all (no
+// `tabindex`, see bar-chart.html), so `:focus-visible` below never
+// matches it anyway — the modifier is just for the cursor.
 .sumi-bar-chart__hit {
   fill: transparent;
+}
+
+.sumi-bar-chart__hit--selectable {
   cursor: pointer;
 
   // `box-shadow` (the global `:focus-visible` rule's focus ring) does not
@@ -53,6 +74,19 @@
     stroke: var(--sumi-focus-ring-base);
     stroke-width: 3;
   }
+}
+
+// The stacked tooltip's per-series swatch (sumi-ui#106) — projected into
+// `sumi-chart-tooltip`'s content, so styled from here (the template that
+// actually creates the element), same reasoning as the rest of this
+// stylesheet.
+.sumi-bar-chart__tip-swatch {
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 2px;
+  margin-right: 0.3rem;
+  vertical-align: middle;
 }
 
 .sumi-bar-chart__table {
