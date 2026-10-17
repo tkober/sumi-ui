@@ -165,6 +165,38 @@ describe('SumiSessionSummary', () => {
     ).toBe(true);
   });
 
+  it('renders a projected [sumiSummaryDetails] section inside .sumi-session-summary__details, after the tiles and before the button, and keeps a projected tile in the <dl>', () => {
+    @Component({
+      imports: [SumiSessionSummary, SumiSummaryTile],
+      template: `
+        <sumi-session-summary [durationMs]="20000">
+          <div sumiSummaryTile label="Items">100</div>
+          <section sumiSummaryDetails>By type</section>
+        </sumi-session-summary>
+      `,
+    })
+    class Host {}
+
+    TestBed.configureTestingModule({ imports: [Host] });
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const el = fixture.nativeElement as HTMLElement;
+
+    const details = el.querySelector('.sumi-session-summary__details');
+    expect(details?.querySelector('section')?.textContent).toBe('By type');
+    // The projected tile lands in the <dl>, not the details wrapper.
+    expect(details?.querySelector('[sumiSummaryTile]')).toBeNull();
+    expect(el.querySelector('.sumi-session-summary__tiles [sumiSummaryTile]')).toBeTruthy();
+
+    // DOM order: tiles, then details, then the action button.
+    const children = Array.from(el.querySelector('sumi-session-summary')!.children);
+    const tilesIndex = children.indexOf(el.querySelector('.sumi-session-summary__tiles')!);
+    const detailsIndex = children.indexOf(details!);
+    const buttonIndex = children.indexOf(el.querySelector('button')!);
+    expect(tilesIndex).toBeLessThan(detailsIndex);
+    expect(detailsIndex).toBeLessThan(buttonIndex);
+  });
+
   it('omits the Answered/Correct tiles when both are unset, but keeps Time and projected tiles', () => {
     @Component({
       imports: [SumiSessionSummary, SumiSummaryTile],

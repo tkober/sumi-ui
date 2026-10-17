@@ -27,3 +27,38 @@
   margin: 0 0 var(--sumi-space-6);
   text-align: left;
 }
+
+// Four tiles in one row once the wrapping sumi-session-gate is wide
+// enough (sumi-ui#85) — the gate's `width="wide"` makes its content a
+// named `sumi-session-gate` size container, so this only ever applies
+// there; outside a wide gate (no such container in scope) the rule never
+// matches and the default two-column grid above is unchanged. More than
+// ~5 tiles get cramped in a single row at typical wide-gate widths — an
+// app with that many should keep most of them as [sumiSummaryDetails]
+// content instead of default-slot tiles.
+@container sumi-session-gate (min-width: 560px) {
+  .sumi-session-summary__tiles {
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
+  }
+}
+
+// [sumiSummaryDetails] (sumi-ui#85): whole sections — a stage-card grid, a
+// table, bars, a collapsible chart — between the tiles and the "Practice
+// again" button. The sections are the app's own markup; this wrapper only
+// spaces them out and left-aligns them (the tiles above and the headline
+// stay centred). `:empty` collapses the wrapper to nothing when no
+// [sumiSummaryDetails] content is projected — Angular leaves only comment
+// nodes for an unused `<ng-content>`, which still count as "empty" for
+// CSS purposes, so this adds no gap for the common case with no details.
+.sumi-session-summary__details:empty {
+  display: none;
+}
+
+.sumi-session-summary__details {
+  display: grid;
+  gap: var(--sumi-space-6);
+  margin: 0 0 var(--sumi-space-6);
+  text-align: left;
+}

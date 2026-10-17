@@ -848,6 +848,13 @@ successfully with `ng build` from a throwaway Angular 22 app):
    `showAction` is `false` (the ended state) — e.g. while a background
    analysis is still running.
 
+   `width` (sumi-ui#85, default `"narrow"`) widens the content column to
+   `min(100%, 680px)` instead of the default 420px, and makes it a named
+   CSS size container (`sumi-session-gate`) — for an ended state whose
+   `sumi-session-summary` carries a `[sumiSummaryDetails]` slot (see
+   below), which needs more room than a few centred tiles. `"narrow"`
+   renders exactly as before.
+
    ```html
    @if (state() === 'idle') {
    <sumi-session-gate title="Ready to practice?" text="…" (start)="startSession()" />
@@ -875,6 +882,28 @@ characters="合格" label="Passed" />`. Its own `restart` output drives
    the "Practice again" button. `levelUp` (T8, e.g. `"Level 4"`) shows a
    second 昇級 hanko next to the result when a level was reached during the
    session — omit it (the default) for no change.
+
+   `[sumiSummaryDetails]` (sumi-ui#85) is a slot for whole sections — a
+   stage-card grid, a table, bars, a collapsible chart — between the tiles
+   and the action button; the sections are the app's own markup, the
+   library only spaces and left-aligns them, and the wrapper adds no gap
+   when nothing is projected. It is meant for the wrapping
+   `sumi-session-gate`'s `width="wide"`, where the tiles above also become
+   one row of up to four (more than ~5 get cramped) once the gate is at
+   least 560px wide, via a container query keyed to the gate's own named
+   container — so it never applies to a narrow gate:
+
+   ```html
+   <sumi-session-gate width="wide" [showAction]="false" (start)="startSession()">
+     <sumi-session-summary [answered]="answered()" [correct]="correct()" [durationMs]="durationMs()">
+       <sumi-hanko sumiSummaryArt characters="合格" label="Passed" />
+       <section sumiSummaryDetails>
+         <h3>Reached a new stage</h3>
+         ...
+       </section>
+     </sumi-session-summary>
+   </sumi-session-gate>
+   ```
 
    `answered`/`correct` are optional (sumi-ui#56): a non-quiz app (e.g.
    jp-conversation-practice, graded by the API afterwards rather than

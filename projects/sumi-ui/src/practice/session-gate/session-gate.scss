@@ -11,6 +11,29 @@
   text-align: center;
 }
 
+// `--wide` (sumi-ui#85): a projected sumi-session-summary with a
+// [sumiSummaryDetails] slot needs ~680px, not 420px, to fit a four-tile
+// row plus whole sections (stage-card grid, table, chart) underneath. The
+// content becomes a named size container only here, not in the default
+// (narrow) case: narrow content is shrink-to-fit inside this centring
+// flex box, so `inline-size` containment there would measure against a
+// zero/collapsed inline size before the box has a definite width. In wide
+// mode the width is already definite (`min(100%, 680px)`), so containment
+// is safe and lets the summary's tiles react to it via `@container
+// sumi-session-gate (min-width: …)`.
+:host(.sumi-session-gate--wide) .sumi-session-gate__content {
+  width: min(100%, 680px);
+  max-width: none;
+  align-items: stretch;
+  container: sumi-session-gate / inline-size;
+}
+
+// The gate's own button stays centred and shrink-to-fit even though the
+// rest of the content now stretches to the container's full width.
+:host(.sumi-session-gate--wide) .sumi-session-gate__content > button {
+  align-self: center;
+}
+
 .sumi-session-gate__title {
   margin: 0;
   font-family: var(--sumi-font-display);

@@ -147,6 +147,61 @@
   </section>
 
   <section class="demo">
+    <h2>Wide summary with details (sumi-ui#85)</h2>
+    <p>
+      kanji-trainer's review summary needs more than a couple of centred tiles: a four-tile row and
+      whole sections underneath, e.g. a breakdown by stage and by item type.
+      <code>sumi-session-gate</code>'s <code>width="wide"</code> widens the content to 680px and
+      turns it into a named size container, so <code>sumi-session-summary</code>'s tiles become one
+      row of four and its <code>[sumiSummaryDetails]</code> slot (sumi-ui#85) can hold whole
+      sections — plain app markup, the library only spaces them out.
+    </p>
+
+    <sumi-session-gate width="wide" [showAction]="false" companion="tsuru">
+      <sumi-session-summary [durationMs]="1593000">
+        <sumi-hanko sumiSummaryArt characters="合格" label="Passed" />
+        <div sumiSummaryTile label="Items">100</div>
+        <div sumiSummaryTile label="Correct">95 <small>(95%)</small></div>
+        <div sumiSummaryTile label="Answers">188<small>/194</small></div>
+
+        <section sumiSummaryDetails class="demo__wide-details-section">
+          <h3>Reached a new stage</h3>
+          <div class="demo__stage-grid">
+            @for (stage of reachedStages; track stage.label) {
+              <div class="demo__stage-card">
+                <span class="demo__stage-value">{{ stage.count }}</span>
+                <span class="demo__stage-label">{{ stage.label }}</span>
+              </div>
+            }
+          </div>
+        </section>
+
+        <section sumiSummaryDetails class="demo__wide-details-section">
+          <h3>By type</h3>
+          <table class="demo__type-table">
+            <thead>
+              <tr>
+                <th scope="col">Type</th>
+                <th scope="col">Count</th>
+                <th scope="col">Accuracy</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of byTypeRows; track row.label) {
+                <tr>
+                  <td>{{ row.label }}</td>
+                  <td>{{ row.count }}</td>
+                  <td>{{ row.accuracy }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </section>
+      </sumi-session-summary>
+    </sumi-session-gate>
+  </section>
+
+  <section class="demo">
     <h2>Other modes</h2>
     <p>
       The grading round above only uses <code>kana</code> and <code>latin</code>. Everything else

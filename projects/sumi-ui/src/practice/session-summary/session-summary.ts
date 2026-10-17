@@ -45,6 +45,32 @@ function formatDuration(ms: number): string {
  * label="…">` into the default slot; it lands after the built-in tiles and
  * looks the same (`SumiSummaryTile`, sumi-ui#48).
  *
+ * `[sumiSummaryDetails]` (sumi-ui#85) is a slot for whole sections —
+ * e.g. a stage-card grid, a table, bars, a collapsible chart — between the
+ * tiles and the action button. The sections are the app's own markup; this
+ * component only spaces and left-aligns them. It is meant for the wrapping
+ * `sumi-session-gate`'s `width="wide"` (420px of content is too narrow for
+ * more than a line or two), where the tiles above also become one row of
+ * up to four once there is room (a named CSS container query keyed to the
+ * gate, so it never applies to a narrow gate):
+ *
+ * ```html
+ * <sumi-session-gate width="wide" [showAction]="false" (start)="startSession()">
+ *   <sumi-session-summary
+ *     [answered]="answered()"
+ *     [correct]="correct()"
+ *     [durationMs]="durationMs()"
+ *     (restart)="startSession()"
+ *   >
+ *     <sumi-hanko sumiSummaryArt characters="合格" label="Passed" />
+ *     <section sumiSummaryDetails>
+ *       <h3>Reached a new stage</h3>
+ *       ...
+ *     </section>
+ *   </sumi-session-summary>
+ * </sumi-session-gate>
+ * ```
+ *
  * ```html
  * <sumi-session-gate title="Session complete" actionLabel="Practice again" (start)="restart()">
  *   <sumi-session-summary

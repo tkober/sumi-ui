@@ -97,6 +97,21 @@ const FURIGANA_SAMPLE: SumiFuriganaSegment[] = [
   { base: 'する' },
 ];
 
+/** "Wide summary with details" demo (sumi-ui#85) — a stage-card grid for [sumiSummaryDetails]. */
+const REACHED_STAGES: { label: string; count: number }[] = [
+  { label: 'Guru', count: 14 },
+  { label: 'Master', count: 9 },
+  { label: 'Enlightened', count: 6 },
+  { label: 'Burned', count: 4 },
+];
+
+/** Same demo, second [sumiSummaryDetails] section — a small table. */
+const BY_TYPE_ROWS: { label: string; count: number; accuracy: string }[] = [
+  { label: 'Radicals', count: 10, accuracy: '100%' },
+  { label: 'Kanji', count: 32, accuracy: '91%' },
+  { label: 'Vocabulary', count: 58, accuracy: '97%' },
+];
+
 /** Plain Levenshtein distance, for the one-typo tolerance on 森. */
 function distance(a: string, b: string): number {
   const rows = a.length + 1;
@@ -149,7 +164,12 @@ type SessionState = 'idle' | 'running' | 'ended';
  * tones, and a "Mode cue" section shows `modeCue` in `kana`/`latin` across
  * every verdict state (sumi-ui#68). A small "Other building blocks"
  * section below shows furigana, every countdown state and every verdict
- * kind side by side.
+ * kind side by side. A "Wide summary with details (sumi-ui#85)" section
+ * demos `sumi-session-gate`'s `width="wide"` and `sumi-session-summary`'s
+ * `[sumiSummaryDetails]` slot: four tiles in one row (three app tiles plus
+ * the built-in Time) and two projected `[sumiSummaryDetails]` sections — a
+ * stage-card grid and a small table — both plain showcase markup/styles
+ * using only `--sumi-*` tokens, not a real kanji-trainer screen.
  */
 @Component({
   selector: 'app-practice-page',
@@ -173,6 +193,8 @@ export class PracticePage {
   protected readonly cards = CARDS;
   protected readonly furiganaSample = FURIGANA_SAMPLE;
   protected readonly radicalImageUrl = RADICAL_IMAGE_URL;
+  protected readonly reachedStages = REACHED_STAGES;
+  protected readonly byTypeRows = BY_TYPE_ROWS;
 
   protected readonly sessionState = signal<SessionState>('idle');
   protected readonly index = signal(0);
