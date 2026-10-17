@@ -115,6 +115,11 @@
   // variable with no `sumi-app-shell` in the tree at all, or in a test).
   --sumi-shell-sticky-height: 0px;
 
+  // Height of the fixed bottom tab bar, `0px` whenever it is hidden
+  // (sumi-ui#90). Set on `sumi-app-shell`'s host, so this fallback only
+  // applies outside a shell.
+  --sumi-shell-bottom-height: 0px;
+
   // Multiplier on every ink motif's base opacity (see
   // docs/concept.md#tuschemotive and `sumi-landscape`/`sumi-pattern`'s
   // `ink-opacity.scss`). `1` is the sketch's reviewed intensity; an app can

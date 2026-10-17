@@ -9,7 +9,7 @@ import {
 } from '@angular/core';
 import { DOCUMENT, NgTemplateOutlet } from '@angular/common';
 import { RouterLink, RouterLinkActive } from '@angular/router';
-import { SumiIcon, SumiIconName, SumiThemeToggle } from 'sumi-ui/core';
+import { SumiIcon, SumiIconName, SumiKeyboardVisibility, SumiThemeToggle } from 'sumi-ui/core';
 import { SumiBadge, type SumiBadgeTone } from '../badge/badge';
 import { SumiAppShellTabBar } from './shell-tab-bar';
 import { SumiShell } from './shell.service';
@@ -102,10 +102,14 @@ export interface SumiNavItem {
   host: {
     class: 'sumi-app-shell',
     '[class.sumi-app-shell--focus]': 'shell.focusMode()',
+    // Same condition as `SumiAppShellTabBar`'s own `@if` -- drives
+    // `--sumi-shell-bottom-height` in shell.scss (sumi-ui#90).
+    '[class.sumi-app-shell--no-tabbar]': 'shell.focusMode() || keyboard.isOpen()',
   },
 })
 export class SumiAppShell {
   protected readonly shell = inject(SumiShell);
+  protected readonly keyboard = inject(SumiKeyboardVisibility);
 
   private readonly document = inject(DOCUMENT);
   private readonly destroyRef = inject(DestroyRef);

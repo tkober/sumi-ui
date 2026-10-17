@@ -158,6 +158,29 @@ describe('SumiAppShell with focus mode', () => {
     shellFixture.detectChanges();
     expect(shellFixture.nativeElement.querySelector('.sumi-app-shell__nav')).toBeTruthy();
   });
+
+  // sumi-ui#90: the host class is what zeroes --sumi-shell-bottom-height.
+  it('flags the host as having no tab bar while focus mode is on', async () => {
+    TestBed.configureTestingModule({
+      providers: [provideRouter([{ path: '**', component: DummyPage }])],
+    });
+    const shellFixture = TestBed.createComponent(SumiAppShell);
+    shellFixture.componentRef.setInput('brand', { glyph: '墨', name: 'Test App' });
+    shellFixture.detectChanges();
+    await shellFixture.whenStable();
+    const host: HTMLElement = shellFixture.nativeElement;
+    expect(host.classList).not.toContain('sumi-app-shell--no-tabbar');
+
+    const focusFixture = TestBed.createComponent(FocusHost);
+    focusFixture.detectChanges();
+    shellFixture.detectChanges();
+    expect(host.classList).toContain('sumi-app-shell--no-tabbar');
+
+    focusFixture.componentInstance.show.set(false);
+    focusFixture.detectChanges();
+    shellFixture.detectChanges();
+    expect(host.classList).not.toContain('sumi-app-shell--no-tabbar');
+  });
 });
 
 describe('SumiAppShell with nav lock', () => {

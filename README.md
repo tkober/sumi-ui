@@ -370,6 +370,12 @@ successfully with `ng build` from a throwaway Angular 22 app):
    top: calc(var(--sumi-shell-sticky-height) + var(--sumi-space-4));
    ```
 
+   Its counterpart for the bottom edge is `--sumi-shell-bottom-height`
+   (sumi-ui#90): the room the fixed tab bar takes on narrow screens, `0px`
+   on desktop, in focus mode and while the on-screen keyboard is open. A
+   bar that sticks to the bottom uses
+   `position: sticky; bottom: var(--sumi-shell-bottom-height);`.
+
    ### Hotkeys
 
    `SumiHotkeys` (`sumi-ui/core`) is a single `keydown` listener shared by
