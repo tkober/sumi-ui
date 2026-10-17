@@ -1,5 +1,8 @@
 :host {
   display: block;
+  // The instant tooltip (sumi-ui#107) positions itself absolutely within
+  // this element, same reasoning as `sumi-bar-chart`'s host.
+  position: relative;
 }
 
 .sumi-segmented-bar__svg {
@@ -8,6 +11,14 @@
   border-radius: var(--sumi-radius-pill);
   background: var(--sumi-sunken);
   overflow: hidden;
+}
+
+// The hovered/tapped segment (sumi-ui#107's instant tooltip) — a visible
+// outline, not colour alone, same treatment as `sumi-bar-chart`'s
+// `--active`.
+.sumi-segmented-bar__bar--active {
+  stroke: var(--sumi-text);
+  stroke-width: 1.5;
 }
 
 .sumi-segmented-bar__table {

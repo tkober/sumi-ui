@@ -114,6 +114,11 @@ describe('SumiSunburst', () => {
     paths.forEach((path) => expect(path.getAttribute('tabindex')).toBe('0'));
   });
 
+  it('renders no <title> elements — no bubble duplicates the centre readout (sumi-ui#107)', () => {
+    const fixture = setup();
+    expect(fixture.nativeElement.querySelector('title')).toBeNull();
+  });
+
   it('renders the table toggle with one flattened row per segment', () => {
     const fixture = setup();
     fixture.componentInstance.table.set(true);

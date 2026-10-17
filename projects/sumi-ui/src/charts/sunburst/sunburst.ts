@@ -58,6 +58,13 @@ const HOLE_RATIO = 0.3;
  *   table
  * />
  * ```
+ *
+ * No instant tooltip (sumi-ui#107), same reasoning as `sumi-donut`: the
+ * centre readout already shows the hovered/tapped/focused segment's own
+ * label, value and share instantly, so a bubble would duplicate it. A
+ * touch tap already pins the readout open via `click`/`togglePin` (a tap
+ * fires both pointer and click events), so unlike `sumi-donut` it needs
+ * no further touch handling here — only the `<title>` elements are gone.
  */
 @Component({
   selector: 'sumi-sunburst',

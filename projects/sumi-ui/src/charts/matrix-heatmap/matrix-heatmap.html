@@ -2,6 +2,7 @@
   class="sumi-matrix-heatmap__scroll"
   [attr.role]="selectable() ? 'group' : 'img'"
   [attr.aria-label]="ariaLabel()"
+  (scroll)="onScroll()"
 >
   <div
     class="sumi-matrix-heatmap__grid"
@@ -26,14 +27,20 @@
             class="sumi-matrix-heatmap__cell sumi-matrix-heatmap__cell--selectable"
             [class.sumi-matrix-heatmap__cell--no-data]="cell.bucket === -1"
             [class.sumi-matrix-heatmap__cell--selected]="isSelected(row, column)"
+            [class.sumi-matrix-heatmap__cell--active]="
+              tip.data()?.row === row && tip.data()?.column === column
+            "
             [style.background-color]="fill(cell.bucket)"
             [style.color]="textColor(cell.bucket)"
-            [title]="cell.title"
             [attr.aria-label]="cell.title"
             [attr.aria-pressed]="isSelected(row, column)"
             (click)="onCellInteract(cell)"
-            (focus)="onCellInteract(cell)"
+            (focus)="onCellInteract(cell); showTip($event, cell)"
+            (blur)="hideTip($event)"
             (mouseenter)="onCellInteract(cell)"
+            (pointerenter)="showTip($event, cell)"
+            (pointerleave)="hideTip($event)"
+            (pointerup)="showTip($event, cell)"
           >
             @if (showValues() && cell.label) {
               {{ cell.label }}
@@ -43,9 +50,14 @@
           <div
             class="sumi-matrix-heatmap__cell"
             [class.sumi-matrix-heatmap__cell--no-data]="cell.bucket === -1"
+            [class.sumi-matrix-heatmap__cell--active]="
+              tip.data()?.row === row && tip.data()?.column === column
+            "
             [style.background-color]="fill(cell.bucket)"
             [style.color]="textColor(cell.bucket)"
-            [title]="cell.title"
+            (pointerenter)="showTip($event, cell)"
+            (pointerleave)="hideTip($event)"
+            (pointerup)="showTip($event, cell)"
           >
             @if (showValues() && cell.label) {
               {{ cell.label }}
@@ -56,6 +68,20 @@
     }
   </div>
 </div>
+
+@if (tip.data(); as t) {
+  <sumi-chart-tooltip [anchor]="tip.anchor()" [hostWidth]="measuredWidth()">
+    @let parts = tipParts(t.title);
+    @if (parts) {
+      {{ parts.prefix }}: <strong>{{ parts.value }}</strong>
+      @if (parts.detail) {
+        · {{ parts.detail }}
+      }
+    } @else {
+      {{ t.title }}
+    }
+  </sumi-chart-tooltip>
+}
 
 <sumi-ramp-legend [minLabel]="minLabel()" [maxLabel]="maxLabel()" [noDataLabel]="noDataLabel()" />
 

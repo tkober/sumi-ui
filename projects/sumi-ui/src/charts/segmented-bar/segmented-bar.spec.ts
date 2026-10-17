@@ -60,4 +60,58 @@ describe('SumiSegmentedBar', () => {
     const rows = fixture.nativeElement.querySelectorAll('tbody tr');
     expect(rows.length).toBe(2);
   });
+
+  it('renders no <title> elements — the native tooltip is replaced by the instant one', () => {
+    const fixture = setup();
+    expect(fixture.nativeElement.querySelector('title')).toBeNull();
+  });
+});
+
+describe('SumiSegmentedBar instant tooltip (sumi-ui#107)', () => {
+  function tooltipText(fixture: ReturnType<typeof setup>): string | null {
+    return (
+      fixture.nativeElement
+        .querySelector('sumi-chart-tooltip')
+        ?.textContent?.replace(/\s+/g, ' ')
+        .trim() ?? null
+    );
+  }
+
+  it('shows "<value> · <label> (<percent>%)" on pointerenter (mouse), and hides on pointerleave', () => {
+    const fixture = setup();
+    const rects = [...fixture.nativeElement.querySelectorAll('rect')] as SVGRectElement[];
+    // Apprentice (12) and Master (28) are the two non-zero segments (Guru is 0).
+    rects[1].dispatchEvent(new PointerEvent('pointerenter', { pointerType: 'mouse' }));
+    fixture.detectChanges();
+    expect(tooltipText(fixture)).toBe('28 · Master (70%)');
+
+    rects[1].dispatchEvent(new PointerEvent('pointerleave', { pointerType: 'mouse' }));
+    fixture.detectChanges();
+    expect(tooltipText(fixture)).toBeNull();
+  });
+
+  it('marks the hovered segment with the active class', () => {
+    const fixture = setup();
+    const rects = [...fixture.nativeElement.querySelectorAll('rect')] as SVGRectElement[];
+    rects[0].dispatchEvent(new PointerEvent('pointerenter', { pointerType: 'mouse' }));
+    fixture.detectChanges();
+    expect(rects[0].classList.contains('sumi-segmented-bar__bar--active')).toBe(true);
+    expect(rects[1].classList.contains('sumi-segmented-bar__bar--active')).toBe(false);
+  });
+
+  it('a touch tap keeps the tooltip open until an outside tap', () => {
+    const fixture = setup();
+    const rects = [...fixture.nativeElement.querySelectorAll('rect')] as SVGRectElement[];
+    rects[0].dispatchEvent(new PointerEvent('pointerup', { pointerType: 'touch', bubbles: true }));
+    fixture.detectChanges();
+    expect(tooltipText(fixture)).toBe('12 · Apprentice (30%)');
+
+    rects[0].dispatchEvent(new PointerEvent('pointerleave', { pointerType: 'touch' }));
+    fixture.detectChanges();
+    expect(tooltipText(fixture)).toBe('12 · Apprentice (30%)');
+
+    document.body.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+    fixture.detectChanges();
+    expect(tooltipText(fixture)).toBeNull();
+  });
 });

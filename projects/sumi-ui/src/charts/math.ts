@@ -1758,6 +1758,13 @@ export interface FlowBandGeometry {
   /** A point on the curve at `t ≈ 0.8` (near the target end, where
    *  stacked bands have separated), for the optional value label. */
   label: SumiPoint;
+  /** The curve's own horizontal midpoint (`t = 0.5`) — sumi-ui#107's
+   *  instant-tooltip anchor uses this band's top edge there (`midpoint.y -
+   *  thickness / 2`): the one point on the curve guaranteed to sit between
+   *  both columns regardless of how heavily the band leans toward either
+   *  end's stack, unlike `label` (deliberately biased toward the target
+   *  end instead). */
+  midpoint: SumiPoint;
 }
 
 export interface FlowGeometry {
@@ -2042,6 +2049,7 @@ export function flowGeometry(
       path: bandPath(p0, p3),
       thickness: flow.value * scale,
       label: cubicBezierPoint(p0, { x: cx, y: p0.y }, { x: cx, y: p3.y }, p3, 0.8),
+      midpoint: cubicBezierPoint(p0, { x: cx, y: p0.y }, { x: cx, y: p3.y }, p3, 0.5),
     });
   });
 

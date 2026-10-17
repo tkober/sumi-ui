@@ -1,5 +1,10 @@
 :host {
   display: block;
+  // The instant tooltip (sumi-ui#107) positions itself absolutely within
+  // this element, same reasoning as `sumi-bar-chart`'s host — needed here
+  // too since this is plain HTML, not SVG, but the anchor maths is still
+  // host-relative (see matrix-heatmap.ts's `showTip`).
+  position: relative;
 }
 
 .sumi-matrix-heatmap__scroll {
@@ -76,6 +81,15 @@
   // every ramp step, in both themes, independent of the cell's fill.
   outline: 3px solid var(--sumi-text);
   outline-offset: -3px;
+}
+
+// The hovered/tapped/focused cell (sumi-ui#107's instant tooltip) — a
+// visible outline, not colour alone, same treatment as the other charts'
+// `--active`. A thinner/inset outline than `--selected`'s so the two
+// combine legibly when a selected cell is also the active one.
+.sumi-matrix-heatmap__cell--active {
+  outline: 1.5px solid var(--sumi-text);
+  outline-offset: -1.5px;
 }
 
 .sumi-matrix-heatmap__cell--no-data {

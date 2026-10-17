@@ -1,5 +1,8 @@
 :host {
   display: block;
+  // The instant tooltip (sumi-ui#107) positions itself absolutely within
+  // this element, same reasoning as `sumi-bar-chart`'s host.
+  position: relative;
 }
 
 .sumi-flow-chart__svg {
@@ -47,6 +50,14 @@
 .sumi-flow-chart__band--down {
   stroke: var(--sumi-wrong);
   opacity: 0.22;
+}
+
+// The hovered/tapped band (sumi-ui#107's instant tooltip) — raises
+// opacity well above any tone's own, rather than an outline (a stroke
+// around a stroke reads poorly on a curve this thin). Listed after the
+// tone rules so it wins the specificity tie regardless of tone.
+.sumi-flow-chart__band--active {
+  opacity: 0.85;
 }
 
 .sumi-flow-chart__value-label {

@@ -1,4 +1,14 @@
-import { Component, computed, input, output } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  ElementRef,
+  afterNextRender,
+  computed,
+  inject,
+  input,
+  output,
+  signal,
+} from '@angular/core';
 import {
   heatmapCellColor,
   heatmapTextColor,
@@ -9,8 +19,12 @@ import {
 } from '../math';
 import { SumiDataTable, type SumiTableColumn, type SumiTableRow } from '../data-table/data-table';
 import { SumiRampLegend } from '../ramp-legend/ramp-legend';
+import { SumiChartTooltip } from '../tooltip/chart-tooltip';
+import { ChartTooltipController } from '../tooltip/chart-tooltip-controller';
+import { observeWidth } from '../util/observe-width';
 
 const DEFAULT_FORMAT = (value: number) => `${value}`;
+const FALLBACK_WIDTH = 480;
 
 /** A `(row, column)` pair plus its value/detail, emitted by `cellSelect`
  *  on click, focus or hover of a cell when `selectable` is on. Mirrors
@@ -78,12 +92,52 @@ export interface SumiMatrixCellSelection {
  *   (cellSelect)="selectedCell.set($event)"
  * />
  * ```
+ *
+ * Every non-blank cell also carries the instant tooltip (sumi-ui#107,
+ * reusing #106's `sumi-chart-tooltip`/`ChartTooltipController` unchanged):
+ * the cell's own `title` text, its value part bold (see `tipParts`).
+ * Anchored via `getBoundingClientRect` relative to the host, like
+ * `sumi-calendar-heatmap`'s cells — this is plain HTML, not SVG, so there
+ * is no shared viewBox coordinate space to compute from instead. The
+ * scroll container's own `scroll` dismisses it, same as the calendar
+ * heatmap's week-scroll container. Selectable mode keeps its existing
+ * `mouseenter`/`focus`/`click` → `onCellInteract` wiring exactly; the
+ * bubble shows additionally, on `pointerenter`/`pointerup`/`focus`.
  */
+/** `cell.title`'s own `"<row> / <column>: <value>[ · <detail>]"` format
+ *  (see `matrixCellGeometry` in `../math.ts`) split into the plain prefix,
+ *  the value/"no data" part to bold, and an optional plain detail —
+ *  always splittable since the title is built from exactly that shape,
+ *  but falls back to `null` (render the title as plain text) rather than
+ *  assume it forever, since `cell.title` is public and a future format
+ *  change should degrade gracefully, not throw. */
+function tipParts(title: string): { prefix: string; value: string; detail: string | null } | null {
+  const colon = title.indexOf(': ');
+  if (colon === -1) {
+    return null;
+  }
+  const prefix = title.slice(0, colon);
+  const rest = title.slice(colon + 2);
+  const dot = rest.indexOf(' · ');
+  if (dot === -1) {
+    return { prefix, value: rest, detail: null };
+  }
+  return { prefix, value: rest.slice(0, dot), detail: rest.slice(dot + 3) };
+}
+
+/** One cell's instant tooltip data (sumi-ui#107): `row`/`column` to find
+ *  the active cell again, `title` for `tipParts` to split. */
+interface MatrixTip {
+  row: string;
+  column: string;
+  title: string;
+}
+
 @Component({
   selector: 'sumi-matrix-heatmap',
   templateUrl: './matrix-heatmap.html',
   styleUrl: './matrix-heatmap.scss',
-  imports: [SumiDataTable, SumiRampLegend],
+  imports: [SumiDataTable, SumiRampLegend, SumiChartTooltip],
   host: { class: 'sumi-matrix-heatmap' },
 })
 export class SumiMatrixHeatmap {
@@ -112,6 +166,27 @@ export class SumiMatrixHeatmap {
    *  plus `aria-pressed="true"`, not colour alone) — typically the last
    *  cell a consumer received through `cellSelect`. */
   readonly selected = input<{ row: string; column: string } | null>(null);
+
+  private readonly hostRef = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly destroyRef = inject(DestroyRef);
+  protected readonly measuredWidth = signal(FALLBACK_WIDTH);
+
+  /** The instant tooltip (sumi-ui#107): mouse hover, keyboard focus
+   *  (selectable only) or a touch tap that sticks until an outside tap/
+   *  another cell/a scroll — see `ChartTooltipController`'s own doc
+   *  comment and the class doc comment above for the scroll dismissal. */
+  protected readonly tip = new ChartTooltipController<MatrixTip>(
+    () => this.hostRef.nativeElement,
+    this.destroyRef,
+  );
+
+  constructor() {
+    afterNextRender(() => {
+      observeWidth(this.hostRef.nativeElement, this.destroyRef, (width) =>
+        this.measuredWidth.set(width),
+      );
+    });
+  }
 
   protected readonly resolvedDomain = computed(() => this.domain() ?? matrixDomain(this.cells()));
 
@@ -150,6 +225,34 @@ export class SumiMatrixHeatmap {
       detail: cell.detail,
     });
   }
+
+  /** Mouse/pen: `pointerenter`; touch: a tap (`pointerup`), stuck open
+   *  until dismissed elsewhere; keyboard (selectable only): `focus` — see
+   *  `ChartTooltipController`'s own doc comment. Anchor is the cell's own
+   *  top-centre, host-relative, same recipe as
+   *  `sumi-calendar-heatmap`'s `showTip`. */
+  protected showTip(event: PointerEvent | FocusEvent, cell: MatrixCellGeometry): void {
+    const host = this.hostRef.nativeElement.getBoundingClientRect();
+    const rect = (event.currentTarget as Element).getBoundingClientRect();
+    this.tip.show(
+      event,
+      { row: cell.row, column: cell.column, title: cell.title },
+      { x: rect.left + rect.width / 2 - host.left, y: rect.top - host.top },
+    );
+  }
+
+  protected hideTip(event: PointerEvent | FocusEvent): void {
+    this.tip.hide(event);
+  }
+
+  /** The scroll container's own scroll (sumi-ui#107): dismissed the same
+   *  as any other scroll, see `ChartTooltipController.dismiss` and
+   *  `sumi-calendar-heatmap`'s analogous `onScroll`. */
+  protected onScroll(): void {
+    this.tip.dismiss();
+  }
+
+  protected readonly tipParts = tipParts;
 
   protected isSelected(row: string, column: string): boolean {
     const selected = this.selected();
