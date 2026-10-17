@@ -1,7 +1,14 @@
 import { Component, computed, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { form, FormField } from '@angular/forms/signals';
-import { SUMI_FORMS, SumiButtonVariant, SumiSegmentedOption, SumiSize } from 'sumi-ui/forms';
+import {
+  SUMI_FORMS,
+  SumiButtonVariant,
+  SumiSegmentedOption,
+  SumiShareSegment,
+  SumiSize,
+  SumiTileOption,
+} from 'sumi-ui/forms';
 import { SumiIcon } from 'sumi-ui/core';
 import { SumiPage } from 'sumi-ui/layout';
 
@@ -73,6 +80,37 @@ export class FormsPage {
 
   protected readonly lastFormOn = signal(true);
   protected readonly canChangeLastForm = (next: boolean) => next;
+
+  // sumi-ui#98: jp-reading-practice's topic picker, same data shape and
+  // order as its approved prototype (proto/topic-tile-picker).
+  protected readonly topicOptions: SumiTileOption<string>[] = [
+    { value: 'daily', glyph: '日常', label: 'Daily life', lang: 'ja' },
+    { value: 'history', glyph: '歴史', label: 'History', lang: 'ja' },
+    { value: 'news', glyph: 'ニュース', label: 'Current events', lang: 'ja' },
+    { value: 'culture', glyph: '文化', label: 'Culture', lang: 'ja' },
+    { value: 'travel', glyph: '旅行', label: 'Travel', lang: 'ja' },
+    { value: 'science', glyph: '科学', label: 'Science', lang: 'ja' },
+    { value: 'story', glyph: '物語', label: 'Short story', lang: 'ja' },
+    { value: 'surprise', glyph: '✨', label: 'Surprise me', special: true },
+  ];
+
+  protected readonly signalTopic = signal({ topic: 'travel' });
+  protected readonly signalTopicForm = form(this.signalTopic);
+  protected ngModelTopic = 'daily';
+
+  protected readonly vetoedTopic = signal('daily');
+  protected readonly canChangeTopic = (next: string) => next !== 'surprise';
+
+  // sumi-ui#99: jp-reading-practice's JLPT mix, same shares as its approved
+  // prototype (proto/jlpt-multi-slider) — N2/N1 start at 0% to show the
+  // stacked-boundary nudge (see share-slider.ts).
+  protected readonly jlptMix = signal<SumiShareSegment[]>([
+    { label: 'N5', value: 50 },
+    { label: 'N4', value: 35 },
+    { label: 'N3', value: 15 },
+    { label: 'N2', value: 0 },
+    { label: 'N1', value: 0 },
+  ]);
 
   // sumi-ui#36: more options than fit a narrow box — scrolls instead of
   // squeezing every label.

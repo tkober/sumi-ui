@@ -1,0 +1,86 @@
+// `sumi-tile-picker` is a component (not a directive + class), so it styles
+// itself via `:host` under default `ViewEncapsulation` — same reasoning as
+// `sumi-segmented-control` (see its own scss comment).
+
+// Phone: 2 columns, not configurable (sumi-ui#98's decision — a fixed
+// column count per width). Desktop: `--sumi-tile-picker-columns`, set from
+// the `columns()` input (default 4) via a host binding in tile-picker.ts.
+:host {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--sumi-space-3);
+}
+
+@media (min-width: 720px) {
+  :host {
+    grid-template-columns: repeat(var(--sumi-tile-picker-columns, 4), 1fr);
+  }
+
+  .sumi-tile-picker__tile {
+    min-height: 88px;
+    padding: var(--sumi-space-3) var(--sumi-space-2);
+  }
+}
+
+.sumi-tile-picker__tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sumi-space-1);
+  // Comfortably above the 44px touch-target minimum even on phone, where
+  // this tile competes with up to 7 others for vertical space.
+  min-height: 72px;
+  padding: var(--sumi-space-2);
+  border: 1px solid var(--sumi-line);
+  border-radius: var(--sumi-radius);
+  background: var(--sumi-surface);
+  color: var(--sumi-text);
+  font-family: var(--sumi-font-ui);
+  cursor: pointer;
+  transition:
+    border-color 120ms ease,
+    background-color 120ms ease;
+
+  &:hover {
+    border-color: var(--sumi-accent-ink);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--sumi-focus-ring);
+  }
+
+  &--selected {
+    border-color: var(--sumi-accent);
+    background: var(--sumi-accent-soft);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.sumi-tile-picker__glyph {
+  font-size: var(--sumi-text-2xl);
+  line-height: 1;
+}
+
+// Distinct styling for the optional special tile (e.g. "Surprise me"),
+// per the issue's decision — a tint on the glyph rather than a separate
+// template, since it is still a normal option (see tile-picker.ts).
+.sumi-tile-picker__tile--special .sumi-tile-picker__glyph {
+  color: var(--sumi-accent-ink);
+}
+
+.sumi-tile-picker__label {
+  font-size: var(--sumi-text-xs);
+  color: var(--sumi-text-2);
+  text-align: center;
+}
+
+.sumi-tile-picker__tile--selected .sumi-tile-picker__label {
+  color: var(--sumi-text);
+  font-weight: 600;
+}

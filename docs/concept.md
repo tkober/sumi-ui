@@ -121,13 +121,33 @@ dark }`; `beni` setzt es auf ein neutrales Blaugrau (`#546e7a` /
 - Die Chart-Rampe `--sumi-seq-*` wird bei `beni` rot, weil sie vom Akzent
   abgeleitet ist. Das ist für jp-conjugation gewollt: eine Fehlerquoten-Matrix
   (siehe `sumi-matrix-heatmap`), bei der „mehr Rot“ zu „mehr falsch“ passt.
+- Aus demselben Grund nutzt auch ein reiner Hinweis (`--sumi-info`, siehe
+  unten) bei `beni` das neutrale Blaugrau statt des roten Akzents — sonst
+  sähe `sumi-banner--info` wie `error` aus (sumi-ui#84, gefunden in
+  jp-conjugation).
 
 **Ausnahme: `tokiwa`.** jp-reading-practice bekommt `tokiwa` (常磐色,
 Immergrün, `#007b43` hell / `#22c378` dunkel), weil Grün die letzte freie
 Farbfamilie ist (sumi-ui#82). Grün bedeutet aber „richtig“: `tokiwa` liegt hell
 nur ΔE76 12,9 von `--sumi-correct` entfernt. Deshalb gilt dieselbe Regel wie
 bei `beni`: neutraler Fokusring (`#546e7a` / `#90a4ae`), damit ein Eingabefeld
-beim Tippen nicht schon nach „richtig“ aussieht.
+beim Tippen nicht schon nach „richtig“ aussieht. Aus demselben Grund nutzt
+auch `--sumi-info` bei `tokiwa` dasselbe neutrale Blaugrau statt des grünen
+Akzents — sonst sähe `sumi-banner--info` wie `success` aus (sumi-ui#84,
+gefunden in jp-reading-practice: „No OpenAI API key is set …“ in den
+Settings wirkte wie eine Erfolgsmeldung).
+
+**`--sumi-info` / `-soft` / `-ink`** (sumi-ui#84): eine rein informative
+Fläche wie `sumi-banner--info` nutzt dieses eigene Token statt direkt
+`--sumi-accent`/`-soft`/`-ink`, damit sie sich von `beni` und `tokiwa` lösen
+lässt. Per Default sind alle drei identisch mit den Akzent-Tokens (`-soft`
+immer als `color-mix` aus `--sumi-info` abgeleitet, wie `--sumi-accent-soft`);
+bei einem Preset mit `focusRing`-Override (`beni`, `tokiwa`) setzt
+`SumiAccent.set` `--sumi-info` und `--sumi-info-ink` stattdessen auf dessen
+neutrales Blaugrau — dieselbe Farbe für beide Rollen, da sie bereits 4,5:1
+Textkontrast auf `--sumi-bg`/`--sumi-surface` in beiden Themes erreicht
+(gemessen in `accent.spec.ts`: `#546e7a` 4,82:1/5,17:1 hell,
+`#90a4ae` 7,06:1/6,52:1 dunkel), also keine eigene Ink-Variante braucht.
 
 Für Charts gibt es eine sequentielle Rampe `--sumi-seq-0` bis `--sumi-seq-5`,
 abgeleitet vom Akzent. In Dark läuft sie umgekehrt, also „mehr“ wird heller.

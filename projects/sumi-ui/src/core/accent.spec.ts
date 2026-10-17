@@ -100,6 +100,25 @@ describe('SUMI_ACCENT_PRESETS', () => {
       );
     },
   );
+
+  // sumi-ui#84: `--sumi-info-ink` reuses this exact same neutral colour for
+  // beni/tokiwa (see `SumiAccent.set` in provide-sumi.ts) — it needs the
+  // full 4.5:1 *text* contrast bar, not just the 3:1 non-text bar the
+  // focus-ring test above proves. Measured: #546e7a on #f3f2ee (light bg) =
+  // 4.82:1, on #fbfaf7 (light surface) = 5.17:1; #90a4ae on #151513 (dark
+  // bg) = 7.06:1, on #1d1d1a (dark surface) = 6.52:1 — comfortably over 4.5
+  // in every case, so no separate "info" colour is needed.
+  it.each(['beni', 'tokiwa'] as const)(
+    "%s's neutral focusRing also reaches 4.5:1 text contrast on --sumi-bg and --sumi-surface, since --sumi-info-ink reuses it",
+    (name) => {
+      const { focusRing } = SUMI_ACCENT_PRESETS[name];
+      expect(focusRing).toBeDefined();
+      expect(contrastRatio(focusRing!.light, BG_LIGHT)).toBeGreaterThanOrEqual(MIN_CONTRAST);
+      expect(contrastRatio(focusRing!.light, SURFACE_LIGHT)).toBeGreaterThanOrEqual(MIN_CONTRAST);
+      expect(contrastRatio(focusRing!.dark, BG_DARK)).toBeGreaterThanOrEqual(MIN_CONTRAST);
+      expect(contrastRatio(focusRing!.dark, SURFACE_DARK)).toBeGreaterThanOrEqual(MIN_CONTRAST);
+    },
+  );
 });
 
 describe('resolveAccent', () => {

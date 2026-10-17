@@ -235,4 +235,42 @@
       <span>stays on — see sumi-ui#36 (<code>canChange</code> vetoes it)</span>
     </div>
   </section>
+
+  <section>
+    <h2>Tile picker</h2>
+    <p>jp-reading-practice's topic picker (sumi-ui#98). Desktop: 4 columns. Phone: 2.</p>
+    <div class="row">
+      <sumi-tile-picker [options]="topicOptions" [formField]="signalTopicForm.topic" />
+      <span
+        >signal forms value: <code>{{ signalTopic().topic }}</code></span
+      >
+    </div>
+    <div class="row">
+      <sumi-tile-picker [options]="topicOptions" [(ngModel)]="ngModelTopic" name="ngModelTopic" />
+      <span
+        >ngModel value: <code>{{ ngModelTopic }}</code></span
+      >
+    </div>
+    <div class="row">
+      <sumi-tile-picker
+        [options]="topicOptions"
+        [value]="vetoedTopic()"
+        [canChange]="canChangeTopic"
+        (valueChange)="vetoedTopic.set($event)"
+      />
+      <span>
+        "Surprise me" is refused (<code>canChange</code>); current:
+        <code>{{ vetoedTopic() }}</code>
+      </span>
+    </div>
+  </section>
+
+  <section>
+    <h2>Share slider</h2>
+    <p>
+      jp-reading-practice's JLPT mix (sumi-ui#99). N2/N1 start at 0% — both boundary thumbs sit at
+      the same position and are nudged apart so neither is unclickable.
+    </p>
+    <sumi-share-slider ariaLabel="JLPT mix" [(value)]="jlptMix" />
+  </section>
 </sumi-page>
