@@ -1,6 +1,18 @@
 :host {
   display: block;
   min-height: 100vh;
+  // Room the fixed bottom tab bar takes from the viewport (sumi-ui#90), so a
+  // page's `position: sticky; bottom: …` element can sit above it rather than
+  // behind it. On the host, not `:root`, so it follows focus mode and the
+  // on-screen keyboard (both hide the tab bar) and every page element inherits
+  // it. 64px is the same allowance `.sumi-app-shell__main` reserves below.
+  --sumi-shell-bottom-height: 0px;
+}
+
+@media (max-width: 719px) {
+  :host(:not(.sumi-app-shell--no-tabbar)) {
+    --sumi-shell-bottom-height: calc(64px + env(safe-area-inset-bottom, 0px));
+  }
 }
 
 // First focusable element, visually hidden until it receives focus.
@@ -185,10 +197,6 @@
   }
 
   .sumi-app-shell__main {
-    padding-bottom: calc(var(--sumi-space-6) + 64px + env(safe-area-inset-bottom, 0px));
-  }
-
-  .sumi-app-shell__main--no-tabbar {
-    padding-bottom: var(--sumi-space-6);
+    padding-bottom: calc(var(--sumi-space-6) + var(--sumi-shell-bottom-height));
   }
 }

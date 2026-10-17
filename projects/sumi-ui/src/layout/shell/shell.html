@@ -66,10 +66,6 @@
 
 <sumi-app-shell-tab-bar [nav]="nav()" />
 
-<main
-  class="sumi-app-shell__main"
-  [id]="mainId"
-  [class.sumi-app-shell__main--no-tabbar]="shell.focusMode()"
->
+<main class="sumi-app-shell__main" [id]="mainId">
   <ng-content />
 </main>
