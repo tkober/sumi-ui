@@ -19,6 +19,12 @@ export {
   type SumiSegmentedOption,
 } from './segmented-control/segmented-control';
 export { SumiToggle } from './toggle/toggle';
+export {
+  SumiTilePicker,
+  type SumiTileOption,
+  SUMI_TILE_PICKER_DESKTOP_BREAKPOINT,
+} from './tile-picker/tile-picker';
+export { SumiShareSlider, type SumiShareSegment } from './share-slider/share-slider';
 
 import { SumiButtonDirective } from './button';
 import { SumiInputDirective } from './input';
@@ -30,6 +36,8 @@ import { SumiKbdDirective } from './kbd';
 import { SumiSubmitOnEnterDirective } from './submit-on-enter';
 import { SumiSegmentedControl } from './segmented-control/segmented-control';
 import { SumiToggle } from './toggle/toggle';
+import { SumiTilePicker } from './tile-picker/tile-picker';
+import { SumiShareSlider } from './share-slider/share-slider';
 
 /** Convenience array for `imports: [...SUMI_FORMS]` in a standalone component. */
 export const SUMI_FORMS = [
@@ -43,4 +51,6 @@ export const SUMI_FORMS = [
   SumiSubmitOnEnterDirective,
   SumiSegmentedControl,
   SumiToggle,
+  SumiTilePicker,
+  SumiShareSlider,
 ] as const;

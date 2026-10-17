@@ -1066,6 +1066,62 @@ again"`) let such an app use its own wording, and `actionDisabled`
    - Navigating between distinct screens/routes, not picking a setting →
      use tabs or links, not a segmented control.
 
+   ### Tile picker and share slider
+
+   `sumi-tile-picker` (sumi-ui#98) is a single-selection grid of large tiles
+   (glyph + label), e.g. jp-reading-practice's topic picker — the same
+   `role="radiogroup"`/roving-tabindex contract as `sumi-segmented-control`,
+   laid out in two dimensions (Arrow Up/Down move by the current column
+   count, wrapping around the grid) instead of one row:
+
+   ```html
+   <sumi-tile-picker
+     [options]="[
+       { value: 'daily', glyph: '日常', label: 'Daily life', lang: 'ja' },
+       { value: 'surprise', glyph: '✨', label: 'Surprise me', special: true },
+     ]"
+     [(value)]="topic"
+   />
+   ```
+
+   `columns` (default 4) sets the desktop column count via
+   `--sumi-tile-picker-columns`; below 720px the grid always uses 2 columns,
+   not configurable. `special` (e.g. a "Surprise me" option) is a flag on an
+   otherwise normal option, not a separately-templated tile — it only tints
+   that tile's glyph with `--sumi-accent-ink`.
+
+   `sumi-share-slider` (sumi-ui#99) is a bar with n proportional segments
+   whose boundaries are draggable, e.g. jp-reading-practice's JLPT mix.
+   Every segment's share always sums to 100; bind the whole thing with
+   `[(value)]`:
+
+   ```html
+   <sumi-share-slider
+     ariaLabel="JLPT mix"
+     [(value)]="[
+       { label: 'N5', value: 50 },
+       { label: 'N4', value: 35 },
+       { label: 'N3', value: 15 },
+       { label: 'N2', value: 0 },
+       { label: 'N1', value: 0 },
+     ]"
+   />
+   ```
+
+   Each boundary between two segments is its own native `<input
+   type="range">` thumb (`step`, default 5), so arrow keys, Home/End and
+   screen readers work for free; `aria-valuetext` names both neighbouring
+   segments with their percentage (e.g. "N5 50%, N4 35%"). Segment colours
+   spread over `--sumi-seq-1`…`-5`, matching `sumi-segmented-bar`. Two or
+   more boundaries can end up at the exact same position once every segment
+   between them is at 0% — each but the first in that group gets a small,
+   fixed nudge on its thumb (toward the track centre) so every thumb stays
+   individually clickable, not just keyboard-reachable. Unlike the other
+   composite form controls here, it does not implement
+   `ControlValueAccessor`/`FormValueControl` — its value is a labelled array
+   with its own sum-to-100 invariant, not a single scalar a `<form>` would
+   otherwise collect, and no consumer has needed that integration yet.
+
    ### Charts
 
    `sumi-ui/charts` (`SUMI_CHARTS`, see docs/concept.md#statistik-komponenten)
