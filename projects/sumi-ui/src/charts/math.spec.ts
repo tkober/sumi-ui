@@ -1073,6 +1073,17 @@ describe('lineChartGeometry', () => {
       expect(geo.minValue).toBe(40);
     });
 
+    it('keeps a yMin that is not a multiple of 10 when the data stays above it', () => {
+      const points = [
+        { date: '2024-01-01', values: { a: 57 } },
+        { date: '2024-01-02', values: { a: 90 } },
+      ];
+      const geo = lineChartGeometry(points, ['a'], ['var(--sumi-seq-5)'], 'line', [], plot, {
+        yMin: 55,
+      });
+      expect(geo.minValue).toBe(55);
+    });
+
     it('extends maxValue when a value exceeds yMax, instead of clipping it', () => {
       const points = [
         { date: '2024-01-01', values: { a: 70 } },

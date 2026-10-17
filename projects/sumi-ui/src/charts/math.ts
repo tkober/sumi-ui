@@ -1026,7 +1026,7 @@ export function lineChartGeometry(
   // exactly on the offending value, same reasoning as a bar chart's axis
   // never ending mid-value.
   const effectiveYMin = options.yMin ?? 0;
-  const minValue = Math.min(effectiveYMin, floor10(dataMin));
+  const minValue = dataMin < effectiveYMin ? floor10(dataMin) : effectiveYMin;
   const maxValue = Math.max(Math.max(options.yMax ?? dataMax, dataMax), minValue + 1);
 
   const y = scaleLinear().domain([minValue, maxValue]).range([innerHeight, 0]);
@@ -1171,7 +1171,17 @@ export function lineChartGeometry(
     : (i: number) => (useFlatSinglePoint ? xs[0] : xs[i]);
   const minLabelSpacing = axisMinLabelSpacing(candidateLabels);
   const step = axisLabelStep(totalCandidates, 1, plotInnerWidth, minLabelSpacing);
-  const tickIndices = new Set(sparseLabelIndices(totalCandidates, step));
+  // A fixed range counts its steps back from `endDate`, so the forced last
+  // tick sits at the same spacing as the rest instead of crowding out its
+  // neighbour (e.g. 18 Sep … 8 Oct, 17 Oct with 13 Oct dropped).
+  const tickIndices = new Set(
+    hasExplicitRange
+      ? Array.from(
+          { length: Math.floor((totalCandidates - 1) / step) + 1 },
+          (_, k) => totalCandidates - 1 - k * step,
+        )
+      : sparseLabelIndices(totalCandidates, step),
+  );
   tickIndices.add(totalCandidates - 1);
   const sortedTickIndices = [...tickIndices].sort((a, b) => a - b);
   const keptTickIndices: number[] = [];

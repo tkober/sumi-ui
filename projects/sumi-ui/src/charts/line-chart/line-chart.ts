@@ -49,6 +49,9 @@ const DEFAULT_HEIGHT = 180;
  *  the other charts' to leave room for the end-of-line/stack-top value
  *  callouts, which sit just past the last point rather than inside the
  *  plot area. */
+/** Rough half-width per character of an x-axis label at `--sumi-text-xs`,
+ *  in px — only used to decide whether a centred first/last label clips. */
+const TICK_CHAR_HALF_WIDTH = 3.5;
 const PAD = { top: 22, right: 34, bottom: 20, left: 4 };
 
 /**
@@ -211,10 +214,14 @@ export class SumiLineChart {
     index: number,
     count: number,
   ): { anchor: 'start' | 'middle' | 'end'; x: number } {
-    if (index === 0) {
+    // Only when a centred label would actually clip: with a fixed
+    // `startDate`, the first tick can sit well inside the plot, and anchoring
+    // it at its start would shift the label off its own tick.
+    const halfLabel = tick.label.length * TICK_CHAR_HALF_WIDTH;
+    if (index === 0 && tick.x - halfLabel < 0) {
       return { anchor: 'start', x: tick.x };
     }
-    if (index === count - 1) {
+    if (index === count - 1 && tick.x + halfLabel > this.plot().width) {
       return { anchor: 'end', x: tick.x };
     }
     return { anchor: 'middle', x: tick.x };
