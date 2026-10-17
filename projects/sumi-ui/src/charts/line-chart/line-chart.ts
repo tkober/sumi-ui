@@ -261,8 +261,8 @@ export class SumiLineChart {
   });
 
   /** Mouse/pen: tracked continuously via `pointermove`. Touch: a tap
-   *  (`pointerdown`) snaps once and stays, same as the other charts'
-   *  marks; `pointerdown` also runs for a mouse press, which just
+   *  (`pointerup`) snaps once and stays, same as the other charts'
+   *  marks; `pointerup` also runs for a mouse click, which just
    *  re-snaps to the same point `pointermove` already found — harmless. */
   protected onPointerMove(event: PointerEvent): void {
     if (event.pointerType !== 'mouse' && event.pointerType !== 'pen') {
@@ -271,7 +271,10 @@ export class SumiLineChart {
     this.updateTipAt(event, event.clientX);
   }
 
-  protected onPointerDown(event: PointerEvent): void {
+  /** A touch tap opens on `pointerup`, never `pointerdown`: a swipe that
+   *  turns into a scroll ends in `pointercancel` instead, so scrolling past
+   *  a chart on a phone does not flash a tooltip. */
+  protected onPointerUp(event: PointerEvent): void {
     this.updateTipAt(event, event.clientX);
   }
 

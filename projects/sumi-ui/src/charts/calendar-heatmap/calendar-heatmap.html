@@ -46,7 +46,7 @@
           [style.fill]="fill(cell.bucket)"
           (pointerenter)="showTip($event, cell)"
           (pointerleave)="hideTip($event)"
-          (pointerdown)="showTip($event, cell)"
+          (pointerup)="showTip($event, cell)"
         />
       }
     </svg>

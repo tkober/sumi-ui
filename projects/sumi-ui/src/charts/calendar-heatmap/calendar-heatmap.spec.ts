@@ -135,7 +135,7 @@ describe('SumiCalendarHeatmap instant tooltip (sumi-ui#106)', () => {
   it('a touch tap keeps the tooltip open; pointerleave (touch) does not close it', () => {
     const fixture = setup();
     const last = cells(fixture).at(-1)!;
-    last.dispatchEvent(new PointerEvent('pointerdown', { pointerType: 'touch', bubbles: true }));
+    last.dispatchEvent(new PointerEvent('pointerup', { pointerType: 'touch', bubbles: true }));
     fixture.detectChanges();
     expect(tooltipText(fixture)).toBe('42 reviews · Tue 15 Oct');
 
@@ -147,7 +147,7 @@ describe('SumiCalendarHeatmap instant tooltip (sumi-ui#106)', () => {
   it('a touch tap closes on an outside tap', () => {
     const fixture = setup();
     const last = cells(fixture).at(-1)!;
-    last.dispatchEvent(new PointerEvent('pointerdown', { pointerType: 'touch', bubbles: true }));
+    last.dispatchEvent(new PointerEvent('pointerup', { pointerType: 'touch', bubbles: true }));
     fixture.detectChanges();
 
     document.body.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
@@ -158,7 +158,7 @@ describe('SumiCalendarHeatmap instant tooltip (sumi-ui#106)', () => {
   it('a touch tap closes on any scroll, including the week-scroll container', () => {
     const fixture = setup();
     const last = cells(fixture).at(-1)!;
-    last.dispatchEvent(new PointerEvent('pointerdown', { pointerType: 'touch', bubbles: true }));
+    last.dispatchEvent(new PointerEvent('pointerup', { pointerType: 'touch', bubbles: true }));
     fixture.detectChanges();
 
     const scroll = fixture.nativeElement.querySelector('.sumi-calendar-heatmap__scroll')!;

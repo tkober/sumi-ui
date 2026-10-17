@@ -142,7 +142,7 @@
   <!-- Last so nothing drawn after it can shadow its hit-testing: a
        transparent overlay over the whole plot area for the instant
        tooltip (sumi-ui#106) — mouse tracks continuously via pointermove,
-       a touch tap snaps once via pointerdown, see line-chart.ts. -->
+       a touch tap snaps once via pointerup, see line-chart.ts. -->
   <rect
     class="sumi-line-chart__tip-overlay"
     [attr.x]="plot().left"
@@ -150,7 +150,7 @@
     [attr.width]="plot().width - plot().left - plot().right"
     [attr.height]="plot().height - plot().top - plot().bottom"
     (pointermove)="onPointerMove($event)"
-    (pointerdown)="onPointerDown($event)"
+    (pointerup)="onPointerUp($event)"
     (pointerleave)="onPointerLeave($event)"
   />
 </svg>

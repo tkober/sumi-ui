@@ -99,6 +99,16 @@ describe('ChartTooltipController', () => {
   });
 
   describe('touch dismissal', () => {
+    it('ignores a touch pointerenter (a finger landing, e.g. the start of a scroll)', () => {
+      const { controller } = setup(host);
+      controller.show(
+        new PointerEvent('pointerenter', { pointerType: 'touch' }),
+        { label: 'a' },
+        { x: 10, y: 10 },
+      );
+      expect(controller.data()).toBeNull();
+    });
+
     it('closes on a pointerdown outside the chart host', () => {
       const { controller } = setup(host);
       controller.show(

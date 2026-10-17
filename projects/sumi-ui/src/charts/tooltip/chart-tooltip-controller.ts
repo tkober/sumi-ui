@@ -14,8 +14,9 @@ export interface SumiChartTooltipAnchor {
  * whatever #107 adds next):
  *
  * - **Mouse/pen**: `show` on `pointerenter`, `hide` on `pointerleave`.
- * - **Touch**: `show` on a tap (`pointerdown`/`click` with
- *   `pointerType === 'touch'`) stays open — `hide` is a no-op for touch —
+ * - **Touch**: `show` on a tap (`pointerup` with
+ *   `pointerType === 'touch'`; a swipe ends in `pointercancel`, so scrolling
+ *   never opens it, and a touch `pointerenter` is ignored) stays open — `hide` is a no-op for touch —
  *   until a tap outside the chart host, a tap on another mark (which just
  *   calls `show` again, moving it), or any scroll, each closing it via
  *   `dismiss()`.
@@ -45,6 +46,15 @@ export class ChartTooltipController<T> {
    *  (`event.pointerType === 'touch'`) additionally opens the
    *  outside-tap/scroll listeners that keep it open until dismissed. */
   show(event: PointerEvent | FocusEvent, data: T, anchor: SumiChartTooltipAnchor): void {
+    // A finger landing fires `pointerenter` too, also at the start of a
+    // scroll; touch opens on the tap's `pointerup` only (see the charts).
+    if (
+      event instanceof PointerEvent &&
+      event.type === 'pointerenter' &&
+      event.pointerType === 'touch'
+    ) {
+      return;
+    }
     this.data.set(data);
     this.anchor.set(anchor);
     if (event instanceof PointerEvent && event.pointerType === 'touch') {

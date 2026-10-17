@@ -79,7 +79,7 @@
       [attr.aria-label]="selectable() ? column.label + ': ' + column.value : null"
       (pointerenter)="showTip($event, i)"
       (pointerleave)="hideTip($event)"
-      (pointerdown)="showTip($event, i)"
+      (pointerup)="showTip($event, i)"
       (focus)="showTip($event, i)"
       (blur)="hideTip($event)"
       (click)="onBarSelect(i, column.label)"

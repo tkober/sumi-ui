@@ -331,14 +331,14 @@ describe('SumiLineChart instant tooltip (sumi-ui#106)', () => {
     expect(tooltipText(fixture)).not.toBeNull();
   });
 
-  it('a touch tap (pointerdown) keeps the tooltip open until an outside tap', () => {
+  it('a touch tap (pointerup) keeps the tooltip open until an outside tap', () => {
     const fixture = setup();
     fixture.detectChanges();
     forceMeasuredWidth(fixture, 400);
 
     const xs = pointScreenXs(fixture);
     overlay(fixture).dispatchEvent(
-      new PointerEvent('pointerdown', { pointerType: 'touch', clientX: xs[0], bubbles: true }),
+      new PointerEvent('pointerup', { pointerType: 'touch', clientX: xs[0], bubbles: true }),
     );
     fixture.detectChanges();
     expect(tooltipText(fixture)).not.toBeNull();
@@ -348,7 +348,7 @@ describe('SumiLineChart instant tooltip (sumi-ui#106)', () => {
     expect(tooltipText(fixture)).toBeNull();
   });
 
-  it('ignores a touch pointermove (only pointerdown opens/moves a touch tooltip)', () => {
+  it('ignores a touch pointermove (only pointerup opens/moves a touch tooltip)', () => {
     const fixture = setup();
     fixture.detectChanges();
     forceMeasuredWidth(fixture, 400);

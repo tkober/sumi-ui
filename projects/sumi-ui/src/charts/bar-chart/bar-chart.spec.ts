@@ -483,7 +483,7 @@ describe('SumiBarChart instant tooltip (sumi-ui#106)', () => {
     const hits = [
       ...fixture.nativeElement.querySelectorAll('.sumi-bar-chart__hit'),
     ] as HTMLElement[];
-    hits[0].dispatchEvent(new PointerEvent('pointerdown', { pointerType: 'touch', bubbles: true }));
+    hits[0].dispatchEvent(new PointerEvent('pointerup', { pointerType: 'touch', bubbles: true }));
     fixture.detectChanges();
     expect(tooltipText(fixture)).toBe('3 · 08:00');
 

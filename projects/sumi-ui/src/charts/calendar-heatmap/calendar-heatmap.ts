@@ -108,7 +108,7 @@ export class SumiCalendarHeatmap {
     });
   }
 
-  /** Mouse/pen: `pointerenter`; touch: a tap (`pointerdown`), stuck open
+  /** Mouse/pen: `pointerenter`; touch: a tap (`pointerup`), stuck open
    *  until dismissed elsewhere (see `ChartTooltipController`). Anchor is
    *  the cell's own top-centre, in host coordinates — the weekday-label
    *  column and the scroll container's own `scrollLeft` both already show
