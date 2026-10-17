@@ -1071,9 +1071,9 @@ again"`) let such an app use its own wording, and `actionDisabled`
    `sumi-ui/charts` (`SUMI_CHARTS`, see docs/concept.md#statistik-komponenten)
    is the statistics area: `sumi-stat-tile` + `sumi-stat-grid`,
    `sumi-segmented-bar`, `sumi-sparkline`, `sumi-bar-chart`,
-   `sumi-line-chart`, `sumi-progress-row`, `sumi-calendar-heatmap`,
-   `sumi-matrix-heatmap`, `sumi-donut`, `sumi-sunburst`, `sumi-legend`,
-   `sumi-ramp-legend` and `sumi-data-table`.
+   `sumi-line-chart`, `sumi-progress-row`, `sumi-flow-chart`,
+   `sumi-calendar-heatmap`, `sumi-matrix-heatmap`, `sumi-donut`,
+   `sumi-sunburst`, `sumi-legend`, `sumi-ramp-legend` and `sumi-data-table`.
    The maths behind every chart — scales, ticks, sparkline/area paths,
    segment percentages, stacked bar offsets, sparse x-axis labels, the
    heatmaps' week grid and bucketing, donut/sunburst angle geometry — lives
@@ -1227,6 +1227,44 @@ again"`) let such an app use its own wording, and `actionDisabled`
    same recipe as `sumi-stat-grid`) the bar wraps onto its own line below
    the label and value instead of squeezing all three into illegibility.
 
+   `sumi-flow-chart` (sumi-ui#86) is two columns of stacked category bars —
+   `fromLabel`/`toLabel`, e.g. "Before"/"After" — connected by curved bands
+   sized to each flow's value, for kanji-trainer's review summary "Stage
+   flow": where a session's items went, from their SRS stage before the
+   session to after. The component itself is generic — any ordered
+   `categories` and any `{ from, to, value }` `flows` between them:
+
+   ```html
+   <sumi-flow-chart
+     ariaLabel="SRS stage, before and after the review session"
+     [categories]="[
+       { key: 'apprentice', label: 'Apprentice', color: 'var(--sumi-seq-2)' },
+       { key: 'guru', label: 'Guru', color: 'var(--sumi-seq-5)' },
+     ]"
+     [flows]="[
+       { from: 'apprentice', to: 'apprentice', value: 47 },
+       { from: 'apprentice', to: 'guru', value: 14 },
+       { from: 'guru', to: 'apprentice', value: 2 },
+     ]"
+     table
+   />
+   ```
+
+   `categories`' order is both the top-to-bottom stacking order of each
+   column and the direction a band's tone is read from: a flow to a
+   *later* category is "up" (`--sumi-accent`), to an *earlier* one is
+   "down" (`--sumi-wrong`, deliberately subdued — a drop should not
+   visually dominate a mostly-upward session), and a flow that stays in
+   its own category is neutral (`--sumi-muted`). A category with nothing
+   flowing into/out of it on one side is skipped on that side only.
+   `valueLabels` (default `'up'`, matching kanji-trainer — it only labels
+   promotions) picks which bands carry a number: `'up'` / `'down'` /
+   `'all'` / `'none'`; a band that stays within its own category never
+   gets one. All geometry — the stacked segments, each band's cubic-bezier
+   curve and its label point — comes from the pure `flowGeometry` in
+   `charts/math.ts`, the same Sankey-style curve shape (horizontal
+   tangents at both ends) a Sankey diagram's links use.
+
    `sumi-calendar-heatmap` and `sumi-matrix-heatmap` are the two "any
    values in a grid" charts (day activity as weeks x weekdays; anything
    else as rows x columns, e.g. kana confidence or a miss rate by form x
@@ -1343,14 +1381,14 @@ again"`) let such an app use its own wording, and `actionDisabled`
    `"Apprentice › Apprentice I"`).
 
    See `projects/showcase/src/app/pages/charts/charts.ts`/`.html` for all
-   twelve components wired up against realistic example data (KPI tiles,
+   thirteen components wired up against realistic example data (KPI tiles,
    SRS distribution, a 30-session Elo sparkline, a 24h "coming up" chart
    with the current hour highlighted, a stacked 7-day forecast, items
    settled over 90 days with an import marker, a selectable "open a level"
-   bar chart, three dashboard progress rows, a 26-week review calendar, a
-   kana confidence matrix, a conjugation miss-rate matrix, a
-   katakana-reading outcome donut, a reviews-by-SRS-stage sunburst and
-   per-level coverage bars).
+   bar chart, three dashboard progress rows, an SRS stage flow chart, a
+   26-week review calendar, a kana confidence matrix, a conjugation
+   miss-rate matrix, a katakana-reading outcome donut, a
+   reviews-by-SRS-stage sunburst and per-level coverage bars).
 
    ### Data table: selection and activation
 
