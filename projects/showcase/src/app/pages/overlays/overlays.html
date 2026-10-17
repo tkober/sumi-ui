@@ -1,0 +1,92 @@
+<sumi-page
+  title="Overlays"
+  subtitle="sumi-popover (anchored popover / bottom sheet) and sumi-side-panel (docked panel / full-height sheet)."
+>
+  <section>
+    <h2>Popover</h2>
+    <p>
+      Tap a word below to open <code>sumi-popover</code>, anchored next to it. Resize the window
+      below 720px (or shrink the browser) to see it become a bottom sheet with a grab handle
+      instead.
+    </p>
+
+    <div class="row">
+      <p class="reading-text" lang="ja">
+        先週、石川県の金沢に
+        <button type="button" class="word" (click)="lookUp('旅行', $event)">旅行</button>
+        に行きました。傘を持っていましたが、
+        <button type="button" class="word" (click)="lookUp('濡れても', $event)">濡れても</button>
+        気にしないことにしました。
+      </p>
+    </div>
+
+    @if (selectedWord(); as details) {
+      <sumi-popover [(open)]="popoverOpen" [anchor]="anchorEl()">
+        <div sumiPopoverHeader class="popover-demo__header">
+          <span class="popover-demo__word" lang="ja">{{ details.word }}</span>
+          @if (details.reading) {
+            <span class="popover-demo__reading" lang="ja">{{ details.reading }}</span>
+          }
+          <sumi-badge tone="accent">{{ details.jlpt }}</sumi-badge>
+        </div>
+        <ul class="popover-demo__meanings">
+          @for (meaning of details.meanings; track meaning) {
+            <li>{{ meaning }}</li>
+          }
+        </ul>
+        <div sumiPopoverActions>
+          <button type="button" sumiButton variant="secondary" size="sm">Explain word</button>
+          <button type="button" sumiButton variant="secondary" size="sm">Translate sentence</button>
+        </div>
+      </sumi-popover>
+    }
+  </section>
+
+  <section>
+    <h2>Side panel</h2>
+    <p>
+      <code>sumi-side-panel</code> docks next to the content below on a wide screen — the content
+      area makes room for it, nothing is covered — and becomes a full-height sheet below 720px.
+    </p>
+    <button type="button" sumiButton variant="primary" size="sm" (click)="chatOpen.set(true)">
+      Ask about this text
+    </button>
+
+    <div class="overlays-demo__row">
+      <div class="overlays-demo__content">
+        <p lang="ja">
+          先週、石川県の金沢に旅行に行きました。天気予報では晴れると言っていましたが、着いた日はずっと雨でした。
+        </p>
+        <p lang="ja">
+          まず、兼六園という有名な庭園に行きました。雨のおかげで、人があまり多くなくて、ゆっくり歩くことができました。
+        </p>
+      </div>
+
+      <sumi-side-panel [(open)]="chatOpen" title="Ask about this text">
+        @for (message of messages(); track $index) {
+          <p
+            class="overlays-demo__message"
+            [class.overlays-demo__message--user]="message.role === 'user'"
+            lang="ja"
+          >
+            {{ message.text }}
+          </p>
+        }
+        <div sumiSidePanelFooter>
+          <textarea
+            sumiTextarea
+            sumiSubmitOnEnter
+            (sumiSubmitOnEnter)="send($event)"
+            rows="2"
+            placeholder="Ask about this text…"
+            [value]="draft()"
+            (input)="draft.set($any($event.target).value)"
+          ></textarea>
+          <button type="button" sumiButton variant="primary" size="sm" (click)="send(draft())">
+            Send
+          </button>
+        </div>
+      </sumi-side-panel>
+    </div>
+  </section>
+</sumi-page>

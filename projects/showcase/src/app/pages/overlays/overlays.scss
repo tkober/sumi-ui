@@ -1,0 +1,97 @@
+section {
+  margin-bottom: var(--sumi-space-8);
+}
+
+.row {
+  margin-bottom: var(--sumi-space-3);
+}
+
+.reading-text {
+  max-width: 640px;
+  font-size: var(--sumi-text-lg);
+  line-height: 2;
+}
+
+// A tappable word in the running text — an inline plain-text button, not
+// styled like `sumiButton`: the design calls for the word itself to read
+// as text with just enough affordance (underline) to show it is
+// interactive.
+.word {
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 3px;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--sumi-accent-ink);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--sumi-focus-ring);
+    border-radius: var(--sumi-radius-sm);
+  }
+}
+
+.popover-demo__header {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sumi-space-2);
+  flex-wrap: wrap;
+}
+
+.popover-demo__word {
+  font-size: var(--sumi-text-xl);
+  font-weight: 600;
+}
+
+.popover-demo__reading {
+  color: var(--sumi-text-2);
+  font-size: var(--sumi-text-sm);
+}
+
+.popover-demo__meanings {
+  margin: 0;
+  padding-left: var(--sumi-space-5);
+  font-size: var(--sumi-text-sm);
+}
+
+.overlays-demo__row {
+  display: flex;
+  align-items: stretch;
+  // So the side panel's own `position: sticky` (relative to the window,
+  // not this row) has visible room to demonstrate sticking — a demo-only
+  // concern: a real page's content column is usually tall enough on its
+  // own (a full reading text).
+  min-height: 70vh;
+}
+
+.overlays-demo__content {
+  flex: 1;
+  min-width: 0;
+  max-width: 640px;
+
+  p {
+    line-height: 1.8;
+  }
+}
+
+.overlays-demo__message {
+  max-width: 85%;
+  margin: 0 0 var(--sumi-space-2);
+  padding: var(--sumi-space-2) var(--sumi-space-3);
+  border-radius: var(--sumi-radius);
+  background: var(--sumi-sunken);
+  font-size: var(--sumi-text-sm);
+  line-height: 1.5;
+
+  &--user {
+    margin-left: auto;
+    background: var(--sumi-accent-soft);
+  }
+}
