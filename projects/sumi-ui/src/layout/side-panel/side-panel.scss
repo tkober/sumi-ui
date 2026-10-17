@@ -1,0 +1,144 @@
+// `sumi-side-panel`'s host takes no box of its own: `.sumi-side-panel__panel`
+// below is the real flex item (see the component's own doc comment on why
+// a plain `display: contents` host, rather than the host itself, is what
+// a consuming page's `display: flex` row lays out next to its content).
+:host {
+  display: contents;
+}
+
+// Only visible/hit-testable on the narrow sheet (see the media query
+// below) — on a docked desktop panel there is nothing "outside" to click,
+// since it never covers the page's own content.
+.sumi-side-panel__backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 44;
+  border: none;
+  padding: 0;
+  background: rgb(0 0 0 / 45%);
+  opacity: 0;
+  pointer-events: none;
+  cursor: default;
+  transition: opacity 200ms ease;
+}
+
+// The flex item / sticky-positioned slot. `width` (not `transform`) is
+// what's animated and what reserves no space while closed — a `transform`
+// slide would keep the full 340px reserved in the flex row the whole
+// time, which is exactly the manual-padding problem this component exists
+// to avoid (see the app-local prototype's own `padding-right: 340px`).
+// `.sumi-side-panel__content` below stays a fixed 340px wide regardless,
+// so animating this element's `width` clips/reveals it rather than
+// squeezing its contents.
+.sumi-side-panel__panel {
+  flex: 0 0 auto;
+  width: 0;
+  overflow: hidden;
+  position: sticky;
+  // The shell header's own rendered height (sumi-ui#87) — see the
+  // component's doc comment. `0px` outside a shell, via this property's
+  // `:root` fallback.
+  top: var(--sumi-shell-sticky-height);
+  height: calc(100vh - var(--sumi-shell-sticky-height));
+  z-index: 10;
+  transition: width 200ms ease;
+}
+
+:host(.sumi-side-panel-host--open) .sumi-side-panel__panel {
+  width: 340px;
+}
+
+.sumi-side-panel__content {
+  width: 340px;
+  height: 100%;
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sumi-space-3);
+  padding: var(--sumi-space-4);
+  background: var(--sumi-surface);
+  color: var(--sumi-text);
+  border-left: 1px solid var(--sumi-line);
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--sumi-focus-ring);
+  }
+}
+
+// Below 720px: a full-screen sheet sliding in from the right, same
+// breakpoint as `sumi-app-shell`'s own tab bar. `transform`, not `width`,
+// here — there is no flex row to reserve space in once this is
+// `position: fixed`.
+@media (max-width: 719px) {
+  .sumi-side-panel__backdrop {
+    display: block;
+  }
+
+  :host(.sumi-side-panel-host--open) .sumi-side-panel__backdrop {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .sumi-side-panel__panel {
+    position: fixed;
+    inset: 0;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    z-index: 45;
+    transform: translateX(100%);
+    transition: transform 200ms ease;
+  }
+
+  // Repeats `width: auto` (same specificity as the desktop open-state rule
+  // above the media query, so source order — this comes later — is what
+  // wins here): without it, the desktop rule's `width: 340px` would apply
+  // at any width once open, since media-query conditions do not affect
+  // selector specificity.
+  :host(.sumi-side-panel-host--open) .sumi-side-panel__panel {
+    width: auto;
+    transform: translateX(0);
+  }
+
+  .sumi-side-panel__content {
+    width: 100%;
+    border-left: none;
+    padding-bottom: calc(var(--sumi-space-4) + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+.sumi-side-panel__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--sumi-space-2);
+  flex: none;
+}
+
+.sumi-side-panel__title {
+  margin: 0;
+  font-size: var(--sumi-text-md);
+}
+
+.sumi-side-panel__close {
+  flex: none;
+}
+
+.sumi-side-panel__body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+// `[sumiSidePanelFooter]` is a plain projected element (see
+// side-panel.html's `ng-content select`), not a child component, so it
+// needs `::ng-deep` to be reached from this component's own stylesheet —
+// same convention as `sumi-card`'s `[sumiCardHeader]`/`[sumiCardFooter]`.
+::ng-deep [sumiSidePanelFooter] {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sumi-space-2);
+  flex: none;
+}
