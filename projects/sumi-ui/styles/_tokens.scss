@@ -107,6 +107,14 @@
   --sumi-focus-ring-base: var(--sumi-accent);
   --sumi-focus-ring: 0 0 0 3px color-mix(in oklab, var(--sumi-focus-ring-base) 45%, transparent);
 
+  // Height of `sumi-app-shell`'s sticky header+strip wrapper, in px
+  // (sumi-ui#87). `sumi-app-shell` overwrites this as an inline style on
+  // `documentElement` once it has rendered and measured itself — an
+  // inline style always wins over this `:root` rule, so this `0px` only
+  // ever shows through before any shell exists (e.g. a page using the
+  // variable with no `sumi-app-shell` in the tree at all, or in a test).
+  --sumi-shell-sticky-height: 0px;
+
   // Multiplier on every ink motif's base opacity (see
   // docs/concept.md#tuschemotive and `sumi-landscape`/`sumi-pattern`'s
   // `ink-opacity.scss`). `1` is the sketch's reviewed intensity; an app can
