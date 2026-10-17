@@ -57,6 +57,12 @@ export interface SumiReadingWord {
   text: string;
   reading?: string;
   unknown?: boolean;
+  /** Plain running text, not a word: punctuation, particles and anything
+   *  else a host has nothing to look up for (sumi-ui#108). Rendered as
+   *  ordinary inline text — not focusable, not tappable, never peeked, and
+   *  skipped by arrow-key navigation. An `unknown` plain token still shows
+   *  its reading. */
+  plain?: boolean;
 }
 
 export type SumiReadingParagraph = readonly SumiReadingWord[];
@@ -324,7 +330,7 @@ export class SumiReadingText {
    *  to the first/last word — Tab already moves through every word in
    *  order since each has `tabindex="0"`, so this only adds the extra
    *  arrow-key roving on top. */
-  protected onKeydown(event: KeyboardEvent, word: SumiReadingWord, flatIndex: number): void {
+  protected onKeydown(event: KeyboardEvent, word: SumiReadingWord): void {
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
       this.onActivate(word, event);
@@ -333,6 +339,12 @@ export class SumiReadingText {
 
     const refs = this.wordRefs;
     if (!refs || refs.length === 0) {
+      return;
+    }
+    // Position among the interactive words only — `plain` tokens have no
+    // `#wordRef`, so a flat index over every token would drift.
+    const flatIndex = refs.toArray().findIndex((ref) => ref.nativeElement === event.currentTarget);
+    if (flatIndex < 0) {
       return;
     }
     let nextIndex: number | undefined;
@@ -356,17 +368,5 @@ export class SumiReadingText {
     }
     event.preventDefault();
     refs.get(nextIndex)?.nativeElement.focus();
-  }
-
-  /** Flat index of `(paragraphIndex, wordIndex)` across all paragraphs, for
-   *  `onKeydown`'s arrow navigation — paragraph boundaries are not a
-   *  meaningful stop, the words just keep going. */
-  protected flatIndex(paragraphIndex: number, wordIndex: number): number {
-    const paragraphs = this.paragraphs();
-    let index = 0;
-    for (let p = 0; p < paragraphIndex; p++) {
-      index += paragraphs[p].length;
-    }
-    return index + wordIndex;
   }
 }
