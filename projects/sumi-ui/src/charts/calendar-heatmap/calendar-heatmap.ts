@@ -10,9 +10,16 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import { calendarGeometry, heatmapCellColor, type SumiCalendarDay } from '../math';
+import {
+  calendarGeometry,
+  formatCalendarCellDayLabel,
+  heatmapCellColor,
+  type SumiCalendarDay,
+} from '../math';
 import { SumiDataTable, type SumiTableColumn, type SumiTableRow } from '../data-table/data-table';
 import { SumiRampLegend } from '../ramp-legend/ramp-legend';
+import { SumiChartTooltip } from '../tooltip/chart-tooltip';
+import { ChartTooltipController } from '../tooltip/chart-tooltip-controller';
 import { observeWidth } from '../util/observe-width';
 
 const FALLBACK_WIDTH = 480;
@@ -42,11 +49,17 @@ const MONTH_LABEL_HEIGHT = 14;
  * <sumi-calendar-heatmap ariaLabel="Reviews per day, last 26 weeks" [days]="reviewDays" />
  * ```
  */
+/** One calendar cell's instant tooltip data (sumi-ui#106). */
+interface CalendarTip {
+  date: string;
+  value: number;
+}
+
 @Component({
   selector: 'sumi-calendar-heatmap',
   templateUrl: './calendar-heatmap.html',
   styleUrl: './calendar-heatmap.scss',
-  imports: [SumiDataTable, SumiRampLegend],
+  imports: [SumiDataTable, SumiRampLegend, SumiChartTooltip],
   host: { class: 'sumi-calendar-heatmap' },
 })
 export class SumiCalendarHeatmap {
@@ -61,6 +74,16 @@ export class SumiCalendarHeatmap {
   private readonly destroyRef = inject(DestroyRef);
   private readonly scrollRef = viewChild<ElementRef<HTMLElement>>('scroll');
   protected readonly measuredWidth = signal(FALLBACK_WIDTH);
+
+  /** The instant tooltip (sumi-ui#106): mouse hover, a tap that sticks
+   *  until an outside tap/another cell/a scroll, see
+   *  `ChartTooltipController`'s own doc comment. No keyboard wiring here —
+   *  cells are not focusable, and this issue adds no new tab stop. */
+  protected readonly tip = new ChartTooltipController<CalendarTip>(
+    () => this.hostRef.nativeElement,
+    this.destroyRef,
+  );
+  protected readonly dayLabel = formatCalendarCellDayLabel;
 
   constructor() {
     afterNextRender(() => {
@@ -83,6 +106,32 @@ export class SumiCalendarHeatmap {
         });
       }
     });
+  }
+
+  /** Mouse/pen: `pointerenter`; touch: a tap (`pointerdown`), stuck open
+   *  until dismissed elsewhere (see `ChartTooltipController`). Anchor is
+   *  the cell's own top-centre, in host coordinates — the weekday-label
+   *  column and the scroll container's own `scrollLeft` both already show
+   *  up in `getBoundingClientRect`, so no extra bookkeeping is needed for
+   *  either. */
+  protected showTip(event: PointerEvent, cell: { date: string; value: number }): void {
+    const host = this.hostRef.nativeElement.getBoundingClientRect();
+    const rect = (event.currentTarget as Element).getBoundingClientRect();
+    this.tip.show(
+      event,
+      { date: cell.date, value: cell.value },
+      { x: rect.left + rect.width / 2 - host.left, y: rect.top - host.top },
+    );
+  }
+
+  protected hideTip(event: PointerEvent): void {
+    this.tip.hide(event);
+  }
+
+  /** The week-scroll container's own scroll (sumi-ui#106): dismissed the
+   *  same as any other scroll, see `ChartTooltipController.dismiss`. */
+  protected onScroll(): void {
+    this.tip.dismiss();
   }
 
   private readonly resolvedEndDate = computed(() => this.endDate() ?? todayISODate());

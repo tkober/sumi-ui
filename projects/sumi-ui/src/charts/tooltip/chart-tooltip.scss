@@ -1,0 +1,38 @@
+:host {
+  position: absolute;
+  // `left`/`top` are set per-instance via the host `[style.left.px]`/
+  // `[style.top.px]` bindings (chart-tooltip.ts); this only lifts the
+  // bubble so its *bottom* edge — not its top — sits at `top`, so the
+  // component never needs to know its own rendered height.
+  transform: translateY(-100%);
+  background: var(--sumi-text);
+  color: var(--sumi-surface);
+  border-radius: var(--sumi-radius-sm);
+  font: var(--sumi-text-xs) var(--sumi-font-ui);
+  font-variant-numeric: tabular-nums;
+  padding: 0.3rem 0.6rem;
+  box-shadow: var(--sumi-shadow);
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 2;
+}
+
+// Projected content (`<ng-content>`, e.g. `<strong>{{ value }}</strong>`)
+// is not re-scoped by view encapsulation — same reasoning as
+// `sumi-card`'s `::ng-deep [sumiCardHeader]` for its own projected header.
+::ng-deep strong {
+  font-weight: 600;
+}
+
+:host::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  // Shifted by `--arrow` (chart-tooltip.ts's `arrowOffset`, px) so the
+  // arrow keeps pointing at `anchor.x` even once the bubble itself has
+  // been clamped away from being centred on it.
+  left: calc(50% + var(--arrow, 0px));
+  margin-left: -5px;
+  border: 5px solid transparent;
+  border-top-color: var(--sumi-text);
+}

@@ -588,14 +588,25 @@ export function calendarMonthLabels(
   return labels;
 }
 
-/** `<title>` text for one calendar cell, e.g. `"Tue 14 Oct: 42 reviews"`. */
-export function formatCalendarCellTitle(date: string, value: number, unit: string): string {
+/** `"Tue 14 Oct"` for one calendar cell's `date` — the day part of
+ *  `formatCalendarCellTitle`, factored out so `sumi-calendar-heatmap`'s
+ *  instant tooltip (sumi-ui#106) can reuse it directly instead of
+ *  splitting the combined title string back apart. */
+export function formatCalendarCellDayLabel(date: string): string {
   const parsed = parseISODate(date);
   const weekdayIndex = (parsed.getUTCDay() + 6) % 7; // Sunday (0) -> 6, Monday (1) -> 0, …
   const weekday = WEEKDAY_NAMES[weekdayIndex];
   const day = parsed.getUTCDate();
   const month = MONTH_NAMES[parsed.getUTCMonth()];
-  return `${weekday} ${day} ${month}: ${value} ${unit}`;
+  return `${weekday} ${day} ${month}`;
+}
+
+/** `<title>` text for one calendar cell, e.g. `"Tue 14 Oct: 42 reviews"`.
+ *  Kept even though sumi-ui#106 removed the `<title>` element itself
+ *  (replaced by the instant tooltip) — `CalendarCell.title` is still
+ *  public API and the table fallback's data. */
+export function formatCalendarCellTitle(date: string, value: number, unit: string): string {
+  return `${formatCalendarCellDayLabel(date)}: ${value} ${unit}`;
 }
 
 /**
@@ -807,6 +818,50 @@ export function heatmapTextColor(bucket: number): string {
   return bucket >= 4 ? 'var(--sumi-on-accent)' : 'var(--sumi-text)';
 }
 
+// --- Chart tooltip (sumi-chart-tooltip, sumi-ui#106) -----------------------
+//
+// The shared instant-tooltip bubble used by `sumi-calendar-heatmap`,
+// `sumi-bar-chart` and `sumi-line-chart` (and future charts, sumi-ui#107):
+// a dark bubble centred above the hovered/tapped/focused mark. Only the
+// horizontal clamp needs real maths — vertical placement is a fixed
+// 7px gap handled in CSS (`transform: translateY(-100%)`), since it never
+// needs to know its own height to sit "7px above" a point.
+
+export interface ChartTooltipPlacement {
+  /** The bubble's `left`, in the same host-relative px as `anchorX` —
+   *  always within `[0, hostWidth - bubbleWidth]` ("0 px margin"). */
+  left: number;
+  /** How far the arrow must shift from the bubble's own horizontal centre
+   *  to still point at `anchorX` once `left` has been clamped away from
+   *  the centred position. `0` when the bubble was not clamped. */
+  arrowOffset: number;
+}
+
+/**
+ * `sumi-chart-tooltip`'s horizontal placement: centres a bubble of
+ * `bubbleWidth` on `anchorX`, then slides it sideways just enough to stay
+ * within `[0, hostWidth]` — never hanging off either edge of the chart
+ * host it is positioned within — and reports how far the arrow needs to
+ * move to keep pointing at `anchorX` despite that slide.
+ *
+ * `bubbleWidth`/`hostWidth` are expected to be real *measured* values (the
+ * bubble's own rendered width, the chart host's own measured width), not
+ * an estimate — see the issue this answers: an estimated width is either
+ * too narrow (arrow doesn't line up) or too generous (clamps sooner than
+ * it needs to).
+ */
+export function tooltipPlacement(
+  anchorX: number,
+  bubbleWidth: number,
+  hostWidth: number,
+): ChartTooltipPlacement {
+  const idealLeft = anchorX - bubbleWidth / 2;
+  const maxLeft = Math.max(0, hostWidth - bubbleWidth);
+  const left = Math.min(maxLeft, Math.max(0, idealLeft));
+  const arrowOffset = anchorX - (left + bubbleWidth / 2);
+  return { left, arrowOffset };
+}
+
 // --- Line chart (sumi-line-chart) ------------------------------------------
 //
 // Unlike `sumi-bar-chart`'s categorical `scaleBand` columns, a line
@@ -891,6 +946,18 @@ export interface LineChartGeometry {
    *  (`null` in `'line'` mode, where each series' own `last` is shown
    *  instead). */
   stackTotal: LineSeriesPointGeometry | null;
+  /** Each data point's screen position, in `points`' own order — the
+   *  hover/tap tooltip's lookup table (sumi-ui#106, see
+   *  `nearestLinePointIndex`): `x` shared by every series at that point,
+   *  `y` each series key's own screen y (the stacked *top*, same
+   *  convention `linePath` draws, in `'stacked-area'` mode). */
+  pointScreens: { x: number; y: Record<string, number> }[];
+  /** Screen px spanned by exactly one day on the x-scale — used as
+   *  `nearestLinePointIndex`'s `maxDistance` ("snap only within ± half a
+   *  day") when `sumi-line-chart` has both `gaps` and a fixed range, so a
+   *  pointer over a day with no point shows nothing instead of snapping
+   *  to a neighbour that could be weeks away. */
+  dayWidthPx: number;
 }
 
 /** `"15 Oct"` for an ISO `date` string, parsed as a UTC day (`parseISODate`)
@@ -987,6 +1054,8 @@ export function lineChartGeometry(
       ticks: [],
       events: [],
       stackTotal: null,
+      pointScreens: [],
+      dayWidthPx: 0,
     };
   }
 
@@ -1012,6 +1081,13 @@ export function lineChartGeometry(
   const dataIndexOf = (plotIndex: number) => (useFlatSinglePoint ? 0 : plotIndex);
   const lastPlotIndex = plotN - 1;
   const lastDataIndex = n - 1;
+  // Exact, not estimated: the x-scale is linear over [rangeStart, rangeEnd],
+  // so one day's screen width is the same everywhere in it.
+  const totalRangeDays = Math.max(
+    1,
+    Math.round((rangeEnd.getTime() - rangeStart.getTime()) / DAY_MS),
+  );
+  const dayWidthPx = (plot.width - plot.left - plot.right) / totalRangeDays;
 
   const totals = points.map((p) => seriesKeys.reduce((sum, key) => sum + (p.values[key] ?? 0), 0));
   const allValues =
@@ -1203,7 +1279,73 @@ export function lineChartGeometry(
     x: Math.min(plot.width - plot.right, Math.max(plot.left, x(parseISODate(event.date)))),
   }));
 
-  return { series, maxValue, minValue, baselineY, ticks, events: eventGeometry, stackTotal };
+  // One entry per data point (not per plot index — the two only diverge in
+  // the single-point-no-range edge case, see `useFlatSinglePoint` above),
+  // each series' y recomputed directly from `points` rather than threaded
+  // out of the per-series loops above, so this stays correct regardless of
+  // which branch built `series`.
+  const pointScreens = points.map((point, dataIndex) => {
+    const xPos = useFlatSinglePoint ? (xs[0] + xs[lastPlotIndex]) / 2 : xs[dataIndex];
+    const screenY: Record<string, number> = {};
+    if (mode === 'stacked-area') {
+      const offsets = stackOffsets(seriesKeys.map((key) => point.values[key] ?? 0));
+      seriesKeys.forEach((key, i) => {
+        screenY[key] = toY(offsets[i] + (point.values[key] ?? 0));
+      });
+    } else {
+      seriesKeys.forEach((key) => {
+        screenY[key] = toY(point.values[key] ?? 0);
+      });
+    }
+    return { x: xPos, y: screenY };
+  });
+
+  return {
+    series,
+    maxValue,
+    minValue,
+    baselineY,
+    ticks,
+    events: eventGeometry,
+    stackTotal,
+    pointScreens,
+    dayWidthPx,
+  };
+}
+
+/**
+ * The index into `pointXs` nearest `pointerX`, or `null` when none
+ * qualifies — `sumi-line-chart`'s hover/tap lookup (sumi-ui#106): with no
+ * `maxDistance`, always the nearest point regardless of how far it is
+ * (the chart's own domain already starts/ends at a real point, or at
+ * `startDate`/`endDate` with every day present, so "nearest" is always
+ * meaningful); with `maxDistance`, `null` once even the nearest point is
+ * further than that — `sumi-line-chart` passes half a day's screen width
+ * here only when `gaps` is on with a fixed range, so hovering a day with
+ * no point shows nothing instead of snapping to a neighbour that could be
+ * weeks away.
+ */
+export function nearestLinePointIndex(
+  pointerX: number,
+  pointXs: readonly number[],
+  maxDistance?: number,
+): number | null {
+  if (pointXs.length === 0) {
+    return null;
+  }
+  let bestIndex = 0;
+  let bestDistance = Math.abs(pointerX - pointXs[0]);
+  for (let i = 1; i < pointXs.length; i++) {
+    const distance = Math.abs(pointerX - pointXs[i]);
+    if (distance < bestDistance) {
+      bestDistance = distance;
+      bestIndex = i;
+    }
+  }
+  if (maxDistance != null && bestDistance > maxDistance) {
+    return null;
+  }
+  return bestIndex;
 }
 
 // --- Donut and sunburst (sumi-donut, sumi-sunburst) ------------------------

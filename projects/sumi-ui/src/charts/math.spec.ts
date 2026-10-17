@@ -11,6 +11,7 @@ import {
   calendarGeometry,
   calendarMonthLabels,
   donutSegments,
+  formatCalendarCellDayLabel,
   formatCalendarCellTitle,
   heatmapCellColor,
   heatmapTextColor,
@@ -34,6 +35,8 @@ import {
   toPoints,
   formatLineChartDateLabel,
   lineChartGeometry,
+  nearestLinePointIndex,
+  tooltipPlacement,
   flowGeometry,
   FLOW_CHART_MIN_WIDTH,
   type PlotBox,
@@ -383,6 +386,16 @@ describe('calendarMonthLabels', () => {
   });
 });
 
+describe('formatCalendarCellDayLabel', () => {
+  it('formats weekday, day and month, no value', () => {
+    expect(formatCalendarCellDayLabel('2024-10-15')).toBe('Tue 15 Oct');
+  });
+
+  it('formats a Sunday correctly (weekday index wraps)', () => {
+    expect(formatCalendarCellDayLabel('2024-10-13')).toBe('Sun 13 Oct');
+  });
+});
+
 describe('formatCalendarCellTitle', () => {
   it('formats weekday, day, month and the value with its unit', () => {
     expect(formatCalendarCellTitle('2024-10-15', 42, 'reviews')).toBe('Tue 15 Oct: 42 reviews');
@@ -390,6 +403,12 @@ describe('formatCalendarCellTitle', () => {
 
   it('formats a Sunday correctly (weekday index wraps)', () => {
     expect(formatCalendarCellTitle('2024-10-13', 0, 'reviews')).toBe('Sun 13 Oct: 0 reviews');
+  });
+
+  it('reuses formatCalendarCellDayLabel for the day part', () => {
+    expect(formatCalendarCellTitle('2024-10-15', 42, 'reviews')).toBe(
+      `${formatCalendarCellDayLabel('2024-10-15')}: 42 reviews`,
+    );
   });
 });
 
@@ -861,6 +880,64 @@ describe('formatLineChartDateLabel', () => {
   });
 });
 
+describe('tooltipPlacement', () => {
+  it('centres the bubble on anchorX when there is room on both sides', () => {
+    expect(tooltipPlacement(100, 80, 200)).toEqual({ left: 60, arrowOffset: 0 });
+  });
+
+  it('clamps to the left edge (0px margin) and reports the shift the arrow needs', () => {
+    // Centred would be 10 - 40 = -30; clamped to 0, so the arrow needs to
+    // shift -30px from the bubble's own centre to still point at x=10.
+    expect(tooltipPlacement(10, 80, 200)).toEqual({ left: 0, arrowOffset: -30 });
+  });
+
+  it('clamps to the right edge (0px margin) and reports the shift the arrow needs', () => {
+    // Centred would be 190 - 40 = 150, past hostWidth - bubbleWidth = 120.
+    expect(tooltipPlacement(190, 80, 200)).toEqual({ left: 120, arrowOffset: 30 });
+  });
+
+  it('never reports a negative left, even when anchorX is 0', () => {
+    expect(tooltipPlacement(0, 80, 200).left).toBe(0);
+  });
+
+  it('never hangs the bubble past the right edge, even when anchorX is hostWidth', () => {
+    expect(tooltipPlacement(200, 80, 200).left).toBe(120);
+  });
+
+  it('does not throw and centres degenerately when the bubble is wider than the host', () => {
+    expect(() => tooltipPlacement(50, 300, 200)).not.toThrow();
+    expect(tooltipPlacement(50, 300, 200).left).toBe(0);
+  });
+
+  it('reports no arrow shift when the bubble happens to need no clamping', () => {
+    expect(tooltipPlacement(100, 0, 200).arrowOffset).toBe(0);
+  });
+});
+
+describe('nearestLinePointIndex', () => {
+  it('picks the closest x', () => {
+    expect(nearestLinePointIndex(12, [0, 10, 20, 30])).toBe(1);
+    expect(nearestLinePointIndex(26, [0, 10, 20, 30])).toBe(3);
+  });
+
+  it('is null for an empty list', () => {
+    expect(nearestLinePointIndex(10, [])).toBeNull();
+  });
+
+  it('without maxDistance, always returns the nearest point regardless of distance', () => {
+    expect(nearestLinePointIndex(1000, [0, 10, 20])).toBe(2);
+  });
+
+  it('with maxDistance, returns null once even the nearest point is further than that', () => {
+    expect(nearestLinePointIndex(15, [0, 10, 20], 4)).toBeNull(); // nearest is 5 away
+    expect(nearestLinePointIndex(15, [0, 10, 20], 5)).not.toBeNull();
+  });
+
+  it('breaks ties by taking the first (lowest-index) nearest point', () => {
+    expect(nearestLinePointIndex(10, [0, 20])).toBe(0);
+  });
+});
+
 describe('lineChartGeometry', () => {
   const plot: PlotBox = { width: 300, height: 180, top: 20, right: 30, bottom: 20, left: 10 };
 
@@ -1192,6 +1269,65 @@ describe('lineChartGeometry', () => {
       );
       expect(withoutOption.series[0].areaPath).not.toBe('');
       expect(withOption.series[0].areaPath).toBe(withoutOption.series[0].areaPath);
+    });
+  });
+
+  // sumi-ui#106: the instant tooltip's hover/tap lookup table.
+  describe('pointScreens/dayWidthPx', () => {
+    it('has one entry per point, x shared and y per series key, in line mode', () => {
+      const points = [
+        { date: '2024-01-01', values: { a: 2, b: 9 } },
+        { date: '2024-01-02', values: { a: 7, b: 4 } },
+      ];
+      const geo = lineChartGeometry(
+        points,
+        ['a', 'b'],
+        ['var(--sumi-seq-1)', 'var(--sumi-seq-5)'],
+        'line',
+        [],
+        plot,
+      );
+      expect(geo.pointScreens).toHaveLength(2);
+      expect(geo.pointScreens[0].x).toBeCloseTo(plot.left, 5);
+      expect(geo.pointScreens[1].x).toBeCloseTo(geo.series[0].last.x, 5);
+      // Each point's own per-series y matches what the line itself is drawn
+      // through — the last point's y should equal each series' own `last.y`.
+      expect(geo.pointScreens[1].y['a']).toBeCloseTo(geo.series[0].last.y, 5);
+      expect(geo.pointScreens[1].y['b']).toBeCloseTo(geo.series[1].last.y, 5);
+    });
+
+    it("in stacked-area mode, each point's per-series y is the stacked top, not its own raw value", () => {
+      const points = [{ date: '2024-01-01', values: { a: 2, b: 4 } }];
+      const geo = lineChartGeometry(
+        points,
+        ['a', 'b'],
+        ['var(--sumi-seq-1)', 'var(--sumi-seq-5)'],
+        'stacked-area',
+        [],
+        plot,
+      );
+      // 'a' stacks bottom (0..2), 'b' on top of it (2..6) — so b's top sits
+      // higher on screen (smaller y) than a's.
+      expect(geo.pointScreens[0].y['b']).toBeLessThan(geo.pointScreens[0].y['a']);
+    });
+
+    it('is empty for zero points, without throwing', () => {
+      const geo = lineChartGeometry([], ['a'], ['var(--sumi-seq-5)'], 'line', [], plot);
+      expect(geo.pointScreens).toEqual([]);
+      expect(geo.dayWidthPx).toBe(0);
+    });
+
+    it('dayWidthPx is the plot inner width divided by the number of days in a fixed range', () => {
+      const points = [
+        { date: '2024-01-01', values: { a: 1 } },
+        { date: '2024-01-11', values: { a: 2 } },
+      ];
+      const geo = lineChartGeometry(points, ['a'], ['var(--sumi-seq-5)'], 'line', [], plot, {
+        startDate: '2024-01-01',
+        endDate: '2024-01-11', // 10 days
+      });
+      const innerWidth = plot.width - plot.left - plot.right;
+      expect(geo.dayWidthPx).toBeCloseTo(innerWidth / 10, 5);
     });
   });
 });

@@ -13,13 +13,12 @@
       <rect
         class="sumi-bar-chart__bar"
         [class.sumi-bar-chart__bar--highlight]="bar.highlight"
+        [class.sumi-bar-chart__bar--active]="tip.data()?.index === i"
         [attr.x]="bar.x"
         [attr.y]="bar.y"
         [attr.width]="bar.width"
         [attr.height]="bar.height"
-      >
-        <title>{{ bar.label }}: {{ bar.value }}</title>
-      </rect>
+      />
       @if (labelIndices().has(i)) {
         @let pos = labelAnchor(i, bar.x, bar.width);
         <text
@@ -37,14 +36,13 @@
       @for (segment of column.segments; track segment.key) {
         <rect
           class="sumi-bar-chart__bar"
+          [class.sumi-bar-chart__bar--active]="tip.data()?.index === i"
           [attr.x]="column.x"
           [attr.y]="segment.y"
           [attr.width]="column.width"
           [attr.height]="segment.height"
           [style.fill]="segment.color"
-        >
-          <title>{{ column.label }} / {{ seriesLabel(segment.key) }}: {{ segment.value }}</title>
-        </rect>
+        />
       }
       @if (labelIndices().has(i)) {
         @let pos = labelAnchor(i, column.x, column.width);
@@ -68,23 +66,42 @@
     [attr.y2]="plot().height - plot().bottom"
   />
 
-  @if (selectable()) {
-    @for (column of selectableColumns(); track $index; let i = $index) {
-      <rect
-        class="sumi-bar-chart__hit"
-        [attr.x]="column.x"
-        [attr.y]="plot().top"
-        [attr.width]="column.width"
-        [attr.height]="plot().height - plot().top - plot().bottom"
-        role="button"
-        tabindex="0"
-        [attr.aria-label]="column.label + ': ' + column.value"
-        (click)="onBarSelect(i, column.label)"
-        (keydown)="onBarKeydown($event, i, column.label)"
-      />
-    }
+  @for (column of selectableColumns(); track $index; let i = $index) {
+    <rect
+      class="sumi-bar-chart__hit"
+      [class.sumi-bar-chart__hit--selectable]="selectable()"
+      [attr.x]="column.x"
+      [attr.y]="plot().top"
+      [attr.width]="column.width"
+      [attr.height]="plot().height - plot().top - plot().bottom"
+      [attr.role]="selectable() ? 'button' : null"
+      [attr.tabindex]="selectable() ? 0 : null"
+      [attr.aria-label]="selectable() ? column.label + ': ' + column.value : null"
+      (pointerenter)="showTip($event, i)"
+      (pointerleave)="hideTip($event)"
+      (pointerdown)="showTip($event, i)"
+      (focus)="showTip($event, i)"
+      (blur)="hideTip($event)"
+      (click)="onBarSelect(i, column.label)"
+      (keydown)="onBarKeydown($event, i, column.label)"
+    />
   }
 </svg>
+
+@if (tip.data(); as t) {
+  <sumi-chart-tooltip [anchor]="tip.anchor()" [hostWidth]="measuredWidth()">
+    @if (!stacked()) {
+      <strong>{{ singleBars()[t.index].value }}</strong> · {{ singleBars()[t.index].label }}
+    } @else {
+      <strong>{{ stackedBars()[t.index].label }}</strong>
+      @for (segment of stackedBars()[t.index].segments; track segment.key) {
+        <br />
+        <span class="sumi-bar-chart__tip-swatch" [style.background]="segment.color"></span
+        >{{ seriesLabel(segment.key) }}: {{ segment.value }}
+      }
+    }
+  </sumi-chart-tooltip>
+}
 
 @if (table()) {
   <details class="sumi-bar-chart__table">

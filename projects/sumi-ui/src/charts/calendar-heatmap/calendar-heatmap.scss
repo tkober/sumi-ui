@@ -1,5 +1,9 @@
 :host {
   display: block;
+  // The instant tooltip (sumi-ui#106) positions itself absolutely within
+  // this element — its `anchor` coordinates are already computed
+  // host-relative (see calendar-heatmap.ts's `showTip`).
+  position: relative;
 }
 
 .sumi-calendar-heatmap__frame {
@@ -33,6 +37,14 @@
 .sumi-calendar-heatmap__cell {
   stroke: var(--sumi-line);
   stroke-width: 1;
+}
+
+// The hovered/tapped cell (sumi-ui#106's instant tooltip) — a visible
+// outline, not colour alone, same reasoning as the other charts' active
+// mark.
+.sumi-calendar-heatmap__cell--active {
+  stroke: var(--sumi-text);
+  stroke-width: 1.5;
 }
 
 .sumi-calendar-heatmap__month,

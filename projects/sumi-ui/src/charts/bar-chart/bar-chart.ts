@@ -19,6 +19,11 @@ import {
   type PlotBox,
 } from '../math';
 import { SumiDataTable, type SumiTableColumn, type SumiTableRow } from '../data-table/data-table';
+import { SumiChartTooltip } from '../tooltip/chart-tooltip';
+import {
+  ChartTooltipController,
+  type SumiChartTooltipAnchor,
+} from '../tooltip/chart-tooltip-controller';
 import { observeWidth } from '../util/observe-width';
 
 export interface SumiBar {
@@ -76,6 +81,12 @@ const PAD = { top: 20, right: 8, bottom: 20, left: 8 };
  * />
  * ```
  *
+ * Every column also carries a full-plot-height hit target for the instant
+ * tooltip (sumi-ui#106, mouse hover/touch tap, plus keyboard focus when
+ * `selectable`) — `<strong>value</strong> · label` for a plain bar, the
+ * column label plus one line per series (with its colour swatch) for a
+ * stacked one, see `ChartTooltipController`.
+ *
  * `selectable` (sumi-ui#76) turns every column — a plain bar or a whole
  * stacked column, never an individual stacked segment — into a
  * keyboard-reachable `role="button"` hit target the full plot height tall
@@ -96,11 +107,19 @@ const PAD = { top: 20, right: 8, bottom: 20, left: 8 };
  * />
  * ```
  */
+/** One column's instant tooltip data (sumi-ui#106): just the index into
+ *  `singleBars()`/`stackedBars()`, whichever is active — the template
+ *  reads everything else (value, label, segments) straight from those,
+ *  rather than duplicating it into the tooltip's own payload. */
+interface BarTip {
+  index: number;
+}
+
 @Component({
   selector: 'sumi-bar-chart',
   templateUrl: './bar-chart.html',
   styleUrl: './bar-chart.scss',
-  imports: [SumiDataTable],
+  imports: [SumiDataTable, SumiChartTooltip],
   host: { class: 'sumi-bar-chart' },
 })
 export class SumiBarChart {
@@ -127,6 +146,15 @@ export class SumiBarChart {
   private readonly hostRef = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly destroyRef = inject(DestroyRef);
   protected readonly measuredWidth = signal(FALLBACK_WIDTH);
+
+  /** The instant tooltip (sumi-ui#106): mouse hover/touch tap on any
+   *  column's hit target (see `singleAnchor`/`stackedAnchor`), plus
+   *  keyboard focus when `selectable` already makes that hit target a
+   *  tab stop — see `ChartTooltipController`'s own doc comment. */
+  protected readonly tip = new ChartTooltipController<BarTip>(
+    () => this.hostRef.nativeElement,
+    this.destroyRef,
+  );
 
   constructor() {
     afterNextRender(() => {
@@ -191,14 +219,45 @@ export class SumiBarChart {
   });
 
   protected onBarSelect(index: number, label: string): void {
+    // The hit target now always renders, for the instant tooltip's hover
+    // target (see `showTip`) — but selecting a column is still
+    // `selectable`-only, same behaviour as before that hit target existed
+    // unconditionally.
+    if (!this.selectable()) {
+      return;
+    }
     this.barSelect.emit({ index, label });
   }
 
   protected onBarKeydown(event: KeyboardEvent, index: number, label: string): void {
+    if (!this.selectable()) {
+      return;
+    }
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
       this.onBarSelect(index, label);
     }
+  }
+
+  /** Top-centre of column `index`'s tallest bar/stack, in the same real-px
+   *  coordinates the SVG draws in (1 viewBox unit = 1 CSS px, same as the
+   *  chart host — see the class doc comment — so no DOM measuring is
+   *  needed here, unlike `sumi-calendar-heatmap`'s weekday-label column). */
+  private anchorFor(index: number): SumiChartTooltipAnchor {
+    if (this.stacked()) {
+      const column = this.stackedBars()[index];
+      return { x: column.x + column.width / 2, y: Math.min(...column.segments.map((s) => s.y)) };
+    }
+    const bar = this.singleBars()[index];
+    return { x: bar.x + bar.width / 2, y: bar.y };
+  }
+
+  protected showTip(event: PointerEvent | FocusEvent, index: number): void {
+    this.tip.show(event, { index }, this.anchorFor(index));
+  }
+
+  protected hideTip(event: PointerEvent | FocusEvent): void {
+    this.tip.hide(event);
   }
 
   /** The labels actually being thinned/placed on the x-axis: `bars`' own

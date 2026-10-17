@@ -51,9 +51,12 @@
   }
 
   @for (s of geometry().series; track s.key) {
-    <path class="sumi-line-chart__line" [attr.d]="s.linePath" [style.stroke]="s.color" fill="none">
-      <title>{{ seriesLabel(s.key) }}</title>
-    </path>
+    <path
+      class="sumi-line-chart__line"
+      [attr.d]="s.linePath"
+      [style.stroke]="s.color"
+      fill="none"
+    />
     @for (pt of s.isolated; track pt.x) {
       <circle
         class="sumi-line-chart__isolated-dot"
@@ -115,7 +118,62 @@
       {{ total.value }}
     </text>
   }
+
+  @if (tip.data(); as t) {
+    @let point = geometry().pointScreens[t.index];
+    <line
+      class="sumi-line-chart__tip-guide"
+      [attr.x1]="point.x"
+      [attr.x2]="point.x"
+      [attr.y1]="plot().top"
+      [attr.y2]="geometry().baselineY"
+    />
+    @for (s of geometry().series; track s.key) {
+      <circle
+        class="sumi-line-chart__tip-dot"
+        [attr.cx]="point.x"
+        [attr.cy]="point.y[s.key]"
+        r="3.5"
+        [style.fill]="s.color"
+      />
+    }
+  }
+
+  <!-- Last so nothing drawn after it can shadow its hit-testing: a
+       transparent overlay over the whole plot area for the instant
+       tooltip (sumi-ui#106) — mouse tracks continuously via pointermove,
+       a touch tap snaps once via pointerdown, see line-chart.ts. -->
+  <rect
+    class="sumi-line-chart__tip-overlay"
+    [attr.x]="plot().left"
+    [attr.y]="plot().top"
+    [attr.width]="plot().width - plot().left - plot().right"
+    [attr.height]="plot().height - plot().top - plot().bottom"
+    (pointermove)="onPointerMove($event)"
+    (pointerdown)="onPointerDown($event)"
+    (pointerleave)="onPointerLeave($event)"
+  />
 </svg>
+
+@if (tip.data(); as t) {
+  <sumi-chart-tooltip [anchor]="tip.anchor()" [hostWidth]="measuredWidth()">
+    @if (series().length <= 1) {
+      <strong>{{ pointValue(t.index, series()[0].key) }}{{ unit() }}</strong> ·
+      {{ dateLabel(t.index) }}
+    } @else {
+      {{ dateLabel(t.index) }}
+      @for (s of geometry().series; track s.key) {
+        <br />
+        <span class="sumi-line-chart__tip-swatch" [style.background]="s.color"></span
+        >{{ seriesLabel(s.key) }}: {{ pointValue(t.index, s.key) }}{{ unit() }}
+      }
+      @if (mode() === 'stacked-area') {
+        <br />
+        Total: {{ pointTotal(t.index) }}{{ unit() }}
+      }
+    }
+  </sumi-chart-tooltip>
+}
 
 @if (showLegend()) {
   <sumi-legend [items]="legendItems()" />

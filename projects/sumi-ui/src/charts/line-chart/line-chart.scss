@@ -1,5 +1,10 @@
 :host {
   display: block;
+  // The instant tooltip (sumi-ui#106) positions itself absolutely within
+  // this element — its `anchor` is computed straight from the plot's own
+  // geometry (`line-chart.ts`'s `anchorFor`), which already shares the
+  // SVG's 1-unit-equals-1-CSS-px coordinate system with this host.
+  position: relative;
 }
 
 .sumi-line-chart__svg {
@@ -88,6 +93,35 @@
   // inline `[style.fill]` instead. Without this, SVG's own default fill
   // (black) is unreadable in dark mode.
   fill: var(--sumi-text);
+}
+
+// The instant tooltip's active-point guide (sumi-ui#106): a thin vertical
+// line at the hovered/tapped x plus a filled dot per series, same role as
+// the other charts' active-mark outline.
+.sumi-line-chart__tip-guide {
+  stroke: var(--sumi-line);
+  stroke-width: 1;
+}
+
+.sumi-line-chart__tip-dot {
+  stroke: none;
+}
+
+.sumi-line-chart__tip-overlay {
+  fill: transparent;
+}
+
+// The multi-series tooltip's per-series swatch (sumi-ui#106) — projected
+// into `sumi-chart-tooltip`'s content, so styled from here (the template
+// that actually creates the element), same reasoning as
+// `sumi-bar-chart`'s own stacked swatch.
+.sumi-line-chart__tip-swatch {
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 2px;
+  margin-right: 0.3rem;
+  vertical-align: middle;
 }
 
 .sumi-line-chart__table {
