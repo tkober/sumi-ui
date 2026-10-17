@@ -11,13 +11,9 @@
     </p>
 
     <div class="row">
-      <p class="reading-text" lang="ja">
-        先週、石川県の金沢に
-        <button type="button" class="word" (click)="lookUp('旅行', $event)">旅行</button>
-        に行きました。傘を持っていましたが、
-        <button type="button" class="word" (click)="lookUp('濡れても', $event)">濡れても</button>
-        気にしないことにしました。
-      </p>
+      <!-- No whitespace between the words: in running Japanese it renders as a gap. -->
+      <!-- prettier-ignore -->
+      <p class="reading-text" lang="ja">先週、石川県の金沢に<button type="button" class="word" (click)="lookUp('旅行', $event)">旅行</button>に行きました。傘を持っていましたが、<button type="button" class="word" (click)="lookUp('濡れても', $event)">濡れても</button>気にしないことにしました。</p>
     </div>
 
     @if (selectedWord(); as details) {
