@@ -60,6 +60,9 @@ const ICONS: Record<SumiVerdictKind, SumiIconName> = {
     '[class.sumi-verdict--wrong]': "kind() === 'wrong'",
     '[class.sumi-verdict--retry]': "kind() === 'retry'",
     '[class.sumi-verdict--held]': "kind() === 'held'",
+    // `title` is an input: a static title="…" would otherwise also stay on
+    // the host element as a native browser tooltip over the whole component.
+    '[attr.title]': 'null',
   },
 })
 export class SumiVerdictCard {

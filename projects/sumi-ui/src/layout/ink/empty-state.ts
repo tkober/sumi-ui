@@ -38,7 +38,12 @@ import { SumiCompanion } from './companion';
   templateUrl: './empty-state.html',
   styleUrl: './empty-state.scss',
   imports: [SumiLandscape, SumiPatternComponent, SumiCompanion],
-  host: { class: 'sumi-empty-state' },
+  host: {
+    class: 'sumi-empty-state',
+    // `title` is an input: a static title="…" would otherwise also stay on
+    // the host element as a native browser tooltip over the whole component.
+    '[attr.title]': 'null',
+  },
 })
 export class SumiEmptyState {
   readonly title = input.required<string>();

@@ -59,6 +59,9 @@ export type SumiPageWidth = 'narrow' | 'default' | 'wide';
     class: 'sumi-page',
     '[class.sumi-page--narrow]': "width() === 'narrow'",
     '[class.sumi-page--wide]': "width() === 'wide'",
+    // `title` is an input: a static title="…" would otherwise also stay on
+    // the host element as a native browser tooltip over the whole component.
+    '[attr.title]': 'null',
   },
 })
 export class SumiPage {

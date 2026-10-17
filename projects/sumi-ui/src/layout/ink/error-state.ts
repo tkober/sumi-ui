@@ -31,7 +31,12 @@ import { SumiInkBackdrop } from './ink-backdrop';
   templateUrl: './error-state.html',
   styleUrl: './error-state.scss',
   imports: [SumiInkBackdrop],
-  host: { class: 'sumi-error-state' },
+  host: {
+    class: 'sumi-error-state',
+    // `title` is an input: a static title="…" would otherwise also stay on
+    // the host element as a native browser tooltip over the whole component.
+    '[attr.title]': 'null',
+  },
 })
 export class SumiErrorState {
   readonly title = input.required<string>();

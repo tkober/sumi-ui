@@ -52,7 +52,12 @@ export type SumiDialogWidth = 'narrow' | 'wide';
   selector: 'sumi-dialog',
   templateUrl: './dialog.html',
   styleUrl: './dialog.scss',
-  host: { class: 'sumi-dialog-host' },
+  host: {
+    class: 'sumi-dialog-host',
+    // `title` is an input: a static title="…" would otherwise also stay on
+    // the host element as a native browser tooltip over the whole component.
+    '[attr.title]': 'null',
+  },
   imports: [SumiButtonDirective, SumiIcon],
 })
 export class SumiDialog {

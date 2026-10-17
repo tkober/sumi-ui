@@ -81,7 +81,12 @@ const GAP = 8;
   selector: 'sumi-popover',
   templateUrl: './popover.html',
   styleUrl: './popover.scss',
-  host: { class: 'sumi-popover-host' },
+  host: {
+    class: 'sumi-popover-host',
+    // `title` is an input: a static title="…" would otherwise also stay on
+    // the host element as a native browser tooltip over the whole component.
+    '[attr.title]': 'null',
+  },
   imports: [SumiButtonDirective, SumiIcon],
 })
 export class SumiPopover {

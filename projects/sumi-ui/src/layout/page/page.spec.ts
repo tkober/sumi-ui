@@ -29,6 +29,14 @@ class HostComponent {
   companion = signal<'tsuru' | undefined>(undefined);
 }
 
+// A plain `title="…"` (no binding) is how apps use it, e.g.
+// `<sumi-page title="Statistics">`; Angular would also keep it as a host attribute.
+@Component({
+  imports: [SumiPage],
+  template: `<sumi-page title="Statistics">Body</sumi-page>`,
+})
+class StaticTitleHostComponent {}
+
 describe('SumiPage', () => {
   function create() {
     TestBed.configureTestingModule({ imports: [HostComponent] });
@@ -44,6 +52,15 @@ describe('SumiPage', () => {
     const page: HTMLElement = fixture.nativeElement.querySelector('sumi-page');
     expect(page.querySelector('h1')?.textContent).toBe('Title');
     expect(page.querySelector('.sumi-page__subtitle')?.textContent).toBe('Subtitle');
+  });
+
+  it('does not leave a static title on the host as a native tooltip', () => {
+    TestBed.configureTestingModule({ imports: [StaticTitleHostComponent] });
+    const fixture = TestBed.createComponent(StaticTitleHostComponent);
+    fixture.detectChanges();
+    const page: HTMLElement = fixture.nativeElement.querySelector('sumi-page');
+    expect(page.hasAttribute('title')).toBe(false);
+    expect(page.querySelector('h1')?.textContent).toBe('Statistics');
   });
 
   it('renders no header when there is no title', () => {
