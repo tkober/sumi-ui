@@ -163,7 +163,11 @@
 .sumi-app-shell__main {
   padding: var(--sumi-space-6) var(--sumi-space-4);
   max-width: 100%;
-  overflow-x: hidden;
+  // `clip`, not `hidden` (sumi-ui#90): `hidden` turns the other axis into
+  // `auto` too, which makes <main> a scroll container that never scrolls
+  // (the document does) -- and every `position: sticky` inside it then
+  // sticks to <main> instead of the viewport, i.e. never sticks at all.
+  overflow-x: clip;
 }
 
 // The bottom tab bar itself (shown under 720px, hidden on desktop) lives in
