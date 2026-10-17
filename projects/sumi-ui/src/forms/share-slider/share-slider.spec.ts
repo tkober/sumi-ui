@@ -66,12 +66,35 @@ describe('SumiShareSlider', () => {
     expect(handles(fixture)[0].step).toBe('5');
   });
 
-  it('clamps a boundary input min/max to its neighbours current cumulative values', () => {
+  it('keeps every input at min 0 / max 100 of the whole track, never the neighbour-clamped range', () => {
+    // A native range input positions its thumb at (value - min) / (max -
+    // min) of its own box, which spans the full track here — binding
+    // min/max to a boundary's actual draggable range moved the thumb off
+    // its real percentage position (a boundary at 85% rendered around
+    // 70%, caught visually in the showcase screenshots). The neighbour
+    // clamp happens only in onBoundaryInput(), never via the DOM
+    // min/max attributes.
+    for (const input of handles(fixture)) {
+      expect(input.min).toBe('0');
+      expect(input.max).toBe('100');
+    }
+  });
+
+  it("exposes a boundary's neighbour-clamped range via aria-valuemin/-valuemax, not the native 0/100", () => {
     const inputs = handles(fixture);
     // Boundary 1 is N4/N3 at cumulative 85 (50+35); its neighbours are the
     // N5/N4 boundary (50) and the N3/N2 boundary (100).
-    expect(inputs[1].min).toBe('50');
-    expect(inputs[1].max).toBe('100');
+    expect(inputs[1].getAttribute('aria-valuemin')).toBe('50');
+    expect(inputs[1].getAttribute('aria-valuemax')).toBe('100');
+  });
+
+  it("positions each thumb's value exactly at its segment boundary's cumulative percentage", () => {
+    const inputs = handles(fixture);
+    // Cumulative boundaries for 50/35/15/0/0: 50, 85, 100, 100. Since
+    // min/max are the full 0-100 track (see above), `value` directly *is*
+    // the thumb's position on that track, in percent.
+    expect(inputs.map((i) => i.value)).toEqual(['50', '85', '100', '100']);
+    expect(inputs.map((i) => Number(i.valueAsNumber))).toEqual([50, 85, 100, 100]);
   });
 
   it('dragging a boundary redistributes shares, keeping the total at 100', () => {

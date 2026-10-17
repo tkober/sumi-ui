@@ -88,6 +88,18 @@ function cumulativeValues(segments: readonly SumiShareSegment[]): number[] {
  * cumulative number would not say anything about either segment's actual
  * share.
  *
+ * Every thumb's own `min`/`max` stay the static `0`/`100` **of the whole
+ * track**, never the neighbour-clamped range — a native range input
+ * positions its thumb at `(value - min) / (max - min)` of its own box, which
+ * spans the full track here, so binding `min`/`max` to a boundary's actual
+ * draggable range would move the thumb off its real percentage position
+ * (confirmed visually: a boundary at 85% rendered around 70%). The
+ * neighbour clamp instead happens purely in `onBoundaryInput()` (`next`
+ * never writes outside `[min, max]`, same as the jp-reading-practice
+ * prototype), and is still exposed to assistive tech as explicit
+ * `aria-valuemin`/`aria-valuemax` (overriding the input's own native
+ * `0`/`100`) alongside `aria-valuetext`.
+ *
  * Unlike `sumi-segmented-control`/`sumi-toggle`/`sumi-tile-picker`, this
  * component does not implement `ControlValueAccessor`/`FormValueControl` —
  * its "value" is a labelled array with its own internal invariant (sums to
