@@ -1,4 +1,4 @@
-import { Component, input, output } from '@angular/core';
+import { Component, ElementRef, inject, input, output } from '@angular/core';
 import {
   SUMI_KEYS,
   injectHotkey,
@@ -49,6 +49,21 @@ import { SumiInkBackdrop } from 'sumi-ui/layout';
  * this one is **not** `allowInEditable` — a gate screen has no field to
  * protect typing in, and the concept's ground rule only grants that
  * exception to editable-aware registrations.
+ *
+ * It is `ignoreActivatableWithin` its own host element, though: this
+ * registration has no `target` of its own, so without it `Enter` focused on
+ * *any* button or link on the page — e.g. a projected `sumi-session-summary`'s
+ * secondary action (sumi-ui#102) — would be caught here instead of
+ * activating that control itself. `Enter` on the gate's own action button
+ * (or a projected `sumi-session-summary`'s primary/secondary ones) still
+ * ends up calling `start`/`restart`/`secondaryAction` either way, just via
+ * that button's own native activation instead of this hotkey. Scoping the
+ * exception to the gate's own host (rather than every button on the page)
+ * matters because Chrome keeps focus on a clicked link after an in-app
+ * navigation — e.g. a header nav link — so an unscoped exception would make
+ * `Enter` silently do nothing right after clicking one, instead of starting
+ * the session; outside the gate, `Enter` on a focused button/link still
+ * works exactly as before.
  *
  * `actionDisabled` (sumi-ui#56) disables both the gate's own button and
  * its `Enter` registration — e.g. a conversation app keeps the ended
@@ -112,12 +127,15 @@ export class SumiSessionGate {
 
   readonly start = output<void>();
 
+  private readonly elementRef = inject<ElementRef<HTMLElement>>(ElementRef);
+
   constructor() {
     injectHotkey({
       keys: SUMI_KEYS.submit,
       label: 'Start session',
       scope: 'page',
       enabled: () => !this.actionDisabled(),
+      ignoreActivatableWithin: () => this.elementRef.nativeElement,
       handler: () => this.start.emit(),
     });
   }

@@ -210,7 +210,11 @@ type SessionState = 'idle' | 'running' | 'ended';
  * `[sumiSummaryDetails]` slot: four tiles in one row (three app tiles plus
  * the built-in Time) and two projected `[sumiSummaryDetails]` sections — a
  * stage-card grid and a small table — both plain showcase markup/styles
- * using only `--sumi-*` tokens, not a real kanji-trainer screen.
+ * using only `--sumi-*` tokens, not a real kanji-trainer screen. That same
+ * section also demos `secondaryActionLabel`/`secondaryActionCount`
+ * (sumi-ui#102, for kanji-trainer#85 "Review mistakes"): a "Review
+ * mistakes 5" button next to "Practice again", wired to a visible counter
+ * below rather than any real navigation.
  */
 @Component({
   selector: 'app-practice-page',
@@ -237,6 +241,13 @@ export class PracticePage {
   protected readonly radicalImageUrl = RADICAL_IMAGE_URL;
   protected readonly reachedStages = REACHED_STAGES;
   protected readonly byTypeRows = BY_TYPE_ROWS;
+
+  // --- Wide summary's secondary action (sumi-ui#102) --------------------
+  protected readonly reviewMistakesClicks = signal(0);
+
+  protected onReviewMistakes(): void {
+    this.reviewMistakesClicks.update((n) => n + 1);
+  }
 
   protected readonly sessionState = signal<SessionState>('idle');
   protected readonly index = signal(0);

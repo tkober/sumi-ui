@@ -1,3 +1,4 @@
+import { NgTemplateOutlet } from '@angular/common';
 import { Component, computed, input, output } from '@angular/core';
 import { SumiButtonDirective } from 'sumi-ui/forms';
 import { SumiHanko } from 'sumi-ui/layout';
@@ -110,12 +111,40 @@ function formatDuration(ms: number): string {
  *   </sumi-session-summary>
  * </sumi-session-gate>
  * ```
+ *
+ * `secondaryActionLabel` (sumi-ui#102, for kanji-trainer#85 "Review
+ * mistakes") adds a second button next to the primary one — e.g. a
+ * "Review mistakes" action that starts a practice round over just this
+ * session's mistakes while the primary action stays "Practice again".
+ * Omit it (the default) for no button and no layout change at all, not
+ * even an extra wrapper around the primary button. `secondaryActionCount`
+ * renders as a small muted number after the label (e.g. "Review mistakes
+ * 5") — part of the button's accessible name, which reads fine as "Review
+ * mistakes 5". `actionDisabled` only ever affects the primary button; the
+ * secondary one has no disabled state of its own. `Enter` keeps activating
+ * the primary action (via the wrapping `sumi-session-gate`, see its own
+ * doc comment and sumi-ui#102) — the secondary is a plain button, reached
+ * by `Tab` and activated by `Enter`/`Space` like any other:
+ *
+ * ```html
+ * <sumi-session-gate [showAction]="false" (start)="startSession()">
+ *   <sumi-session-summary
+ *     [answered]="answered()"
+ *     [correct]="correct()"
+ *     [durationMs]="durationMs()"
+ *     secondaryActionLabel="Review mistakes"
+ *     [secondaryActionCount]="mistakeCount()"
+ *     (restart)="startSession()"
+ *     (secondaryAction)="reviewMistakes()"
+ *   />
+ * </sumi-session-gate>
+ * ```
  */
 @Component({
   selector: 'sumi-session-summary',
   templateUrl: './session-summary.html',
   styleUrl: './session-summary.scss',
-  imports: [SumiButtonDirective, SumiHanko, SumiSummaryTile],
+  imports: [NgTemplateOutlet, SumiButtonDirective, SumiHanko, SumiSummaryTile],
   host: { class: 'sumi-session-summary' },
 })
 export class SumiSessionSummary {
@@ -143,8 +172,23 @@ export class SumiSessionSummary {
    * Items/Correct/Answers/Time row (sumi-ui#85).
    */
   readonly timePosition = input<'first' | 'last'>('first');
+  /**
+   * Label for an optional second button next to the primary one (sumi-ui#102).
+   * Omit it (the default) for no button at all — not even a wrapper that
+   * would change the primary button's layout.
+   */
+  readonly secondaryActionLabel = input<string>();
+  /**
+   * A small muted number shown after `secondaryActionLabel`, e.g. "Review
+   * mistakes 5". Shown for any value including `0` — omit the input itself
+   * (the default) for no number; the library has no opinion on whether a
+   * `0` count should still show the button at all, that's `secondaryActionLabel`'s call.
+   */
+  readonly secondaryActionCount = input<number>();
 
   readonly restart = output<void>();
+  /** Fires on a click of the secondary button. Never affected by `actionDisabled`, which only guards the primary action. */
+  readonly secondaryAction = output<void>();
 
   /** Both quiz numbers present — the only case the Answered/Correct tiles render. */
   protected readonly hasQuizStats = computed(
@@ -163,6 +207,11 @@ export class SumiSessionSummary {
   protected readonly duration = computed(() => formatDuration(this.durationMs()));
 
   protected readonly hasDelta = computed(() => this.delta() != null);
+
+  /** Whether the secondary button renders at all — label-driven, see its doc comment. */
+  protected readonly hasSecondaryAction = computed(() => this.secondaryActionLabel() != null);
+
+  protected readonly hasSecondaryActionCount = computed(() => this.secondaryActionCount() != null);
 
   protected readonly deltaTrend = computed<'up' | 'down' | undefined>(() => {
     const delta = this.delta();
@@ -183,5 +232,10 @@ export class SumiSessionSummary {
       return;
     }
     this.restart.emit();
+  }
+
+  /** No `actionDisabled` guard here — it only ever applies to the primary action. */
+  protected onSecondaryActionClick(): void {
+    this.secondaryAction.emit();
   }
 }

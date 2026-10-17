@@ -8,7 +8,13 @@ import {
   signal,
 } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
-import { type ParsedHotkey, eventMatchesHotkey, isEditableTarget, parseKeys } from './key-matching';
+import {
+  type ParsedHotkey,
+  eventMatchesHotkey,
+  isActivatableTarget,
+  isEditableTarget,
+  parseKeys,
+} from './key-matching';
 
 /** Where a hotkey applies, see docs/concept.md#hotkeys. Used to group `sumi-hotkey-help`. */
 export type SumiHotkeyScope = 'page' | 'practice' | 'feedback';
@@ -18,6 +24,9 @@ export type SumiHotkeyScope = 'page' | 'practice' | 'feedback';
  * matched, and docs/concept.md#hotkeys for the reserved keys and ground
  * rule this implements.
  */
+/** A static element, or a getter for one that may not exist yet (e.g. behind an `@if`). */
+type SumiHotkeyElement = HTMLElement | (() => HTMLElement | undefined);
+
 export interface SumiHotkeyDef {
   /**
    * `'Enter'`, `'Escape'`, `'Alt+K'`, `'Shift+Enter'`, `'F'`, `'?'`. See
@@ -30,12 +39,8 @@ export interface SumiHotkeyDef {
   handler: (event: KeyboardEvent) => void;
   /** Read signals inside. `false` hides the registration and ignores it entirely. */
   enabled?: () => boolean;
-  /**
-   * Restricts the hotkey to events whose target is this element (or inside
-   * it). A static element, or a getter for one that may not exist yet (e.g.
-   * behind an `@if`).
-   */
-  target?: HTMLElement | (() => HTMLElement | undefined);
+  /** Restricts the hotkey to events whose target is this element (or inside it). */
+  target?: SumiHotkeyElement;
   /**
    * Lets this registration fire even while the event target is editable
    * (see the ground rule on `SumiHotkeys`). Used by bare-key registrations
@@ -43,6 +48,29 @@ export interface SumiHotkeyDef {
    * screen's `F`/`?` after feedback.
    */
   allowInEditable?: boolean;
+  /**
+   * Skips this registration while the event target is a button, link, or
+   * `role="button"` element *inside this element* — such a control already
+   * activates itself on `Enter`/`Space` (a native `click`), so a broad
+   * registration with no `target` of its own (e.g. `sumi-session-gate`'s
+   * page-scoped "start session" `Enter`) must not also match and
+   * `preventDefault()` away that native activation (sumi-ui#102) — e.g. a
+   * second button sitting next to the gate's own action.
+   *
+   * Scoped to one element (typically the registering component's own host)
+   * rather than every activatable element on the page: Chrome keeps focus
+   * on a link or button after an in-app click (e.g. a header nav link using
+   * `routerLink` — the SPA navigates, focus stays put). An unscoped version
+   * of this option would then make a page-scoped `Enter` registered
+   * *elsewhere* (the next screen's gate) skip itself for that unrelated,
+   * already-focused nav link too, breaking "Enter starts the session" for
+   * anyone who just clicked a nav link. Scoping to this element keeps the
+   * exception to controls that are actually part of *this* registration's
+   * own UI (the gate's own button, a projected `sumi-session-summary`'s
+   * primary/secondary buttons, …) — everywhere else `Enter` still fires and
+   * `preventDefault()`s exactly as before.
+   */
+  ignoreActivatableWithin?: SumiHotkeyElement;
   /** Defaults to `true`. */
   preventDefault?: boolean;
 }
@@ -68,8 +96,8 @@ interface SumiHotkeyRegistration extends SumiHotkeyDef {
   readonly parsed: ParsedHotkey;
 }
 
-function targetElement(target: SumiHotkeyDef['target']): HTMLElement | undefined {
-  return typeof target === 'function' ? target() : target;
+function resolveElement(element: SumiHotkeyElement | undefined): HTMLElement | undefined {
+  return typeof element === 'function' ? element() : element;
 }
 
 /**
@@ -85,6 +113,17 @@ function targetElement(target: SumiHotkeyDef['target']): HTMLElement | undefined
  * field's handler) while its bare `F`/`?` shortcuts stay inert until
  * `allowInEditable` is paired with an `enabled()` that only turns true once
  * feedback is on screen.
+ *
+ * A second ground rule guards the opposite case: `ignoreActivatableWithin`
+ * skips a registration whenever the event target is a button, link or
+ * `role="button"` element *inside* the given element, since that control
+ * already handles its own `Enter`/`Space` natively. Without it, a broad
+ * `target`-less registration (e.g. a page-scoped "start session" `Enter`)
+ * would match *any* focused control and `preventDefault()` away its native
+ * click (sumi-ui#102). It is deliberately scoped to one element rather than
+ * every activatable element on the page — see its doc comment for why an
+ * unscoped version would break "Enter starts the session" right after
+ * clicking an unrelated header nav link.
  *
  * Several enabled registrations matching the same keys: the most recently
  * registered one wins (stack semantics, like a modal shadowing the page
@@ -183,8 +222,15 @@ export class SumiHotkeys {
           continue;
         }
       }
+      if (reg.ignoreActivatableWithin && isActivatableTarget(event.target)) {
+        const container = resolveElement(reg.ignoreActivatableWithin);
+        const node = event.target;
+        if (container && node instanceof Node && container.contains(node)) {
+          continue;
+        }
+      }
       if (reg.target) {
-        const el = targetElement(reg.target);
+        const el = resolveElement(reg.target);
         const node = event.target;
         if (!el || !(node instanceof Node) || (el !== node && !el.contains(node))) {
           continue;

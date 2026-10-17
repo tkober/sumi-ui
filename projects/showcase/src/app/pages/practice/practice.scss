@@ -41,6 +41,13 @@ sumi-answer-field {
   width: 100%;
 }
 
+.demo__note {
+  margin-top: var(--sumi-space-2);
+  text-align: center;
+  font-size: var(--sumi-text-sm);
+  color: var(--sumi-muted);
+}
+
 .demo__log {
   margin-top: var(--sumi-space-2);
 

@@ -178,6 +178,130 @@ describe('SumiHotkeys', () => {
     });
   });
 
+  describe('ignoreActivatableWithin (sumi-ui#102)', () => {
+    function withButtonInside(): { container: HTMLElement; button: HTMLButtonElement } {
+      const container = document.createElement('div');
+      const button = document.createElement('button');
+      container.appendChild(button);
+      document.body.appendChild(container);
+      return { container, button };
+    }
+
+    it('skips the registration when the event target is a button inside the given element', () => {
+      const hotkeys = create();
+      const handler = vi.fn();
+      const { container, button } = withButtonInside();
+      hotkeys.register({
+        keys: 'Enter',
+        label: 'Start session',
+        scope: 'page',
+        handler,
+        ignoreActivatableWithin: container,
+      });
+
+      dispatch(button, { key: 'Enter' });
+      expect(handler).not.toHaveBeenCalled();
+
+      container.remove();
+    });
+
+    it('accepts a getter, matching a button nested anywhere inside the resolved element', () => {
+      const hotkeys = create();
+      const handler = vi.fn();
+      const { container, button } = withButtonInside();
+      hotkeys.register({
+        keys: 'Enter',
+        label: 'Start session',
+        scope: 'page',
+        handler,
+        ignoreActivatableWithin: () => container,
+      });
+
+      dispatch(button, { key: 'Enter' });
+      expect(handler).not.toHaveBeenCalled();
+
+      container.remove();
+    });
+
+    it('still fires — regression guard — when the activatable target is OUTSIDE the given element (e.g. focus left on an unrelated clicked nav link)', () => {
+      const hotkeys = create();
+      const handler = vi.fn();
+      const { container } = withButtonInside();
+      const outsideLink = document.createElement('a');
+      document.body.appendChild(outsideLink);
+      hotkeys.register({
+        keys: 'Enter',
+        label: 'Start session',
+        scope: 'page',
+        handler,
+        ignoreActivatableWithin: container,
+      });
+
+      dispatch(outsideLink, { key: 'Enter' });
+      expect(handler).toHaveBeenCalledTimes(1);
+
+      container.remove();
+      outsideLink.remove();
+    });
+
+    it('still fires for a non-activatable target, e.g. the page itself', () => {
+      const hotkeys = create();
+      const handler = vi.fn();
+      const { container } = withButtonInside();
+      hotkeys.register({
+        keys: 'Enter',
+        label: 'Start session',
+        scope: 'page',
+        handler,
+        ignoreActivatableWithin: container,
+      });
+
+      dispatch(document, { key: 'Enter' });
+      expect(handler).toHaveBeenCalledTimes(1);
+
+      container.remove();
+    });
+
+    it('does not prevent the default action when it skips, so a focused button inside stays free to activate itself', () => {
+      const hotkeys = create();
+      const { container, button } = withButtonInside();
+      hotkeys.register({
+        keys: 'Enter',
+        label: 'Start session',
+        scope: 'page',
+        handler: vi.fn(),
+        ignoreActivatableWithin: container,
+      });
+
+      const event = new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true });
+      button.dispatchEvent(event);
+      expect(event.defaultPrevented).toBe(false);
+
+      container.remove();
+    });
+
+    it('prevents the default action for an activatable target OUTSIDE the given element, same as without this option', () => {
+      const hotkeys = create();
+      const { container } = withButtonInside();
+      const outsideLink = document.createElement('a');
+      document.body.appendChild(outsideLink);
+      hotkeys.register({
+        keys: 'Enter',
+        label: 'Start session',
+        scope: 'page',
+        handler: vi.fn(),
+        ignoreActivatableWithin: container,
+      });
+
+      const event = new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true });
+      outsideLink.dispatchEvent(event);
+      expect(event.defaultPrevented).toBe(true);
+
+      container.remove();
+      outsideLink.remove();
+    });
+  });
+
   it('ignores a registration whose enabled() is false, and reflects it in active()', () => {
     const hotkeys = create();
     const on = signal(false);

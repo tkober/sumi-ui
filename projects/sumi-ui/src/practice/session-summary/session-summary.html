@@ -38,14 +38,30 @@
   <ng-content select="[sumiSummaryDetails]" />
 </div>
 
-<button
-  type="button"
-  sumiButton
-  variant="primary"
-  [disabled]="actionDisabled()"
-  [attr.aria-disabled]="actionDisabled() ? 'true' : null"
-  [attr.aria-busy]="actionDisabled() ? 'true' : null"
-  (click)="onActionClick()"
->
-  {{ actionLabel() }}
-</button>
+<ng-template #primaryActionButton>
+  <button
+    type="button"
+    sumiButton
+    variant="primary"
+    [disabled]="actionDisabled()"
+    [attr.aria-disabled]="actionDisabled() ? 'true' : null"
+    [attr.aria-busy]="actionDisabled() ? 'true' : null"
+    (click)="onActionClick()"
+  >
+    {{ actionLabel() }}
+  </button>
+</ng-template>
+
+@if (hasSecondaryAction()) {
+  <div class="sumi-session-summary__actions">
+    <ng-container *ngTemplateOutlet="primaryActionButton" />
+    <button type="button" sumiButton variant="secondary" (click)="onSecondaryActionClick()">
+      {{ secondaryActionLabel() }}
+      @if (hasSecondaryActionCount()) {
+        <span class="sumi-session-summary__secondary-count">{{ secondaryActionCount() }}</span>
+      }
+    </button>
+  </div>
+} @else {
+  <ng-container *ngTemplateOutlet="primaryActionButton" />
+}

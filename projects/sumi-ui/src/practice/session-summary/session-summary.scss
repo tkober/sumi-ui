@@ -62,3 +62,22 @@
   margin: 0 0 var(--sumi-space-6);
   text-align: left;
 }
+
+// Only rendered when `secondaryActionLabel` is set (sumi-ui#102) — without
+// it the primary button is a bare direct child, unwrapped, exactly as
+// before. Primary first, secondary to its right, centred as a group;
+// `flex-wrap` drops the secondary onto its own line on narrow widths, and
+// `justify-content` on a wrapped flex container centres each line on its
+// own, so the lone secondary centres correctly too.
+.sumi-session-summary__actions {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: var(--sumi-space-3);
+}
+
+.sumi-session-summary__secondary-count {
+  margin-inline-start: var(--sumi-space-1);
+  color: var(--sumi-muted);
+  font-size: var(--sumi-text-sm);
+}
