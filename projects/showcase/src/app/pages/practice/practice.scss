@@ -146,33 +146,6 @@ sumi-toggle {
   margin-bottom: var(--sumi-space-4);
 }
 
-.demo__reading-chat {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--sumi-space-2);
-  border: none;
-  background: transparent;
-  color: var(--sumi-text-2);
-  font: inherit;
-  font-size: var(--sumi-text-sm);
-  padding: var(--sumi-space-1) var(--sumi-space-2);
-  cursor: pointer;
-
-  sumi-icon {
-    width: 18px;
-    height: 18px;
-  }
-
-  &:hover {
-    background: var(--sumi-sunken);
-  }
-
-  &:focus-visible {
-    outline: none;
-    box-shadow: var(--sumi-focus-ring);
-  }
-}
-
 .demo__question-text {
   font-size: var(--sumi-text-lg);
   margin: 0 0 var(--sumi-space-4);

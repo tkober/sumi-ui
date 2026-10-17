@@ -304,12 +304,16 @@
       question using <code>sumi-verdict</code>'s colours.
     </p>
 
-    <h3>Reading text (sumi-ui#94)</h3>
+    <h3>Reading text (sumi-ui#94, #108)</h3>
     <p>
       Hover or focus a known word (has a reading, not already <code>unknown</code>) for about half a
       second to peek its reading, or long-press on touch. Tap/click or <kbd>Enter</kbd> activates a
       word; arrow keys move between words, in addition to <kbd>Tab</kbd>. 雨 is marked
-      <code>unknown</code> and always shows its reading.
+      <code>unknown</code> and always shows its reading. <code>wordActivated</code>'s
+      <code>element</code> (sumi-ui#108) is the activated word's own span — meant for
+      <code>sumi-popover</code>'s <code>[anchor]</code> (see the "Overlays" page); this page has
+      none nearby, so the log below just shows the element's own text instead, to prove it is the
+      right one.
     </p>
     <sumi-reading-text
       [paragraphs]="readingParagraphs"
@@ -322,14 +326,16 @@
       <p>{{ readingLog() || '(tap, hover or peek a word above)' }}</p>
     </div>
 
-    <h3>Reading session bar (sumi-ui#100)</h3>
+    <h3>Reading session bar (sumi-ui#100, #108)</h3>
     <p>
       No <code>answered</code>/<code>correct</code> — a reading session has nothing to grade while
       it runs — so this gives only <code>elapsed</code> and <code>showPause</code>, turns the
       built-in "End session" button off (<code>[showEndSession]="false"</code>; a reading session
       ends through its own "Done reading" button elsewhere on the page instead), and projects an
-      extra "Ask about this text" action wrapped for the icon-only collapse. Narrow the window below
-      720px to see both actions drop to icon-only.
+      extra "Ask about this text" action wrapped for the icon-only collapse. It also carries
+      <code>sumiSessionBarAction</code>, which gives it the exact same look as the built-in pause
+      button to its right — one style for both instead of this page styling its own copy. Narrow the
+      window below 720px to see both actions drop to icon-only.
     </p>
     <sumi-session-bar
       class="demo__reading-bar"
@@ -341,8 +347,8 @@
     >
       <button
         type="button"
-        class="demo__reading-chat"
         sumiSessionBarActions
+        sumiSessionBarAction
         (click)="onReadingChatToggle()"
       >
         <sumi-icon name="chat" />

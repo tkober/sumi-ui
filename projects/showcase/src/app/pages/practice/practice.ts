@@ -477,7 +477,12 @@ export class PracticePage {
 
   protected onReadingWordActivated(event: SumiReadingWordActivateEvent): void {
     this.selectedReadingWordId.set(event.word.id);
-    this.readingLog.set(`Activated "${event.word.text}"`);
+    // No `sumi-popover` on this page (see the "Overlays" page for that) —
+    // just prove out `event.element` (sumi-ui#108) by showing what it
+    // actually is: the word's own span, same text as `event.word.text`.
+    this.readingLog.set(
+      `Activated "${event.word.text}" (element text: "${event.element.textContent}")`,
+    );
   }
 
   protected onReadingPeeked(word: SumiReadingWord): void {

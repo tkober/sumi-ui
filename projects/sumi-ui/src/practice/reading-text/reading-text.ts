@@ -65,6 +65,14 @@ export interface SumiReadingWordActivateEvent {
   word: SumiReadingWord;
   /** The tapped word's own screen position, for an anchored popover. */
   rect: DOMRect;
+  /** The activated word's own `role="button"` span — hand this straight to
+   *  `sumi-popover`'s `[anchor]` so it can re-measure on resize/scroll,
+   *  rather than resolving an element back from `rect` (which breaks as
+   *  soon as something else covers that point, e.g. a sticky header, a
+   *  side panel or an earlier popover — sumi-ui#108). The same element for
+   *  a click, `Enter` and a touch tap alike. `rect` stays for existing
+   *  users who only need the position, e.g. a one-off measurement. */
+  element: HTMLElement;
 }
 
 /** How long a hover (desktop) or keyboard focus has to sit on a known word
@@ -307,7 +315,7 @@ export class SumiReadingText {
       return;
     }
     const target = event.currentTarget as HTMLElement;
-    this.wordActivated.emit({ word, rect: target.getBoundingClientRect() });
+    this.wordActivated.emit({ word, rect: target.getBoundingClientRect(), element: target });
   }
 
   /** `Enter`/`Space` activate a word, same as a native button's click would

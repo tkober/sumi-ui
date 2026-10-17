@@ -182,6 +182,7 @@ describe('SumiReadingText — reading peek timing', () => {
     expect(fixture.componentInstance.peeked).toEqual([]);
     expect(fixture.componentInstance.activated.length).toBe(1);
     expect(fixture.componentInstance.activated[0].word).toEqual(KNOWN_WORD);
+    expect(fixture.componentInstance.activated[0].element).toBe(span);
   });
 
   it('peeks on a long press and suppresses the click that follows it, instead of also activating', () => {
@@ -268,6 +269,17 @@ describe('SumiReadingText — reading peek timing', () => {
     expect(wordSpan(fixture, 'です').getAttribute('aria-pressed')).toBe('false');
   });
 
+  it('a mouse click activates a word and carries the word span as `element` (sumi-ui#108)', () => {
+    const fixture = render();
+    const span = wordSpan(fixture, '散歩');
+
+    click(span);
+
+    expect(fixture.componentInstance.activated.length).toBe(1);
+    expect(fixture.componentInstance.activated[0].word).toEqual(KNOWN_WORD);
+    expect(fixture.componentInstance.activated[0].element).toBe(span);
+  });
+
   it('Enter activates a word like a click would', () => {
     const fixture = render();
     const span = wordSpan(fixture, 'です');
@@ -276,6 +288,7 @@ describe('SumiReadingText — reading peek timing', () => {
 
     expect(fixture.componentInstance.activated.length).toBe(1);
     expect(fixture.componentInstance.activated[0].word).toEqual(KANA_WORD);
+    expect(fixture.componentInstance.activated[0].element).toBe(span);
   });
 
   it('ArrowRight moves focus to the next word (roving focus, in addition to Tab)', () => {
