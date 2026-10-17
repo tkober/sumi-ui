@@ -26,7 +26,7 @@
   @if (showPause()) {
     <button
       type="button"
-      class="sumi-session-bar__pause"
+      class="sumi-session-bar__pause sumi-session-bar__action"
       [attr.aria-pressed]="paused()"
       [attr.aria-label]="paused() ? 'Resume' : 'Pause'"
       title="{{ paused() ? 'Resume' : 'Pause' }}"

@@ -1,5 +1,7 @@
+import { Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { SumiSessionBar } from './session-bar';
+import { SumiSessionBarActionDirective } from './session-bar-action.directive';
 
 function render(inputs: {
   answered?: number;
@@ -203,5 +205,33 @@ describe('SumiSessionBar', () => {
     expect(el.querySelector('.sumi-session-bar__stats')).toBeNull();
     expect(el.querySelector('.sumi-session-bar__pause')).toBeTruthy();
     expect(el.querySelector('.sumi-session-bar__end')).toBeNull();
+  });
+
+  // --- sumi-ui#108: sumiSessionBarAction gives a projected action the
+  // built-in pause button's look
+
+  it('the built-in pause button carries the shared action-look class', () => {
+    const fixture = render({ showPause: true });
+    const button = host(fixture).querySelector('.sumi-session-bar__pause')!;
+    expect(button.classList.contains('sumi-session-bar__action')).toBe(true);
+  });
+
+  it('[sumiSessionBarAction] applies the same class as the built-in pause button', () => {
+    @Component({
+      imports: [SumiSessionBar, SumiSessionBarActionDirective],
+      template: `
+        <sumi-session-bar>
+          <button type="button" sumiSessionBarActions sumiSessionBarAction>Ask</button>
+        </sumi-session-bar>
+      `,
+    })
+    class HostComponent {}
+
+    TestBed.configureTestingModule({ imports: [HostComponent] });
+    const fixture = TestBed.createComponent(HostComponent);
+    fixture.detectChanges();
+
+    const projected = (fixture.nativeElement as HTMLElement).querySelector('button')!;
+    expect(projected.classList.contains('sumi-session-bar__action')).toBe(true);
   });
 });

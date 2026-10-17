@@ -64,7 +64,15 @@
   margin-left: auto;
 }
 
-.sumi-session-bar__pause {
+// Shared look for the built-in pause button and any projected
+// `[sumiSessionBarAction]` button (`SumiSessionBarActionDirective`,
+// sumi-ui#108) — one style for both instead of every host copying this CSS
+// by hand for its own projected action. A projected button is plain
+// projected content, not a child component (same as
+// `[sumiSessionBarActionLabel]` below), so this needs `::ng-deep` to reach
+// it; the built-in pause button is reached either way since it is not
+// projected, but the rule is written once to cover both.
+::ng-deep .sumi-session-bar__action {
   display: inline-flex;
   align-items: center;
   gap: var(--sumi-space-2);

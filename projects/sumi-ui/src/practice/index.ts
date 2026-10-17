@@ -43,6 +43,7 @@ export { SumiFuriganaText, type SumiFuriganaSegment } from './furigana/furigana-
 export { SumiFuriganaToggle } from './furigana/furigana-toggle';
 export { SumiRubyWord } from './furigana/ruby-word';
 export { SumiSessionBarActionLabelDirective } from './session-bar/session-bar-action-label.directive';
+export { SumiSessionBarActionDirective } from './session-bar/session-bar-action.directive';
 export {
   SumiReadingText,
   SUMI_READING_PEEK_DWELL_MS,
@@ -70,6 +71,7 @@ import { SumiFuriganaText } from './furigana/furigana-text';
 import { SumiFuriganaToggle } from './furigana/furigana-toggle';
 import { SumiRubyWord } from './furigana/ruby-word';
 import { SumiSessionBarActionLabelDirective } from './session-bar/session-bar-action-label.directive';
+import { SumiSessionBarActionDirective } from './session-bar/session-bar-action.directive';
 import { SumiReadingText } from './reading-text/reading-text';
 import { SumiChoiceQuestion } from './choice-question/choice-question';
 
@@ -84,6 +86,7 @@ export const SUMI_PRACTICE = [
   SumiCountdownRing,
   SumiSessionBar,
   SumiSessionBarActionLabelDirective,
+  SumiSessionBarActionDirective,
   SumiSessionProgress,
   SumiSessionSummary,
   SumiSummaryTile,

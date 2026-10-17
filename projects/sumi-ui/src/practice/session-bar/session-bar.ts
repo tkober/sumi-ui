@@ -55,19 +55,24 @@ import { SumiButtonDirective } from 'sumi-ui/forms';
  *   [showEndSession]="false"
  *   (pauseToggle)="togglePause()"
  * >
- *   <button type="button" sumiSessionBarActions (click)="chatToggle.emit()">
+ *   <button type="button" sumiSessionBarActions sumiSessionBarAction (click)="chatToggle.emit()">
  *     <sumi-icon name="chat" />
  *     <span sumiSessionBarActionLabel>Ask about this text</span>
  *   </button>
  * </sumi-session-bar>
  * ```
  *
- * Wrapping a projected action's text in `[sumiSessionBarActionLabel]`
- * (plain class marker, no directive needed) collapses it to icon-only
- * below 720px, same breakpoint and same mechanism as the built-in pause
- * button — see session-bar.scss. An app that skips the wrapper just never
- * goes icon-only, which is a reasonable choice too for an action that only
- * exists above 720px to begin with.
+ * `[sumiSessionBarAction]` (`SumiSessionBarActionDirective`, sumi-ui#108)
+ * gives a projected action the exact same look as the built-in pause
+ * button — same class, so the same hover/focus-ring/`aria-pressed`
+ * styling — instead of every host copying that CSS by hand (the showcase's
+ * own reading demo and jp-reading-practice both did, before this
+ * existed). Wrapping a projected action's text in
+ * `[sumiSessionBarActionLabel]` (plain class marker, no directive needed)
+ * collapses it to icon-only below 720px, same breakpoint and same
+ * mechanism as the built-in pause button — see session-bar.scss. An app
+ * that skips the wrapper just never goes icon-only, which is a reasonable
+ * choice too for an action that only exists above 720px to begin with.
  *
  * Extending this component rather than adding a second,
  * reading-specific one was the sumi-ui#100 call: all of kanji-trainer's,
