@@ -1,0 +1,47 @@
+@if (open()) {
+  <button
+    type="button"
+    class="sumi-popover__backdrop"
+    aria-label="Close"
+    tabindex="-1"
+    (click)="requestClose()"
+  ></button>
+
+  <div
+    #panelRef
+    class="sumi-popover__panel"
+    [style]="panelStyle()"
+    role="dialog"
+    aria-modal="true"
+    [attr.aria-label]="hasProjectedHeader() ? null : title() || null"
+    (keydown)="onPanelKeydown($event)"
+  >
+    <div class="sumi-popover__handle" aria-hidden="true"></div>
+
+    <div class="sumi-popover__header">
+      <div class="sumi-popover__header-content">
+        <ng-content select="[sumiPopoverHeader]"></ng-content>
+        @if (!hasProjectedHeader() && title()) {
+          <h2 class="sumi-popover__title">{{ title() }}</h2>
+        }
+      </div>
+      <button
+        type="button"
+        sumiButton
+        variant="ghost"
+        size="sm"
+        class="sumi-popover__close"
+        aria-label="Close"
+        (click)="requestClose()"
+      >
+        <sumi-icon name="close" />
+      </button>
+    </div>
+
+    <div class="sumi-popover__body">
+      <ng-content></ng-content>
+    </div>
+
+    <ng-content select="[sumiPopoverActions]"></ng-content>
+  </div>
+}

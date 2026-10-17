@@ -1,0 +1,119 @@
+// `sumi-popover`'s host takes no box of its own — the backdrop and panel
+// below are both `position: fixed`, so they do not need a positioned
+// ancestor and nothing here should affect the surrounding layout. Same
+// reasoning as `sumi-dialog`'s `:host { display: contents }`.
+:host {
+  display: contents;
+}
+
+// Full-viewport and transparent on desktop (just there to catch an
+// "outside" click, see `requestClose`'s doc comment), a real scrim once
+// the panel becomes a bottom sheet below.
+.sumi-popover__backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  border: none;
+  padding: 0;
+  background: transparent;
+  cursor: default;
+}
+
+.sumi-popover__panel {
+  position: fixed;
+  z-index: 51;
+  width: 320px;
+  // 16px = 2 * the `GAP` constant popover.ts positions against.
+  max-width: calc(100vw - 16px);
+  max-height: 70vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sumi-space-3);
+  padding: var(--sumi-space-4);
+  background: var(--sumi-surface);
+  color: var(--sumi-text);
+  border: 1px solid var(--sumi-line);
+  border-radius: var(--sumi-radius);
+  box-shadow: var(--sumi-shadow);
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--sumi-shadow);
+  }
+}
+
+.sumi-popover__handle {
+  display: none;
+}
+
+// Below 720px the JS-computed `left`/`top` (inline styles, so `!important`
+// is needed to win the cascade) are ignored entirely and the panel docks
+// as a full-width bottom sheet with a grab handle instead — the same
+// breakpoint `sumi-app-shell` collapses to its tab bar at.
+@media (max-width: 719px) {
+  .sumi-popover__backdrop {
+    background: rgb(0 0 0 / 45%);
+  }
+
+  .sumi-popover__panel {
+    left: 0 !important;
+    right: 0;
+    top: auto !important;
+    bottom: 0;
+    width: auto;
+    max-width: none;
+    max-height: 80vh;
+    border-radius: var(--sumi-radius) var(--sumi-radius) 0 0;
+    border-bottom: none;
+    padding-bottom: calc(var(--sumi-space-4) + env(safe-area-inset-bottom, 0px));
+  }
+
+  .sumi-popover__handle {
+    display: block;
+    width: 36px;
+    height: 4px;
+    margin: calc(-1 * var(--sumi-space-2)) auto 0;
+    border-radius: var(--sumi-radius-pill);
+    background: var(--sumi-line);
+  }
+}
+
+.sumi-popover__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--sumi-space-2);
+  flex: none;
+}
+
+.sumi-popover__header-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sumi-space-1);
+}
+
+.sumi-popover__title {
+  margin: 0;
+  font-size: var(--sumi-text-lg);
+}
+
+.sumi-popover__close {
+  flex: none;
+}
+
+.sumi-popover__body {
+  flex: 1;
+}
+
+// `[sumiPopoverActions]` is a plain projected element (see popover.html's
+// `ng-content select`), not a child component, so it needs `::ng-deep` to
+// be reached from this component's own stylesheet — same convention as
+// `sumi-card`'s `[sumiCardHeader]`/`[sumiCardFooter]`.
+::ng-deep [sumiPopoverActions] {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sumi-space-2);
+}
