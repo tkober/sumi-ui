@@ -1256,6 +1256,49 @@ again"`) let such an app use its own wording, and `actionDisabled`
    minimum-spacing check is based on each shown label's own estimated
    width regardless of where it lands, so two labels still never collide.
 
+   A fixed 30-day window of daily accuracy (sumi-ui#105, kanji-trainer's
+   dashboard) adds a few opt-in inputs, every one defaulting to today's
+   behaviour above so none of this changes an existing usage:
+
+   ```html
+   <sumi-line-chart
+     ariaLabel="Daily review accuracy over the last 30 days"
+     [points]="accuracyPoints"
+     [series]="[{ key: 'accuracy', label: 'Accuracy' }]"
+     startDate="2024-09-21"
+     endDate="2024-10-20"
+     [yMin]="50"
+     unit=" %"
+     [gaps]="true"
+     [area]="true"
+   />
+   ```
+
+   - `startDate`/`endDate` (ISO `yyyy-mm-dd`) fix the x-domain instead of
+     deriving it from `points`' own first/last date, so the axis still
+     reaches `endDate` even on a day with no data yet. Either on its own
+     already fixes that side. Tick candidates become every day in the
+     range rather than just the points' own dates, thinned the same way;
+     the end-of-line callout still sticks to the last actual data point,
+     never to `endDate` itself.
+   - `yMin` (default `0`) and `yMax` (default the data's own max) set the
+     y-domain's ends. A value outside either one still isn't clipped: the
+     domain extends to the next multiple of 10 past it instead. A `yMin`
+     that ends up not `0` is labelled left, just above the baseline, in
+     the same style as the max callout.
+   - `unit` (default `''`) suffixes the max/min labels, the end-of-line
+     callout and, in `'line'` mode, the table's values — never a date.
+   - `gaps` (default `false`) breaks the line/area where two consecutive
+     points are more than a day apart instead of bridging the missing
+     days; a run reduced to a single point (a lone day between two gaps)
+     draws as a small dot so it stays visible rather than a path too
+     short to see.
+   - `area` (`'line'` mode only, default `false`) fills down to the
+     baseline, in the same family as `sumi-sparkline`'s own area: `var(
+     --sumi-accent-soft)` by default, or a series' own `color` at low
+     opacity. Meant for a single series — with several, the fills
+     overlap.
+
    `sumi-progress-row` (sumi-ui#76) is one row — a label, a reused
    `sumi-segmented-bar` (`height="sm"`, never a second, duplicated bar
    drawing) and a "x / y" value readout — for a dashboard like

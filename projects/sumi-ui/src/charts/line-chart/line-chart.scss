@@ -10,6 +10,9 @@
      usage) so strokes/text never stretch at a wide container. */
 }
 
+// `.sumi-line-chart__min` (sumi-ui#105, `yMin`) reuses this class as-is for
+// the same look as the max callout — only its position (left, just above
+// the baseline) differs, set via the template's own `y`.
 .sumi-line-chart__max {
   font-family: var(--sumi-font-ui);
   font-variant-numeric: tabular-nums;
@@ -24,8 +27,23 @@
   fill-opacity: 0.82;
 }
 
+// 'line' mode's optional area fill (sumi-ui#105): same family as
+// sumi-sparkline's own area — a soft wash at full opacity by default,
+// never the stacked fill's 0.82 (several of these can overlap, since the
+// feature is meant for a single series). An explicit series `color`
+// switches to that colour at a low `fill-opacity` instead, set inline.
+.sumi-line-chart__area--line {
+  fill: var(--sumi-accent-soft);
+}
+
 .sumi-line-chart__line {
   stroke-width: 2;
+}
+
+// `gaps` (sumi-ui#105): a run reduced to a single point by a surrounding
+// gap, too short for `__line`'s path to draw anything visible.
+.sumi-line-chart__isolated-dot {
+  stroke: none;
 }
 
 .sumi-line-chart__dot {

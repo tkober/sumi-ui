@@ -104,6 +104,37 @@ export class SumiLineChart {
    *  already gets its own column named after its `label`). */
   readonly valueLabel = input('Total');
 
+  /** ISO `yyyy-mm-dd`. Fixes the x-domain's start/end instead of deriving
+   *  it from `points`' own first/last date — e.g. kanji-trainer's fixed
+   *  30-day accuracy window, which should still run to today even on a day
+   *  with no reviews yet. Either on its own already fixes the domain on
+   *  that side; the end-of-line callout still sticks to the last actual
+   *  point, never to `endDate` itself. */
+  readonly startDate = input<string>();
+  readonly endDate = input<string>();
+  /** Lower end of the y-domain. A value below it still isn't clipped: the
+   *  domain extends down to the next multiple of 10 below it, and the
+   *  effective min is then labelled left, just above the baseline (same
+   *  style as the max label) — skipped while it stays the default `0`. */
+  readonly yMin = input(0);
+  /** Upper end of the y-domain, default the data's own max. A value above
+   *  it extends the domain the same way `yMin` does. */
+  readonly yMax = input<number>();
+  /** Suffix appended to the max/min labels, the end-of-line callout and
+   *  the table's values (`'line'` mode only) — e.g. `' %'` for an accuracy
+   *  chart. Never appended to a date. */
+  readonly unit = input('');
+  /** When two consecutive points are more than a day apart, breaks the
+   *  line (and `area`) there instead of bridging the missing days; a run
+   *  reduced to a single point draws as a small dot so it stays visible. */
+  readonly gaps = input(false);
+  /** `'line'` mode only: fills the area between each line and the
+   *  baseline, like `sumi-sparkline`'s. A series with its own `color`
+   *  fills with that colour at low opacity instead of the default
+   *  `var(--sumi-accent-soft)` — meant for a single series; with several,
+   *  the fills overlap. */
+  readonly area = input(false);
+
   private readonly hostRef = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly destroyRef = inject(DestroyRef);
   protected readonly measuredWidth = signal(FALLBACK_WIDTH);
@@ -139,6 +170,14 @@ export class SumiLineChart {
       this.mode(),
       this.events(),
       this.plot(),
+      {
+        startDate: this.startDate(),
+        endDate: this.endDate(),
+        yMin: this.yMin(),
+        yMax: this.yMax(),
+        gaps: this.gaps(),
+        area: this.area(),
+      },
     ),
   );
 
@@ -153,6 +192,14 @@ export class SumiLineChart {
    *  `sumi-bar-chart`'s `seriesLabel`). */
   protected seriesLabel(key: string): string {
     return this.series().find((s) => s.key === key)?.label ?? key;
+  }
+
+  /** Whether this series was given its own `color` rather than one from
+   *  the `rampColor` ramp — decides `area`'s default fill in `'line'`
+   *  mode (`true` tints the area with the series' own colour at low
+   *  opacity instead of the default `var(--sumi-accent-soft)`). */
+  protected seriesHasOwnColor(key: string): boolean {
+    return this.series().find((s) => s.key === key)?.color != null;
   }
 
   /** `text-anchor`/x for an x-axis tick at `index` of `count`: the first
@@ -184,19 +231,24 @@ export class SumiLineChart {
     return columns;
   });
 
-  protected readonly tableRows = computed<SumiTableRow[]>(() =>
-    this.points().map((point) => {
+  protected readonly tableRows = computed<SumiTableRow[]>(() => {
+    // `unit` only ever suffixes a value, never the date column, and only
+    // in `'line'` mode — `'stacked-area'`'s table isn't covered by the
+    // issue this adds `unit` for (kanji-trainer's single-series accuracy
+    // chart), so its total column keeps showing a bare number.
+    const unit = this.mode() === 'line' ? this.unit() : '';
+    return this.points().map((point) => {
       const row: SumiTableRow = { date: formatLineChartDateLabel(point.date) };
       let total = 0;
       for (const s of this.series()) {
         const value = point.values[s.key] ?? 0;
-        row[s.key] = value;
+        row[s.key] = `${value}${unit}`;
         total += value;
       }
       if (this.mode() === 'stacked-area') {
         row['total'] = total;
       }
       return row;
-    }),
-  );
+    });
+  });
 }

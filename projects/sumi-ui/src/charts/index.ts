@@ -67,6 +67,7 @@ export {
   type LineChartTick,
   type LineChartEventGeometry,
   type LineChartGeometry,
+  type LineChartRangeOptions,
   type SumiFlowCategory,
   type SumiFlow,
   type FlowSegmentGeometry,

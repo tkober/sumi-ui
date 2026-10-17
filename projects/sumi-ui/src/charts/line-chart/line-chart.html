@@ -7,12 +7,25 @@
   [attr.aria-label]="ariaLabel()"
 >
   <text class="sumi-line-chart__max" x="0" [attr.y]="plot().top - 8">
-    {{ geometry().maxValue }}
+    {{ geometry().maxValue }}{{ unit() }}
   </text>
 
-  @for (s of geometry().series; track s.key) {
-    @if (s.areaPath) {
-      <path class="sumi-line-chart__area" [attr.d]="s.areaPath" [style.fill]="s.color" />
+  @if (mode() === 'line' && area()) {
+    @for (s of geometry().series; track s.key) {
+      @if (s.areaPath) {
+        <path
+          class="sumi-line-chart__area--line"
+          [attr.d]="s.areaPath"
+          [style.fill]="seriesHasOwnColor(s.key) ? s.color : null"
+          [style.fill-opacity]="seriesHasOwnColor(s.key) ? 0.18 : null"
+        />
+      }
+    }
+  } @else {
+    @for (s of geometry().series; track s.key) {
+      @if (s.areaPath) {
+        <path class="sumi-line-chart__area" [attr.d]="s.areaPath" [style.fill]="s.color" />
+      }
     }
   }
 
@@ -24,10 +37,32 @@
     [attr.y2]="geometry().baselineY"
   />
 
+  @if (geometry().minValue !== 0) {
+    <!-- Painted after the area fills (any of which would otherwise sit on
+         top of and hide this), just above the baseline, left — same style
+         as the max callout. -->
+    <text
+      class="sumi-line-chart__max sumi-line-chart__min"
+      x="0"
+      [attr.y]="geometry().baselineY - 4"
+    >
+      {{ geometry().minValue }}{{ unit() }}
+    </text>
+  }
+
   @for (s of geometry().series; track s.key) {
     <path class="sumi-line-chart__line" [attr.d]="s.linePath" [style.stroke]="s.color" fill="none">
       <title>{{ seriesLabel(s.key) }}</title>
     </path>
+    @for (pt of s.isolated; track pt.x) {
+      <circle
+        class="sumi-line-chart__isolated-dot"
+        [attr.cx]="pt.x"
+        [attr.cy]="pt.y"
+        r="2.5"
+        [style.fill]="s.color"
+      />
+    }
   }
 
   @for (event of geometry().events; track event.label) {
@@ -70,7 +105,7 @@
         [attr.y]="s.last.y + 3"
         [style.fill]="s.color"
       >
-        {{ s.last.value }}
+        {{ s.last.value }}{{ unit() }}
       </text>
     }
   } @else if (geometry().stackTotal) {
