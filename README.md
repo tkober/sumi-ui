@@ -359,6 +359,17 @@ successfully with `ng build` from a throwaway Angular 22 app):
    </sumi-app-shell>
    ```
 
+   `sumi-app-shell` publishes its sticky header+strip wrapper's rendered
+   height as `--sumi-shell-sticky-height` on `documentElement` (sumi-ui#87)
+   — it changes with focus mode, the narrow strip, font size and wrapping,
+   so a page cannot hard-code it. A page-level sticky element stacks below
+   it the same way:
+
+   ```css
+   position: sticky;
+   top: calc(var(--sumi-shell-sticky-height) + var(--sumi-space-4));
+   ```
+
    ### Hotkeys
 
    `SumiHotkeys` (`sumi-ui/core`) is a single `keydown` listener shared by

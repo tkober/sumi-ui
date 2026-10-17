@@ -317,6 +317,90 @@ describe('SumiAppShell with focus actions', () => {
   });
 });
 
+describe('SumiAppShell sticky height (sumi-ui#87)', () => {
+  // jsdom (Vitest's test environment, see observe-width.ts's own doc
+  // comment) has no real `ResizeObserver`, so the component no-ops there.
+  // A fake stands in: it never fires on its own, the tests drive its
+  // callback by hand once they have stubbed the sticky element's measured
+  // height, exactly like a real resize would.
+  class FakeResizeObserver {
+    static readonly instances: FakeResizeObserver[] = [];
+    readonly callback: ResizeObserverCallback;
+
+    constructor(callback: ResizeObserverCallback) {
+      this.callback = callback;
+      FakeResizeObserver.instances.push(this);
+    }
+
+    observe(): void {}
+    unobserve(): void {}
+    disconnect(): void {}
+
+    fire(): void {
+      this.callback([], this as unknown as ResizeObserver);
+    }
+  }
+
+  let originalResizeObserver: typeof ResizeObserver | undefined;
+
+  beforeEach(() => {
+    FakeResizeObserver.instances.length = 0;
+    originalResizeObserver = globalThis.ResizeObserver;
+    globalThis.ResizeObserver = FakeResizeObserver as unknown as typeof ResizeObserver;
+  });
+
+  afterEach(() => {
+    globalThis.ResizeObserver = originalResizeObserver as typeof ResizeObserver;
+    document.documentElement.style.removeProperty('--sumi-shell-sticky-height');
+  });
+
+  function setStickyHeight(fixture: Awaited<ReturnType<typeof createShell>>, height: number): void {
+    const sticky: HTMLElement = fixture.nativeElement.querySelector('.sumi-app-shell__sticky');
+    vi.spyOn(sticky, 'getBoundingClientRect').mockReturnValue({ height } as DOMRect);
+  }
+
+  it('publishes --sumi-shell-sticky-height on documentElement once rendered', async () => {
+    const fixture = await createShell(makeNav(2));
+    setStickyHeight(fixture, 72);
+    FakeResizeObserver.instances[0].fire();
+
+    expect(document.documentElement.style.getPropertyValue('--sumi-shell-sticky-height')).toBe(
+      '72px',
+    );
+
+    fixture.destroy();
+  });
+
+  it('follows a later size change, e.g. the header growing in focus mode', async () => {
+    const fixture = await createShell(makeNav(2));
+    setStickyHeight(fixture, 72);
+    FakeResizeObserver.instances[0].fire();
+    expect(document.documentElement.style.getPropertyValue('--sumi-shell-sticky-height')).toBe(
+      '72px',
+    );
+
+    setStickyHeight(fixture, 120);
+    FakeResizeObserver.instances[0].fire();
+    expect(document.documentElement.style.getPropertyValue('--sumi-shell-sticky-height')).toBe(
+      '120px',
+    );
+
+    fixture.destroy();
+  });
+
+  it('removes the property when the shell is destroyed', async () => {
+    const fixture = await createShell(makeNav(2));
+    setStickyHeight(fixture, 72);
+    FakeResizeObserver.instances[0].fire();
+    expect(document.documentElement.style.getPropertyValue('--sumi-shell-sticky-height')).toBe(
+      '72px',
+    );
+
+    fixture.destroy();
+    expect(document.documentElement.style.getPropertyValue('--sumi-shell-sticky-height')).toBe('');
+  });
+});
+
 describe('SumiShell', () => {
   it('focusMode handles overlapping enter/leave via a counter', () => {
     const shell = TestBed.inject(SumiShell);
