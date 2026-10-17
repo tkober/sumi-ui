@@ -312,3 +312,15 @@ describe('SumiReadingText — reading peek timing', () => {
     }
   });
 });
+
+describe('SumiReadingText — running text', () => {
+  it('renders the words without any gap between them', () => {
+    const fixture = render();
+    const paragraph = (fixture.nativeElement as HTMLElement)
+      .querySelector('.sumi-reading-text__paragraph')!
+      .cloneNode(true) as HTMLElement;
+    paragraph.querySelectorAll('rt').forEach((rt) => rt.remove());
+    // A space between words of running Japanese reads as 散歩 です 猫.
+    expect(paragraph.textContent).toBe('散歩です猫');
+  });
+});
