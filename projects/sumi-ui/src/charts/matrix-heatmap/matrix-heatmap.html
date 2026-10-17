@@ -73,7 +73,7 @@
   <sumi-chart-tooltip [anchor]="tip.anchor()" [hostWidth]="measuredWidth()">
     @let parts = tipParts(t.title);
     @if (parts) {
-      {{ parts.prefix }}: <strong>{{ parts.value }}</strong>
+      <strong>{{ parts.value }}</strong> · {{ parts.prefix }}
       @if (parts.detail) {
         · {{ parts.detail }}
       }

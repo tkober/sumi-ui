@@ -248,7 +248,7 @@ describe('SumiMatrixHeatmap instant tooltip (sumi-ui#107)', () => {
     const cell = fixture.nativeElement.querySelector('.sumi-matrix-heatmap__cell')!;
     cell.dispatchEvent(new PointerEvent('pointerenter', { pointerType: 'mouse' }));
     fixture.detectChanges();
-    expect(tooltipText(fixture)).toBe('ア / a: 90');
+    expect(tooltipText(fixture)).toBe('90 · ア / a');
 
     cell.dispatchEvent(new PointerEvent('pointerleave', { pointerType: 'mouse' }));
     fixture.detectChanges();
@@ -266,7 +266,7 @@ describe('SumiMatrixHeatmap instant tooltip (sumi-ui#107)', () => {
     fixture.detectChanges();
     const strong = fixture.nativeElement.querySelector('sumi-chart-tooltip strong');
     expect(strong?.textContent?.trim()).toBe('90');
-    expect(tooltipText(fixture)?.replace(/\s+/g, ' ')).toBe('ア / a: 90 · 9/10 correct');
+    expect(tooltipText(fixture)?.replace(/\s+/g, ' ')).toBe('90 · ア / a · 9/10 correct');
   });
 
   it('never shows a bubble for a blank cell', () => {
@@ -289,7 +289,7 @@ describe('SumiMatrixHeatmap instant tooltip (sumi-ui#107)', () => {
     const cell = fixture.nativeElement.querySelector('.sumi-matrix-heatmap__cell')!;
     cell.dispatchEvent(new Event('focus'));
     fixture.detectChanges();
-    expect(tooltipText(fixture)).toBe('ア / a: 90');
+    expect(tooltipText(fixture)).toBe('90 · ア / a');
     expect(fixture.componentInstance.lastSelection()?.row).toBe('ア'); // existing onCellInteract wiring, unchanged
 
     cell.dispatchEvent(new Event('blur'));
@@ -310,11 +310,11 @@ describe('SumiMatrixHeatmap instant tooltip (sumi-ui#107)', () => {
     const cell = fixture.nativeElement.querySelector('.sumi-matrix-heatmap__cell')!;
     cell.dispatchEvent(new PointerEvent('pointerup', { pointerType: 'touch', bubbles: true }));
     fixture.detectChanges();
-    expect(tooltipText(fixture)).toBe('ア / a: 90');
+    expect(tooltipText(fixture)).toBe('90 · ア / a');
 
     cell.dispatchEvent(new PointerEvent('pointerleave', { pointerType: 'touch' }));
     fixture.detectChanges();
-    expect(tooltipText(fixture)).toBe('ア / a: 90');
+    expect(tooltipText(fixture)).toBe('90 · ア / a');
 
     document.body.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
     fixture.detectChanges();
