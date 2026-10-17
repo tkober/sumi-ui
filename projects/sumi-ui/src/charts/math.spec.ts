@@ -1009,6 +1009,191 @@ describe('lineChartGeometry', () => {
     expect(x).toBeGreaterThan(plot.left);
     expect(x).toBeLessThan(plot.width - plot.right);
   });
+
+  it('defaults minValue to 0 and leaves maxValue/ticks untouched without options', () => {
+    const points = [
+      { date: '2024-01-01', values: { a: 2 } },
+      { date: '2024-01-02', values: { a: 7 } },
+    ];
+    const geo = lineChartGeometry(points, ['a'], ['var(--sumi-seq-5)'], 'line', [], plot);
+    expect(geo.minValue).toBe(0);
+    expect(geo.maxValue).toBe(7);
+  });
+
+  describe('a fixed startDate/endDate', () => {
+    it("fixes the x-domain beyond the points' own dates, with endDate as the last tick", () => {
+      const points = [
+        { date: '2024-01-10', values: { a: 1 } },
+        { date: '2024-01-12', values: { a: 2 } },
+      ];
+      const geo = lineChartGeometry(points, ['a'], ['var(--sumi-seq-5)'], 'line', [], plot, {
+        startDate: '2024-01-01',
+        endDate: '2024-01-20',
+      });
+      const lastTick = geo.ticks[geo.ticks.length - 1];
+      expect(lastTick.label).toBe('20 Jan');
+      expect(lastTick.x).toBeCloseTo(plot.width - plot.right, 5);
+    });
+
+    it('keeps the end-of-line callout at the last data point, not endDate', () => {
+      const points = [
+        { date: '2024-01-10', values: { a: 1 } },
+        { date: '2024-01-12', values: { a: 2 } },
+      ];
+      const geo = lineChartGeometry(points, ['a'], ['var(--sumi-seq-5)'], 'line', [], plot, {
+        startDate: '2024-01-01',
+        endDate: '2024-01-20',
+      });
+      expect(geo.series[0].last.value).toBe(2);
+      expect(geo.series[0].last.x).toBeLessThan(plot.width - plot.right);
+    });
+  });
+
+  describe('yMin/yMax', () => {
+    it('keeps minValue at yMin when nothing dips below it', () => {
+      const points = [
+        { date: '2024-01-01', values: { a: 70 } },
+        { date: '2024-01-02', values: { a: 90 } },
+      ];
+      const geo = lineChartGeometry(points, ['a'], ['var(--sumi-seq-5)'], 'line', [], plot, {
+        yMin: 50,
+      });
+      expect(geo.minValue).toBe(50);
+      expect(geo.maxValue).toBe(90);
+    });
+
+    it('extends minValue down to the next multiple of 10 when a value dips below yMin', () => {
+      const points = [
+        { date: '2024-01-01', values: { a: 70 } },
+        { date: '2024-01-02', values: { a: 45 } },
+      ];
+      const geo = lineChartGeometry(points, ['a'], ['var(--sumi-seq-5)'], 'line', [], plot, {
+        yMin: 50,
+      });
+      expect(geo.minValue).toBe(40);
+    });
+
+    it('keeps a yMin that is not a multiple of 10 when the data stays above it', () => {
+      const points = [
+        { date: '2024-01-01', values: { a: 57 } },
+        { date: '2024-01-02', values: { a: 90 } },
+      ];
+      const geo = lineChartGeometry(points, ['a'], ['var(--sumi-seq-5)'], 'line', [], plot, {
+        yMin: 55,
+      });
+      expect(geo.minValue).toBe(55);
+    });
+
+    it('extends maxValue when a value exceeds yMax, instead of clipping it', () => {
+      const points = [
+        { date: '2024-01-01', values: { a: 70 } },
+        { date: '2024-01-02', values: { a: 95 } },
+      ];
+      const geo = lineChartGeometry(points, ['a'], ['var(--sumi-seq-5)'], 'line', [], plot, {
+        yMax: 80,
+      });
+      expect(geo.maxValue).toBe(95);
+    });
+
+    it('uses yMax as-is when nothing exceeds it', () => {
+      const points = [{ date: '2024-01-01', values: { a: 70 } }];
+      const geo = lineChartGeometry(points, ['a'], ['var(--sumi-seq-5)'], 'line', [], plot, {
+        yMax: 100,
+      });
+      expect(geo.maxValue).toBe(100);
+    });
+  });
+
+  describe('gaps', () => {
+    it('splits the line into one sub-path per run of dates <= 1 day apart', () => {
+      const points = [
+        { date: '2024-01-01', values: { a: 1 } },
+        { date: '2024-01-02', values: { a: 2 } },
+        { date: '2024-01-10', values: { a: 3 } },
+        { date: '2024-01-11', values: { a: 4 } },
+      ];
+      const bridged = lineChartGeometry(points, ['a'], ['var(--sumi-seq-5)'], 'line', [], plot);
+      const gapped = lineChartGeometry(points, ['a'], ['var(--sumi-seq-5)'], 'line', [], plot, {
+        gaps: true,
+      });
+      // Bridged: one path, starting with a single "M". Gapped: two runs,
+      // each contributing their own "M" sub-path.
+      expect(bridged.series[0].linePath.match(/M/g)?.length).toBe(1);
+      expect(gapped.series[0].linePath.match(/M/g)?.length).toBe(2);
+    });
+
+    it('renders a run reduced to a single point as an isolated point instead of a path', () => {
+      const points = [
+        { date: '2024-01-01', values: { a: 1 } },
+        { date: '2024-01-02', values: { a: 2 } },
+        { date: '2024-01-10', values: { a: 3 } }, // isolated: >1 day from its neighbours
+        { date: '2024-01-20', values: { a: 4 } },
+        { date: '2024-01-21', values: { a: 5 } },
+      ];
+      const geo = lineChartGeometry(points, ['a'], ['var(--sumi-seq-5)'], 'line', [], plot, {
+        gaps: true,
+      });
+      expect(geo.series[0].isolated).toHaveLength(1);
+      expect(geo.series[0].isolated[0].y).toBeCloseTo(
+        plot.top + (plot.height - plot.top - plot.bottom) * (1 - 3 / 5),
+        1,
+      );
+      // Two 2-point runs around the isolated day: two "M"s in the path,
+      // not three — the isolated day contributes no sub-path of its own.
+      expect(geo.series[0].linePath.match(/M/g)?.length).toBe(2);
+    });
+
+    it('without gaps, nothing is isolated even with large date gaps', () => {
+      const points = [
+        { date: '2024-01-01', values: { a: 1 } },
+        { date: '2024-03-01', values: { a: 2 } },
+      ];
+      const geo = lineChartGeometry(points, ['a'], ['var(--sumi-seq-5)'], 'line', [], plot);
+      expect(geo.series[0].isolated).toEqual([]);
+    });
+  });
+
+  describe('area', () => {
+    const points = [
+      { date: '2024-01-01', values: { a: 2 } },
+      { date: '2024-01-02', values: { a: 7 } },
+    ];
+
+    it('is empty by default in line mode', () => {
+      const geo = lineChartGeometry(points, ['a'], ['var(--sumi-seq-5)'], 'line', [], plot);
+      expect(geo.series[0].areaPath).toBe('');
+    });
+
+    it('fills down to the baseline when requested', () => {
+      const geo = lineChartGeometry(points, ['a'], ['var(--sumi-seq-5)'], 'line', [], plot, {
+        area: true,
+      });
+      expect(geo.series[0].areaPath).not.toBe('');
+      expect(geo.series[0].areaPath).toContain(String(geo.baselineY));
+    });
+
+    it('is ignored in stacked-area mode (which has its own, unconditional area)', () => {
+      const withoutOption = lineChartGeometry(
+        points,
+        ['a'],
+        ['var(--sumi-seq-5)'],
+        'stacked-area',
+        [],
+        plot,
+      );
+      const withOption = lineChartGeometry(
+        points,
+        ['a'],
+        ['var(--sumi-seq-5)'],
+        'stacked-area',
+        [],
+        plot,
+        { area: true },
+      );
+      expect(withoutOption.series[0].areaPath).not.toBe('');
+      expect(withOption.series[0].areaPath).toBe(withoutOption.series[0].areaPath);
+    });
+  });
 });
 
 describe('flowGeometry', () => {

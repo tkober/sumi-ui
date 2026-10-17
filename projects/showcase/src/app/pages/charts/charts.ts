@@ -85,6 +85,32 @@ export class ChartsPage {
     { date: this.settledPoints[30].date, label: 'import' },
   ];
 
+  // --- Daily accuracy, fixed 30-day range (sumi-ui#105) --------------------
+  // kanji-trainer's dashboard "Accuracy, 30 days" replaces a sparkline with
+  // this: a fixed range that still reaches today even on a day with no
+  // reviews yet, gaps left as gaps rather than bridged (one isolated day,
+  // one 3-day gap), the y-domain pinned to 50–100 % by default, and an area
+  // fill (compare visually against the sparkline demo above). The second
+  // chart dips below 50 % once, to show the domain extending down instead
+  // of clipping that value.
+  protected readonly accuracyEndDate = new Date().toISOString().slice(0, 10);
+  protected readonly accuracyStartDate = new Date(
+    new Date(`${this.accuracyEndDate}T00:00:00Z`).getTime() - 29 * 24 * 60 * 60 * 1000,
+  )
+    .toISOString()
+    .slice(0, 10);
+  protected readonly accuracySeries: SumiLineSeries[] = [{ key: 'accuracy', label: 'Accuracy' }];
+  protected readonly accuracyPoints: SumiLinePoint[] = buildAccuracyPoints(
+    30,
+    this.accuracyEndDate,
+    false,
+  );
+  protected readonly accuracyDipPoints: SumiLinePoint[] = buildAccuracyPoints(
+    30,
+    this.accuracyEndDate,
+    true,
+  );
+
   // --- Open a level: a selectable bar chart (sumi-ui#76) -------------------
   protected readonly itemsPerLevel: SumiBar[] = buildItemsPerLevel();
   protected readonly selectedLevel = signal<SumiBarSelectEvent | null>(null);
@@ -466,6 +492,31 @@ function buildSettledPoints(days: number, endDate: string): SumiLinePoint[] {
       date: date.toISOString().slice(0, 10),
       values: { earned: earned - known, known },
     });
+  }
+  return points;
+}
+
+/** 30 days of daily review accuracy, 70–100 % (or a single day in the 30s
+ *  when `dip` is on, to show the y-domain extending below the default
+ *  `yMin` of 50 instead of clipping it) — kanji-trainer's dashboard
+ *  "Accuracy, 30 days" (sumi-ui#105). Two gaps on purpose: day 9 and day
+ *  11 are both missing so day 10 sits alone between two gaps (an isolated
+ *  single-point run once `gaps` is on — skipping day 10 itself would just
+ *  join days 9 and 11 across it instead), and days 20–22 are missing
+ *  together (a multi-day gap) — every skipped day has no review at all,
+ *  not a 0 % accuracy silently inserted. */
+function buildAccuracyPoints(days: number, endDate: string, dip: boolean): SumiLinePoint[] {
+  const rng = makeRng(dip ? 73 : 67);
+  const end = new Date(`${endDate}T00:00:00Z`);
+  const skippedDays = new Set([9, 11, 20, 21, 22]);
+  const points: SumiLinePoint[] = [];
+  for (let i = 0; i < days; i++) {
+    if (skippedDays.has(i)) {
+      continue;
+    }
+    const date = new Date(end.getTime() - (days - 1 - i) * 24 * 60 * 60 * 1000);
+    const accuracy = i === 15 && dip ? 42 : Math.round(70 + rng() * 30);
+    points.push({ date: date.toISOString().slice(0, 10), values: { accuracy } });
   }
   return points;
 }

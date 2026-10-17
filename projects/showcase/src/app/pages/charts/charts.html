@@ -104,6 +104,45 @@
   </section>
 
   <section class="demo">
+    <h2>Daily accuracy (fixed range, 50–100 %, gaps, area, sumi-ui#105)</h2>
+    <p class="demo__note">
+      A fixed 30-day range that still reaches today even on a day with no reviews
+      (<code>startDate</code>/<code>endDate</code>), gaps left as gaps instead of bridged (day 10 on
+      its own, days 20–22 together), an accuracy-shaped <code>unit=" %"</code> and an area fill. The
+      right chart dips below the default 50&nbsp;% <code>yMin</code> once, to show the domain
+      extending down instead of clipping it.
+    </p>
+    <div class="demo__accuracy-charts">
+      <sumi-line-chart
+        ariaLabel="Daily review accuracy over the last 30 days"
+        [points]="accuracyPoints"
+        [series]="accuracySeries"
+        [startDate]="accuracyStartDate"
+        [endDate]="accuracyEndDate"
+        [yMin]="50"
+        [yMax]="100"
+        unit=" %"
+        [gaps]="true"
+        [area]="true"
+        [table]="true"
+      />
+      <sumi-line-chart
+        ariaLabel="Daily review accuracy over the last 30 days, with a dip below 50 percent"
+        [points]="accuracyDipPoints"
+        [series]="accuracySeries"
+        [startDate]="accuracyStartDate"
+        [endDate]="accuracyEndDate"
+        [yMin]="50"
+        [yMax]="100"
+        unit=" %"
+        [gaps]="true"
+        [area]="true"
+        [table]="true"
+      />
+    </div>
+  </section>
+
+  <section class="demo">
     <h2>Open a level (selectable bar chart, sumi-ui#76)</h2>
     <p class="demo__note">
       Click, or Tab to a bar and press Enter/Space, to "open" that level — a real app would navigate

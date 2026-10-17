@@ -443,6 +443,13 @@ function addDays(date: Date, days: number): Date {
   return new Date(date.getTime() + days * DAY_MS);
 }
 
+/** Rounds `value` down to the next lower (or equal) multiple of 10 — used by
+ *  `lineChartGeometry` to extend the y-domain below `yMin` without clipping
+ *  a value that dips under it. */
+function floor10(value: number): number {
+  return Math.floor(value / 10) * 10;
+}
+
 /** The Monday (European week start) of the ISO week containing `date`. */
 function mondayOf(date: Date): Date {
   const weekday = date.getUTCDay(); // 0 = Sunday … 6 = Saturday
@@ -826,11 +833,20 @@ export interface LineSeriesGeometry {
   color: string;
   /** The stroke path: the series' own values in `'line'` mode, or the
    *  stack's top edge (this series' cumulative top) in `'stacked-area'`
-   *  mode. */
+   *  mode. With `gaps`, one `M`-prefixed sub-path per run of dates ≤ 1 day
+   *  apart — a run of a single point contributes no sub-path here, see
+   *  `isolated` instead. */
   linePath: string;
-  /** Fill path between this series' stacked bottom and top; empty string
-   *  in `'line'` mode, which has no fill. */
+  /** Fill path between this series' stacked bottom and top in
+   *  `'stacked-area'` mode; in `'line'` mode, one closed area per run from
+   *  the line down to `LineChartGeometry.baselineY` when `area` is on,
+   *  empty string otherwise. */
   areaPath: string;
+  /** Screen position of every run that `gaps` reduced to a single point —
+   *  too short for `linePath`/`areaPath` to draw anything visible, so
+   *  `sumi-line-chart` draws a small dot at each one instead. Always `[]`
+   *  without `gaps`. */
+  isolated: { x: number; y: number }[];
   /** This series' own last value and where it lands on screen — the
    *  per-series end-of-line callout in `'line'` mode. In `'stacked-area'`
    *  mode this is still this series' own (non-cumulative) value, but the
@@ -855,11 +871,19 @@ export interface LineChartEventGeometry {
 
 export interface LineChartGeometry {
   series: LineSeriesGeometry[];
-  /** The y-axis max: the largest single value in `'line'` mode, the
-   *  largest stacked total in `'stacked-area'` mode — called out top-left,
+  /** The y-axis max: the effective top of the domain — the largest single
+   *  value in `'line'` mode, the largest stacked total in `'stacked-area'`
+   *  mode, extended to `yMax` when that is larger — called out top-left,
    *  like `sumi-bar-chart`'s own max callout. */
   maxValue: number;
-  /** Screen y of value 0, for the baseline and area fills' lower edge. */
+  /** The y-axis min: the effective bottom of the domain (`yMin`, default
+   *  `0`, extended down to the next multiple of 10 below the data when a
+   *  value dips under it). Called out left, just above the baseline, only
+   *  when it is not `0` — `sumi-line-chart` skips the label otherwise since
+   *  the baseline already reads as "0" without one. */
+  minValue: number;
+  /** Screen y of the effective min (`minValue`), for the baseline and area
+   *  fills' lower edge. */
   baselineY: number;
   ticks: LineChartTick[];
   events: LineChartEventGeometry[];
@@ -878,21 +902,60 @@ export function formatLineChartDateLabel(date: string): string {
   return `${parsed.getUTCDate()} ${MONTH_NAMES[parsed.getUTCMonth()]}`;
 }
 
+/** Opt-in extras for `lineChartGeometry`, every one of them defaulting to
+ *  reproduce the chart's original behaviour exactly (fixed x-domain aside,
+ *  a caller that passes none of these gets byte-identical output to the
+ *  6-argument call — see `sumi-line-chart`'s own inputs for the per-field
+ *  rationale). */
+export interface LineChartRangeOptions {
+  /** ISO `yyyy-mm-dd`. Fixes the x-domain's start instead of the first
+   *  point's own date — e.g. so the axis still starts 30 days back even
+   *  when the earliest answer came in later. */
+  startDate?: string;
+  /** ISO `yyyy-mm-dd`. Fixes the x-domain's end instead of the last point's
+   *  own date — e.g. so the axis still reaches today when there has been
+   *  no data for the last few days. Either `startDate`/`endDate` alone
+   *  already switches on the fixed-range tick recipe (every day in range,
+   *  not just the points' own dates); the end-of-line callout still sticks
+   *  to the last actual data point, never to `endDate` itself. */
+  endDate?: string;
+  /** Lower end of the y-domain, default `0`. A value below it still isn't
+   *  clipped: the domain extends down to the next multiple of 10 below it. */
+  yMin?: number;
+  /** Upper end of the y-domain, default the data's own max. A value above
+   *  it extends the domain the same way `yMin` does. */
+  yMax?: number;
+  /** When two consecutive points are more than a day apart, breaks the
+   *  line/area there instead of bridging the missing days; a run reduced
+   *  to a single point draws as a dot (`LineSeriesGeometry.isolated`)
+   *  instead of a path too short to see. Default `false` (today's
+   *  behaviour: every point bridged into one continuous path). */
+  gaps?: boolean;
+  /** `'line'` mode only: fills each series' area down to the baseline
+   *  (`LineChartGeometry.baselineY`). Default `false`. */
+  area?: boolean;
+}
+
 /**
  * Builds `sumi-line-chart`'s full geometry: the x scale is a real
  * `d3-scale` `scaleTime` over the points' own dates (so gaps are
- * respected), the y scale `0..maxValue` (see `LineChartGeometry.maxValue`).
- * `colors` is expected pre-resolved to `seriesKeys`' length (the component
- * defaults a missing series `color` from `rampColor` before calling this,
- * same convention as `stackedBarGeometry`); a short/empty array still falls
- * back to `rampColor` here so this function never throws on its own.
+ * respected) or, with `options.startDate`/`endDate`, a fixed range; the y
+ * scale covers `[minValue, maxValue]`, the effective domain after `yMin`/
+ * `yMax` (see `LineChartGeometry`'s own fields). `colors` is expected
+ * pre-resolved to `seriesKeys`' length (the component defaults a missing
+ * series `color` from `rampColor` before calling this, same convention as
+ * `stackedBarGeometry`); a short/empty array still falls back to
+ * `rampColor` here so this function never throws on its own.
  *
  * Edge cases:
  * - no points, or no series: every path empty, `ticks`/`events` empty,
  *   `stackTotal` null.
- * - exactly one point: plotted as a flat line/area across the full inner
- *   width (same recipe as `sparklineGeometry`'s single-point case) rather
- *   than collapsing `scaleTime`'s domain into a single pixel.
+ * - exactly one point, no fixed range: plotted as a flat line/area across
+ *   the full inner width (same recipe as `sparklineGeometry`'s
+ *   single-point case) rather than collapsing `scaleTime`'s domain into a
+ *   single pixel. A fixed range resolves that ambiguity on its own, so a
+ *   single point then plots at its own date instead (as an isolated dot
+ *   when `options.gaps` is on, same as any other single-point run).
  */
 export function lineChartGeometry(
   points: readonly { date: string; values: Record<string, number> }[],
@@ -901,6 +964,7 @@ export function lineChartGeometry(
   mode: 'line' | 'stacked-area',
   events: readonly { date: string; label: string }[],
   plot: PlotBox,
+  options: LineChartRangeOptions = {},
 ): LineChartGeometry {
   const innerHeight = plot.height - plot.top - plot.bottom;
   const baselineY = plot.height - plot.bottom;
@@ -914,9 +978,11 @@ export function lineChartGeometry(
         color: colorFor(i),
         linePath: '',
         areaPath: '',
+        isolated: [],
         last: { x: plot.left, y: baselineY, value: 0 },
       })),
       maxValue: 0,
+      minValue: 0,
       baselineY,
       ticks: [],
       events: [],
@@ -927,43 +993,96 @@ export function lineChartGeometry(
   const dates = points.map((p) => parseISODate(p.date));
   const n = points.length;
   const singlePoint = n === 1;
+  const hasExplicitRange = options.startDate != null || options.endDate != null;
+  // A single point is plotted flat across the inner width instead of every
+  // x landing on the same pixel (`scaleTime` of one instant) — but only
+  // without a fixed range, which already resolves where that point sits.
+  const useFlatSinglePoint = singlePoint && !hasExplicitRange;
   const domainEnd =
     !singlePoint && dates[n - 1].getTime() > dates[0].getTime()
       ? dates[n - 1]
       : new Date(dates[0].getTime() + DAY_MS);
+  const rangeStart = options.startDate ? parseISODate(options.startDate) : dates[0];
+  const rangeEnd = options.endDate ? parseISODate(options.endDate) : domainEnd;
   const x = scaleTime()
-    .domain([dates[0], domainEnd])
+    .domain([rangeStart, rangeEnd])
     .range([plot.left, plot.width - plot.right]);
-  // A single point is plotted flat across the inner width instead of every
-  // x landing on the same pixel (`scaleTime` of one instant).
-  const xs = singlePoint ? [plot.left, plot.width - plot.right] : dates.map((d) => x(d));
+  const xs = useFlatSinglePoint ? [plot.left, plot.width - plot.right] : dates.map((d) => x(d));
   const plotN = xs.length;
-  const dataIndexOf = (plotIndex: number) => (singlePoint ? 0 : plotIndex);
+  const dataIndexOf = (plotIndex: number) => (useFlatSinglePoint ? 0 : plotIndex);
   const lastPlotIndex = plotN - 1;
   const lastDataIndex = n - 1;
 
   const totals = points.map((p) => seriesKeys.reduce((sum, key) => sum + (p.values[key] ?? 0), 0));
-  const maxValue =
+  const allValues =
     mode === 'stacked-area'
-      ? Math.max(1, ...totals)
-      : Math.max(1, ...points.flatMap((p) => seriesKeys.map((key) => p.values[key] ?? 0)));
+      ? totals
+      : points.flatMap((p) => seriesKeys.map((key) => p.values[key] ?? 0));
+  const dataMax = Math.max(1, ...allValues);
+  const dataMin = Math.min(...allValues);
+  // Effective y-domain: `yMin`/`yMax` (default `0`/the data max) extended
+  // outward — never clipped inward — to cover a value that falls outside
+  // them. `floor10` keeps the extension a round number rather than landing
+  // exactly on the offending value, same reasoning as a bar chart's axis
+  // never ending mid-value.
+  const effectiveYMin = options.yMin ?? 0;
+  const minValue = dataMin < effectiveYMin ? floor10(dataMin) : effectiveYMin;
+  const maxValue = Math.max(Math.max(options.yMax ?? dataMax, dataMax), minValue + 1);
 
-  const y = scaleLinear().domain([0, maxValue]).range([innerHeight, 0]);
+  const y = scaleLinear().domain([minValue, maxValue]).range([innerHeight, 0]);
   const toY = (value: number) => plot.top + y(value);
 
   const plotIndices = Array.from({ length: plotN }, (_, i) => i);
-  const buildLinePath = (ys: readonly number[]): string =>
-    d3Line<number>()
-      .x((_, i) => xs[i])
-      .y((_, i) => ys[i])
-      .curve(curveMonotoneX)(plotIndices) ?? '';
-  const buildAreaPath = (y0s: readonly number[], y1s: readonly number[]): string =>
-    d3Area<number>()
-      .x((_, i) => xs[i])
-      .y0((_, i) => y0s[i])
-      .y1((_, i) => y1s[i])
-      .curve(curveMonotoneX)(plotIndices) ?? '';
+  // `gaps`: split the plotted indices into runs of dates ≤ 1 day apart —
+  // without it, everything is one run, same bridging as before. A run of
+  // a single point is kept out of `multiPointRuns` (nothing to draw a path
+  // through) and surfaced via `isolated` instead, per series.
+  const gapsEnabled = options.gaps ?? false;
+  const runs: number[][] = [];
+  plotIndices.forEach((pi) => {
+    const prevRun = runs[runs.length - 1];
+    const prevIndex = prevRun?.[prevRun.length - 1];
+    const contiguous =
+      prevIndex !== undefined &&
+      (!gapsEnabled ||
+        dates[dataIndexOf(pi)].getTime() - dates[dataIndexOf(prevIndex)].getTime() <= DAY_MS);
+    if (contiguous) {
+      prevRun.push(pi);
+    } else {
+      runs.push([pi]);
+    }
+  });
+  const multiPointRuns = runs.filter((run) => run.length > 1);
+  const isolatedIndices = runs.filter((run) => run.length === 1).map((run) => run[0]);
 
+  // Each accessor below takes the plot index itself (not its position in
+  // `run`) as `d3-shape`'s datum, since a run after the first one no
+  // longer starts at array position 0.
+  const buildLinePath = (ys: readonly number[]): string =>
+    multiPointRuns
+      .map(
+        (run) =>
+          d3Line<number>()
+            .x((i) => xs[i])
+            .y((i) => ys[i])
+            .curve(curveMonotoneX)(run) ?? '',
+      )
+      .join('');
+  const buildAreaPath = (y0s: readonly number[], y1s: readonly number[]): string =>
+    multiPointRuns
+      .map(
+        (run) =>
+          d3Area<number>()
+            .x((i) => xs[i])
+            .y0((i) => y0s[i])
+            .y1((i) => y1s[i])
+            .curve(curveMonotoneX)(run) ?? '',
+      )
+      .join('');
+  const buildIsolated = (ys: readonly number[]) =>
+    isolatedIndices.map((i) => ({ x: xs[i], y: ys[i] }));
+
+  const areaEnabled = mode === 'line' && (options.area ?? false);
   const series: LineSeriesGeometry[] = [];
   let stackTotal: LineSeriesPointGeometry | null = null;
 
@@ -985,6 +1104,7 @@ export function lineChartGeometry(
         color: colorFor(i),
         linePath: buildLinePath(tops),
         areaPath: buildAreaPath(bottoms, tops),
+        isolated: buildIsolated(tops),
         last: {
           x: xs[lastPlotIndex],
           y: tops[lastPlotIndex],
@@ -1004,7 +1124,13 @@ export function lineChartGeometry(
         key,
         color: colorFor(i),
         linePath: buildLinePath(ys),
-        areaPath: '',
+        areaPath: areaEnabled
+          ? buildAreaPath(
+              plotIndices.map(() => baselineY),
+              ys,
+            )
+          : '',
+        isolated: buildIsolated(ys),
         last: {
           x: xs[lastPlotIndex],
           y: ys[lastPlotIndex],
@@ -1014,35 +1140,62 @@ export function lineChartGeometry(
     });
   }
 
-  // x-axis ticks: the same initial thinning recipe as `sumi-bar-chart`
-  // (`axisLabelStep` + `sparseLabelIndices`) applied to the points' own
-  // index, which assumes its labels end up evenly spaced — true for
-  // `sumi-bar-chart`'s band scale, but not here: a real time scale spaces
-  // points by their actual date gap, so two indices that survive that
-  // first pass can still land closer together on screen than
-  // `minLabelSpacing` (e.g. a cluster of daily points right before a
-  // month-long gap). The pass below removes those on top, right to left
-  // so the forced last-point tick (added next) always wins the spot
-  // nearest the end over a neighbour auto-selected by index alone.
+  // x-axis ticks: with a fixed range, candidates are every day from
+  // `rangeStart` to `rangeEnd`; otherwise the points' own dates, same as
+  // before. Either way the same initial thinning recipe as `sumi-bar-chart`
+  // (`axisLabelStep` + `sparseLabelIndices`) applies, which assumes the
+  // candidates end up evenly spaced — true for `sumi-bar-chart`'s band
+  // scale and for the fixed-range's one-per-day candidates, but not for
+  // the points' own dates on a real time scale, which space by actual date
+  // gap. The pass below removes any that still land closer together on
+  // screen than `minLabelSpacing` (e.g. a cluster of daily points right
+  // before a month-long gap), right to left, so the forced last-tick
+  // (added next — `endDate`, or the last point otherwise) always wins the
+  // spot nearest the end over a neighbour auto-selected by index alone.
   const plotInnerWidth = plot.width - plot.left - plot.right;
-  const tickLabels = points.map((p) => formatLineChartDateLabel(p.date));
-  const minLabelSpacing = axisMinLabelSpacing(tickLabels);
-  const step = axisLabelStep(n, 1, plotInnerWidth, minLabelSpacing);
-  const tickIndices = new Set(sparseLabelIndices(n, step));
-  tickIndices.add(lastDataIndex);
+  const candidateDates = hasExplicitRange
+    ? (() => {
+        const days: Date[] = [];
+        for (let t = rangeStart.getTime(); t <= rangeEnd.getTime(); t += DAY_MS) {
+          days.push(new Date(t));
+        }
+        return days;
+      })()
+    : dates;
+  const candidateLabels = hasExplicitRange
+    ? candidateDates.map((d) => formatLineChartDateLabel(toISODate(d)))
+    : points.map((p) => formatLineChartDateLabel(p.date));
+  const totalCandidates = candidateDates.length;
+  const tickX = hasExplicitRange
+    ? (i: number) => x(candidateDates[i])
+    : (i: number) => (useFlatSinglePoint ? xs[0] : xs[i]);
+  const minLabelSpacing = axisMinLabelSpacing(candidateLabels);
+  const step = axisLabelStep(totalCandidates, 1, plotInnerWidth, minLabelSpacing);
+  // A fixed range counts its steps back from `endDate`, so the forced last
+  // tick sits at the same spacing as the rest instead of crowding out its
+  // neighbour (e.g. 18 Sep … 8 Oct, 17 Oct with 13 Oct dropped).
+  const tickIndices = new Set(
+    hasExplicitRange
+      ? Array.from(
+          { length: Math.floor((totalCandidates - 1) / step) + 1 },
+          (_, k) => totalCandidates - 1 - k * step,
+        )
+      : sparseLabelIndices(totalCandidates, step),
+  );
+  tickIndices.add(totalCandidates - 1);
   const sortedTickIndices = [...tickIndices].sort((a, b) => a - b);
   const keptTickIndices: number[] = [];
   for (let i = sortedTickIndices.length - 1; i >= 0; i--) {
     const index = sortedTickIndices[i];
     const nextKept = keptTickIndices[0];
-    const tickX = singlePoint ? xs[0] : xs[index];
-    if (nextKept === undefined || (singlePoint ? xs[0] : xs[nextKept]) - tickX >= minLabelSpacing) {
+    const tx = tickX(index);
+    if (nextKept === undefined || tickX(nextKept) - tx >= minLabelSpacing) {
       keptTickIndices.unshift(index);
     }
   }
   const ticks = keptTickIndices.map((i) => ({
-    x: singlePoint ? xs[0] : xs[i],
-    label: tickLabels[i],
+    x: tickX(i),
+    label: candidateLabels[i],
   }));
 
   const eventGeometry = events.map((event) => ({
@@ -1050,7 +1203,7 @@ export function lineChartGeometry(
     x: Math.min(plot.width - plot.right, Math.max(plot.left, x(parseISODate(event.date)))),
   }));
 
-  return { series, maxValue, baselineY, ticks, events: eventGeometry, stackTotal };
+  return { series, maxValue, minValue, baselineY, ticks, events: eventGeometry, stackTotal };
 }
 
 // --- Donut and sunburst (sumi-donut, sumi-sunburst) ------------------------
