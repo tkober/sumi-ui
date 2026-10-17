@@ -1409,3 +1409,346 @@ export function sunburstTextColor(baseShare: number, depth: number): string {
   const share = (baseShare * sunburstRetained(depth)) / 100;
   return share >= 75 ? 'var(--sumi-on-accent)' : 'var(--sumi-text)';
 }
+
+// --- Flow chart (sumi-flow-chart) ------------------------------------------
+
+/** One category in `sumi-flow-chart`'s `categories` input. Order matters:
+ *  it is both the top-to-bottom stacking order of each column *and* the
+ *  direction a band's `from`/`to` indices are compared against to decide
+ *  its tone (`flowGeometry`). */
+export interface SumiFlowCategory {
+  key: string;
+  label: string;
+  /** Any CSS colour, typically a token (`var(--sumi-seq-2)`, an app token, …). */
+  color: string;
+}
+
+/** One flow between two categories (by `key`), generic across both sides —
+ *  `from`/`to` need not be the same category set (see `flowGeometry`'s
+ *  "unequal totals" handling). */
+export interface SumiFlow {
+  from: string;
+  to: string;
+  value: number;
+}
+
+/** One category's stacked segment on one side (`left`/`right`) of
+ *  `sumi-flow-chart`. */
+export interface FlowSegmentGeometry {
+  key: string;
+  label: string;
+  color: string;
+  /** Total of all non-zero flows out of (left) / into (right) this category. */
+  value: number;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+/** One band (one non-zero flow) between the two columns. */
+export interface FlowBandGeometry {
+  from: string;
+  to: string;
+  value: number;
+  /** `'up'`: `to` is a later category than `from` (`categories`' order).
+   *  `'down'`: earlier. `'same'`: `from === to`. Drives the band's tone. */
+  tone: 'up' | 'down' | 'same';
+  /** Cubic-bezier `d` path for the band's centre line, horizontal tangents
+   *  at both ends — the same curve shape a Sankey diagram draws its links
+   *  with. Meant to be drawn unfilled, with `stroke-width: thickness`. */
+  path: string;
+  /** Stroke width in px: `value * scale`. */
+  thickness: number;
+  /** A point on the curve at `t ≈ 0.8` (near the target end, where
+   *  stacked bands have separated), for the optional value label. */
+  label: SumiPoint;
+}
+
+export interface FlowGeometry {
+  /** Stacked category segments, `fromLabel` side, in `categories`' order
+   *  (categories with a 0/absent total are skipped). */
+  left: FlowSegmentGeometry[];
+  /** Same, `toLabel` side. */
+  right: FlowSegmentGeometry[];
+  bands: FlowBandGeometry[];
+  /** Left edge of the left column / right column, and their shared width —
+   *  exposed so the component can place column headers and category
+   *  labels even when a column has no segments at all. */
+  leftX: number;
+  rightX: number;
+  columnWidth: number;
+  /** Top of the plot area (below the column header text). */
+  innerTop: number;
+  innerHeight: number;
+}
+
+export interface FlowChartOptions {
+  width: number;
+  height: number;
+  /** Px reserved above the plot for the column header text. */
+  headerHeight?: number;
+  /** Px reserved outside each column for its category label + value. */
+  labelWidth?: number;
+  /** Stacked column width in px. */
+  columnWidth?: number;
+  /** Vertical gap in px between two adjacent category segments. */
+  gap?: number;
+}
+
+const FLOW_DEFAULTS = {
+  headerHeight: 24,
+  labelWidth: 120,
+  columnWidth: 14,
+  gap: 6,
+} as const;
+
+/** Minimum sensible width for `sumi-flow-chart`: a label column on each
+ *  side, the two stacked bars, and enough room between them that the bands
+ *  still read as curves rather than near-straight lines. Narrower than
+ *  this, the two label columns alone eat the chart. */
+export const FLOW_CHART_MIN_WIDTH =
+  FLOW_DEFAULTS.labelWidth * 2 + FLOW_DEFAULTS.columnWidth * 2 + 80;
+
+function flowTotals(flows: readonly SumiFlow[], side: 'from' | 'to'): Map<string, number> {
+  const totals = new Map<string, number>();
+  for (const flow of flows) {
+    const key = flow[side];
+    totals.set(key, (totals.get(key) ?? 0) + flow.value);
+  }
+  return totals;
+}
+
+function sumMapValues(map: Map<string, number>): number {
+  let sum = 0;
+  for (const value of map.values()) {
+    sum += value;
+  }
+  return sum;
+}
+
+function cubicBezierPoint(
+  p0: SumiPoint,
+  p1: SumiPoint,
+  p2: SumiPoint,
+  p3: SumiPoint,
+  t: number,
+): SumiPoint {
+  const mt = 1 - t;
+  const a = mt * mt * mt;
+  const b = 3 * mt * mt * t;
+  const c = 3 * mt * t * t;
+  const d = t * t * t;
+  return {
+    x: a * p0.x + b * p1.x + c * p2.x + d * p3.x,
+    y: a * p0.y + b * p1.y + c * p2.y + d * p3.y,
+  };
+}
+
+/** Sankey-style cubic-bezier `d` path between two points with purely
+ *  horizontal tangents at both ends — control points sit at the
+ *  horizontal midpoint, each at its own end's `y`. */
+function bandPath(p0: SumiPoint, p3: SumiPoint): string {
+  const cx = (p0.x + p3.x) / 2;
+  return `M${p0.x},${p0.y} C${cx},${p0.y} ${cx},${p3.y} ${p3.x},${p3.y}`;
+}
+
+function buildFlowSide(
+  categories: readonly SumiFlowCategory[],
+  totals: Map<string, number>,
+  x: number,
+  innerTop: number,
+  scale: number,
+  gap: number,
+  columnWidth: number,
+): FlowSegmentGeometry[] {
+  const segments: FlowSegmentGeometry[] = [];
+  let y = innerTop;
+  for (const category of categories) {
+    const value = totals.get(category.key) ?? 0;
+    if (value <= 0) {
+      continue;
+    }
+    const height = value * scale;
+    segments.push({
+      key: category.key,
+      label: category.label,
+      color: category.color,
+      value,
+      x,
+      y,
+      width: columnWidth,
+      height,
+    });
+    y += height + gap;
+  }
+  return segments;
+}
+
+/** For every flow touching a segment on `side` (`'from'` for the left
+ *  column, `'to'` for the right), the flow's vertical centre within that
+ *  segment: flows are stacked top-to-bottom in ascending order of the
+ *  *other* end's category index — the same ordering a bipartite Sankey
+ *  diagram uses to minimise crossings between two aligned columns — with
+ *  no gap between bands sharing a segment (their stacked heights already
+ *  sum to exactly the segment's own height). Returns a `flows`-index -> y map. */
+function flowAttachmentPoints(
+  flows: readonly SumiFlow[],
+  categoryIndex: Map<string, number>,
+  segmentsByKey: Map<string, FlowSegmentGeometry>,
+  scale: number,
+  side: 'from' | 'to',
+  otherSide: 'to' | 'from',
+): Map<number, number> {
+  const bySegment = new Map<string, number[]>();
+  flows.forEach((flow, index) => {
+    const key = flow[side];
+    const indices = bySegment.get(key) ?? [];
+    indices.push(index);
+    bySegment.set(key, indices);
+  });
+
+  const centerY = new Map<number, number>();
+  for (const [key, indices] of bySegment) {
+    const segment = segmentsByKey.get(key);
+    if (!segment) {
+      continue;
+    }
+    const sorted = [...indices].sort(
+      (a, b) =>
+        (categoryIndex.get(flows[a][otherSide]) ?? 0) -
+        (categoryIndex.get(flows[b][otherSide]) ?? 0),
+    );
+    let offset = segment.y;
+    for (const index of sorted) {
+      const height = flows[index].value * scale;
+      centerY.set(index, offset + height / 2);
+      offset += height;
+    }
+  }
+  return centerY;
+}
+
+/**
+ * All geometry behind `sumi-flow-chart` (sumi-ui#86): two columns of
+ * stacked category segments (`left`/`right`, in `categories`' own order,
+ * a category with a 0 or absent total skipped *on that side only*)
+ * connected by cubic-bezier `bands`, one per flow with `value > 0` whose
+ * `from` *and* `to` both name a known category — a flow naming a category
+ * key absent from `categories` on one side still counts toward its known
+ * side's total (see "Scale" below) but never gets a band, there being no
+ * segment on the other side to attach it to.
+ *
+ * - **Scale**: one value unit is `(innerHeight - gapsHeight) /
+ *   max(totalLeft, totalRight)`, where `gapsHeight` is sized off whichever
+ *   side has more *active* (non-zero) categories. The side that drives the
+ *   max total exactly fills the available height; the other side — even
+ *   with a smaller total, or fewer active categories and so fewer gaps —
+ *   never overflows it. `totalLeft`/`totalRight` are each side's own sum
+ *   (independently), so with a fully generic `categories`/`flows` (see
+ *   `SumiFlow`) they genuinely can differ — not just the active category
+ *   count — e.g. a flow whose value leaves the tracked categories
+ *   entirely on one side.
+ * - **Stacking order**: within a segment, its bands are ordered by the
+ *   *other* end's category index — see `flowAttachmentPoints`.
+ * - **Label point**: each band's curve has purely horizontal tangents at
+ *   both ends (`bandPath`); `label` is that curve evaluated at `t = 0.8`,
+ *   near the target end where stacked bands have separated.
+ * - Zero/empty `flows` (or every value `<= 0`) renders empty columns and no
+ *   bands, never throws.
+ */
+export function flowGeometry(
+  categories: readonly SumiFlowCategory[],
+  flows: readonly SumiFlow[],
+  options: FlowChartOptions,
+): FlowGeometry {
+  const { width, height } = options;
+  const headerHeight = options.headerHeight ?? FLOW_DEFAULTS.headerHeight;
+  const labelWidth = options.labelWidth ?? FLOW_DEFAULTS.labelWidth;
+  const columnWidth = options.columnWidth ?? FLOW_DEFAULTS.columnWidth;
+  const gap = options.gap ?? FLOW_DEFAULTS.gap;
+
+  const knownKeys = new Set(categories.map((c) => c.key));
+  const nonZero = flows.filter((flow) => flow.value > 0);
+  const categoryIndex = new Map(categories.map((c, index) => [c.key, index]));
+
+  // A side's own total only ever counts flows whose key *on that side* is a
+  // known category — independently of the other end. A flow whose `to` is
+  // not a category at all (e.g. "left the company", not tracked as a
+  // destination) still counts toward its `from` category's left total, so
+  // `totalLeft`/`totalRight` genuinely can differ (see the doc comment
+  // below). It just never gets a band, below.
+  const leftTotals = flowTotals(
+    nonZero.filter((f) => knownKeys.has(f.from)),
+    'from',
+  );
+  const rightTotals = flowTotals(
+    nonZero.filter((f) => knownKeys.has(f.to)),
+    'to',
+  );
+  // A band needs a real segment on both ends.
+  const bandFlows = nonZero.filter((f) => knownKeys.has(f.from) && knownKeys.has(f.to));
+  const leftActive = categories.filter((c) => (leftTotals.get(c.key) ?? 0) > 0).length;
+  const rightActive = categories.filter((c) => (rightTotals.get(c.key) ?? 0) > 0).length;
+  const gapsHeight = Math.max(0, Math.max(leftActive, rightActive) - 1) * gap;
+
+  const innerTop = headerHeight;
+  const innerHeight = Math.max(0, height - headerHeight);
+  const totalLeft = sumMapValues(leftTotals);
+  const totalRight = sumMapValues(rightTotals);
+  const maxTotal = Math.max(1, totalLeft, totalRight);
+  const scale = Math.max(0, innerHeight - gapsHeight) / maxTotal;
+
+  const leftX = labelWidth;
+  const rightX = width - labelWidth - columnWidth;
+
+  const left = buildFlowSide(categories, leftTotals, leftX, innerTop, scale, gap, columnWidth);
+  const right = buildFlowSide(categories, rightTotals, rightX, innerTop, scale, gap, columnWidth);
+  const leftByKey = new Map(left.map((s) => [s.key, s]));
+  const rightByKey = new Map(right.map((s) => [s.key, s]));
+
+  const leftCenters = flowAttachmentPoints(
+    bandFlows,
+    categoryIndex,
+    leftByKey,
+    scale,
+    'from',
+    'to',
+  );
+  const rightCenters = flowAttachmentPoints(
+    bandFlows,
+    categoryIndex,
+    rightByKey,
+    scale,
+    'to',
+    'from',
+  );
+
+  const bands: FlowBandGeometry[] = [];
+  bandFlows.forEach((flow, index) => {
+    const leftSegment = leftByKey.get(flow.from);
+    const rightSegment = rightByKey.get(flow.to);
+    const y0 = leftCenters.get(index);
+    const y1 = rightCenters.get(index);
+    if (!leftSegment || !rightSegment || y0 === undefined || y1 === undefined) {
+      return;
+    }
+    const p0: SumiPoint = { x: leftSegment.x + leftSegment.width, y: y0 };
+    const p3: SumiPoint = { x: rightSegment.x, y: y1 };
+    const cx = (p0.x + p3.x) / 2;
+    const fromIndex = categoryIndex.get(flow.from) ?? 0;
+    const toIndex = categoryIndex.get(flow.to) ?? 0;
+    const tone = toIndex > fromIndex ? 'up' : toIndex < fromIndex ? 'down' : 'same';
+    bands.push({
+      from: flow.from,
+      to: flow.to,
+      value: flow.value,
+      tone,
+      path: bandPath(p0, p3),
+      thickness: flow.value * scale,
+      label: cubicBezierPoint(p0, { x: cx, y: p0.y }, { x: cx, y: p3.y }, p3, 0.8),
+    });
+  });
+
+  return { left, right, bands, leftX, rightX, columnWidth, innerTop, innerHeight };
+}

@@ -1,0 +1,79 @@
+:host {
+  display: block;
+}
+
+.sumi-flow-chart__svg {
+  display: block;
+  width: 100%;
+  /* height is set per-instance via [style.height.px] in the template, kept
+     fixed in real px regardless of width (see flow-chart.ts's observeWidth
+     usage) so bars/bands/text never stretch at a wide or narrow container. */
+}
+
+.sumi-flow-chart__header {
+  font-family: var(--sumi-font-ui);
+  font-size: var(--sumi-text-xs);
+  fill: var(--sumi-muted);
+  text-anchor: middle;
+}
+
+.sumi-flow-chart__segment {
+  /* fill is set per-category inline via [style.fill] (see flow-chart.html). */
+}
+
+.sumi-flow-chart__category-label {
+  font-family: var(--sumi-font-ui);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--sumi-text-xs);
+  fill: var(--sumi-text);
+}
+
+.sumi-flow-chart__band {
+  fill: none;
+}
+
+.sumi-flow-chart__band--up {
+  stroke: var(--sumi-accent);
+  opacity: 0.42;
+}
+
+.sumi-flow-chart__band--same {
+  stroke: var(--sumi-muted);
+  opacity: 0.18;
+}
+
+// Deliberately the most subdued tone — the app does not want drops to
+// visually dominate a "mostly upward" session (see the class doc comment).
+.sumi-flow-chart__band--down {
+  stroke: var(--sumi-wrong);
+  opacity: 0.22;
+}
+
+.sumi-flow-chart__value-label {
+  font-family: var(--sumi-font-ui);
+  font-variant-numeric: tabular-nums;
+  font-size: 11px;
+  font-weight: 700;
+  fill: var(--sumi-accent-ink);
+  // A halo behind the glyphs so a label stays legible crossing its own (or
+  // a neighbouring) band — `--sumi-flow-chart-halo` lets a host surface
+  // override the colour it matches (e.g. a card background) when the
+  // chart does not sit directly on `--sumi-surface`.
+  paint-order: stroke;
+  stroke: var(--sumi-flow-chart-halo, var(--sumi-surface));
+  stroke-width: 3;
+}
+
+.sumi-flow-chart__value-label--down {
+  fill: var(--sumi-wrong);
+}
+
+.sumi-flow-chart__table {
+  margin-top: var(--sumi-space-2);
+}
+
+.sumi-flow-chart__table summary {
+  cursor: pointer;
+  font-size: var(--sumi-text-sm);
+  color: var(--sumi-muted);
+}

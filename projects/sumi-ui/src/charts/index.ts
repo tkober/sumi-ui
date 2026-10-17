@@ -45,6 +45,8 @@ export {
   arcLabelTangentialRotation,
   formatLineChartDateLabel,
   lineChartGeometry,
+  flowGeometry,
+  FLOW_CHART_MIN_WIDTH,
   type SumiPoint,
   type SparklineGeometry,
   type SegmentGeometry,
@@ -65,6 +67,12 @@ export {
   type LineChartTick,
   type LineChartEventGeometry,
   type LineChartGeometry,
+  type SumiFlowCategory,
+  type SumiFlow,
+  type FlowSegmentGeometry,
+  type FlowBandGeometry,
+  type FlowGeometry,
+  type FlowChartOptions,
 } from './math';
 
 export { SumiStatTile } from './stat-tile/stat-tile';
@@ -93,6 +101,7 @@ export {
   type SumiChartEvent,
 } from './line-chart/line-chart';
 export { SumiProgressRow } from './progress-row/progress-row';
+export { SumiFlowChart } from './flow-chart/flow-chart';
 
 import { SumiStatTile } from './stat-tile/stat-tile';
 import { SumiStatGrid } from './stat-grid/stat-grid';
@@ -109,6 +118,7 @@ import { SumiDonut } from './donut/donut';
 import { SumiSunburst } from './sunburst/sunburst';
 import { SumiLineChart } from './line-chart/line-chart';
 import { SumiProgressRow } from './progress-row/progress-row';
+import { SumiFlowChart } from './flow-chart/flow-chart';
 
 /** Convenience array for `imports: [...SUMI_CHARTS]` in a standalone component. */
 export const SUMI_CHARTS = [
@@ -127,4 +137,5 @@ export const SUMI_CHARTS = [
   SumiSunburst,
   SumiLineChart,
   SumiProgressRow,
+  SumiFlowChart,
 ] as const;

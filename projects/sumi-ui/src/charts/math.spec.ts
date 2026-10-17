@@ -34,7 +34,10 @@ import {
   toPoints,
   formatLineChartDateLabel,
   lineChartGeometry,
+  flowGeometry,
+  FLOW_CHART_MIN_WIDTH,
   type PlotBox,
+  type SumiPoint,
 } from './math';
 
 describe('toPoints', () => {
@@ -1005,5 +1008,203 @@ describe('lineChartGeometry', () => {
     const x = geo.events[0].x;
     expect(x).toBeGreaterThan(plot.left);
     expect(x).toBeLessThan(plot.width - plot.right);
+  });
+});
+
+describe('flowGeometry', () => {
+  /** Pulls a band's two endpoints out of its `d` path
+   *  (`M${x0},${y0} C${cx},${y0} ${cx},${y1} ${x1},${y1}`) without
+   *  depending on the exact control-point format. */
+  function endpointsOf(path: string): { p0: SumiPoint; p3: SumiPoint } {
+    const tokens = path.split(' ');
+    const [x0, y0] = tokens[0].slice(1).split(',').map(Number);
+    const [x1, y1] = tokens[3].split(',').map(Number);
+    return { p0: { x: x0, y: y0 }, p3: { x: x1, y: y1 } };
+  }
+
+  const categoriesAB = [
+    { key: 'a', label: 'A', color: 'red' },
+    { key: 'b', label: 'B', color: 'blue' },
+  ];
+
+  it("computes a band's cubic path, thickness, tone and t≈0.8 label point", () => {
+    const geo = flowGeometry(categoriesAB, [{ from: 'a', to: 'b', value: 10 }], {
+      width: 300,
+      height: 124,
+      headerHeight: 24,
+      labelWidth: 100,
+      columnWidth: 10,
+      gap: 6,
+    });
+    expect(geo.leftX).toBe(100);
+    expect(geo.rightX).toBe(190);
+    expect(geo.innerTop).toBe(24);
+    expect(geo.innerHeight).toBe(100);
+
+    expect(geo.left).toEqual([
+      { key: 'a', label: 'A', color: 'red', value: 10, x: 100, y: 24, width: 10, height: 100 },
+    ]);
+    expect(geo.right).toEqual([
+      { key: 'b', label: 'B', color: 'blue', value: 10, x: 190, y: 24, width: 10, height: 100 },
+    ]);
+
+    expect(geo.bands).toHaveLength(1);
+    const band = geo.bands[0];
+    expect(band.tone).toBe('up');
+    expect(band.thickness).toBe(100); // value(10) * scale(10)
+    // Right edge of the left segment (110,74) to the left edge of the
+    // right segment (190,74) — both centred in their (single-band) column.
+    expect(band.path).toBe('M110,74 C150,74 150,74 190,74');
+    expect(band.label.y).toBeCloseTo(74, 5);
+    expect(band.label.x).toBeCloseTo(170.16, 3); // cubic bezier at t=0.8
+  });
+
+  it('never throws and renders nothing for empty flows', () => {
+    expect(() => flowGeometry(categoriesAB, [], { width: 300, height: 124 })).not.toThrow();
+    const geo = flowGeometry(categoriesAB, [], { width: 300, height: 124 });
+    expect(geo.left).toEqual([]);
+    expect(geo.right).toEqual([]);
+    expect(geo.bands).toEqual([]);
+  });
+
+  it('drops zero/negative-value flows, rendering nothing for them', () => {
+    const geo = flowGeometry(
+      categoriesAB,
+      [
+        { from: 'a', to: 'b', value: 0 },
+        { from: 'a', to: 'b', value: -5 },
+      ],
+      { width: 300, height: 124 },
+    );
+    expect(geo.left).toEqual([]);
+    expect(geo.right).toEqual([]);
+    expect(geo.bands).toEqual([]);
+  });
+
+  describe('stacking order and gaps (sumi-ui#86)', () => {
+    // Three categories, A/B/C (indices 0/1/2); every flow present on both
+    // sides so nothing is skipped, chosen so `scale` lands on a round 8
+    // (264px available / 33 total) and every offset below is exact.
+    const categories = [
+      { key: 'a', label: 'A', color: 'red' },
+      { key: 'b', label: 'B', color: 'green' },
+      { key: 'c', label: 'C', color: 'blue' },
+    ];
+    const flows = [
+      { from: 'a', to: 'a', value: 10 },
+      { from: 'a', to: 'b', value: 5 },
+      { from: 'b', to: 'a', value: 3 },
+      { from: 'b', to: 'b', value: 8 },
+      { from: 'b', to: 'c', value: 2 },
+      { from: 'c', to: 'b', value: 1 },
+      { from: 'c', to: 'c', value: 4 },
+    ];
+    // Defaults: headerHeight 24, labelWidth 120, columnWidth 14, gap 6.
+    const geo = flowGeometry(categories, flows, { width: 500, height: 300 });
+
+    it('stacks each column with a fixed gap between active category segments', () => {
+      expect(geo.left.map((s) => ({ key: s.key, y: s.y, height: s.height }))).toEqual([
+        { key: 'a', y: 24, height: 120 },
+        { key: 'b', y: 150, height: 104 }, // 24 + 120 + gap(6)
+        { key: 'c', y: 260, height: 40 }, // 150 + 104 + gap(6)
+      ]);
+      expect(geo.right.map((s) => ({ key: s.key, y: s.y, height: s.height }))).toEqual([
+        { key: 'a', y: 24, height: 104 },
+        { key: 'b', y: 134, height: 112 },
+        { key: 'c', y: 252, height: 48 },
+      ]);
+      // The side with the taller column exactly fills the plot height.
+      expect(geo.left[2].y + geo.left[2].height).toBe(geo.innerTop + geo.innerHeight);
+      expect(geo.right[2].y + geo.right[2].height).toBe(geo.innerTop + geo.innerHeight);
+    });
+
+    it("stacks bands within a segment by the *other* end's category index, minimising crossings", () => {
+      const byPair = new Map(
+        geo.bands.map((band) => [`${band.from}>${band.to}`, endpointsOf(band.path)]),
+      );
+      // Left side: a->{a,b} ordered a-then-b (to-index 0 then 1); b->{a,b,c}
+      // ordered a-then-b-then-c; c->{b,c} ordered b-then-c.
+      expect(byPair.get('a>a')?.p0.y).toBe(64);
+      expect(byPair.get('a>b')?.p0.y).toBe(124);
+      expect(byPair.get('b>a')?.p0.y).toBe(162);
+      expect(byPair.get('b>b')?.p0.y).toBe(206);
+      expect(byPair.get('b>c')?.p0.y).toBe(246);
+      expect(byPair.get('c>b')?.p0.y).toBe(264);
+      expect(byPair.get('c>c')?.p0.y).toBe(284);
+      // Right side: {a,b}->a ordered a-then-b (from-index 0 then 1);
+      // {a,b,c}->b ordered a-then-b-then-c; {b,c}->c ordered b-then-c.
+      expect(byPair.get('a>a')?.p3.y).toBe(64);
+      expect(byPair.get('b>a')?.p3.y).toBe(116);
+      expect(byPair.get('a>b')?.p3.y).toBe(154);
+      expect(byPair.get('b>b')?.p3.y).toBe(206);
+      expect(byPair.get('c>b')?.p3.y).toBe(242);
+      expect(byPair.get('b>c')?.p3.y).toBe(260);
+      expect(byPair.get('c>c')?.p3.y).toBe(284);
+    });
+
+    it('tones a band up/down/same by comparing category indices', () => {
+      const toneOf = (from: string, to: string) =>
+        geo.bands.find((b) => b.from === from && b.to === to)?.tone;
+      expect(toneOf('a', 'a')).toBe('same');
+      expect(toneOf('a', 'b')).toBe('up');
+      expect(toneOf('b', 'a')).toBe('down');
+    });
+  });
+
+  it('skips an empty category on its own side only', () => {
+    // C never appears as a `from`, only as a `to` — it must be absent from
+    // `left` but present in `right`.
+    const categories = [
+      { key: 'a', label: 'A', color: 'red' },
+      { key: 'b', label: 'B', color: 'green' },
+      { key: 'c', label: 'C', color: 'blue' },
+    ];
+    const flows = [
+      { from: 'a', to: 'b', value: 5 },
+      { from: 'b', to: 'a', value: 5 },
+      { from: 'b', to: 'c', value: 5 },
+    ];
+    const geo = flowGeometry(categories, flows, { width: 500, height: 300 });
+    expect(geo.left.map((s) => s.key)).toEqual(['a', 'b']);
+    expect(geo.right.map((s) => s.key)).toEqual(['a', 'b', 'c']);
+  });
+
+  it('scales both sides off whichever has the larger total, without either overflowing the plot', () => {
+    // `x` is not a known category: the a->x flow counts toward a's *left*
+    // total (15) but never attaches to a band, so totalLeft (15) outgrows
+    // totalRight (10, from a->b alone).
+    const categories = [
+      { key: 'a', label: 'A', color: 'red' },
+      { key: 'b', label: 'B', color: 'blue' },
+    ];
+    const flows = [
+      { from: 'a', to: 'b', value: 10 },
+      { from: 'a', to: 'x', value: 5 },
+    ];
+    const geo = flowGeometry(categories, flows, {
+      width: 300,
+      height: 124,
+      headerHeight: 24,
+      labelWidth: 100,
+      columnWidth: 10,
+      gap: 6,
+    });
+
+    expect(geo.left).toEqual([
+      { key: 'a', label: 'A', color: 'red', value: 15, x: 100, y: 24, width: 10, height: 100 },
+    ]);
+    // Scaled by the same factor as the left (max) side: 10 * (100/15).
+    expect(geo.right[0].height).toBeCloseTo((10 * 100) / 15, 5);
+    // Neither column overflows the plot's inner height.
+    for (const segment of [...geo.left, ...geo.right]) {
+      expect(segment.y + segment.height).toBeLessThanOrEqual(geo.innerTop + geo.innerHeight + 1e-9);
+    }
+    // The dangling a->x flow never becomes a band (no category 'x').
+    expect(geo.bands).toHaveLength(1);
+    expect(geo.bands[0]).toMatchObject({ from: 'a', to: 'b', value: 10 });
+  });
+
+  it('is a plain function of fixed label/column reservations', () => {
+    expect(FLOW_CHART_MIN_WIDTH).toBe(120 * 2 + 14 * 2 + 80);
   });
 });

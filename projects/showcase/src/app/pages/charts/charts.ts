@@ -7,6 +7,8 @@ import {
   type SumiCalendarDay,
   type SumiChartEvent,
   type SumiDonutSegment,
+  type SumiFlow,
+  type SumiFlowCategory,
   type SumiLinePoint,
   type SumiLineSeries,
   type SumiMatrixCellInput,
@@ -16,7 +18,7 @@ import {
   type SumiTableColumn,
   type SumiTableRow,
 } from 'sumi-ui/charts';
-import { SumiDialog, SumiDialogHeader, SumiPage } from 'sumi-ui/layout';
+import { SumiCard, SumiDialog, SumiDialogHeader, SumiPage } from 'sumi-ui/layout';
 import { SumiButtonDirective } from 'sumi-ui/forms';
 
 /**
@@ -32,6 +34,7 @@ import { SumiButtonDirective } from 'sumi-ui/forms';
   styleUrl: './charts.scss',
   imports: [
     SumiPage,
+    SumiCard,
     SumiDialog,
     SumiDialogHeader,
     SumiButtonDirective,
@@ -93,6 +96,41 @@ export class ChartsPage {
   protected onLevelSelect(event: SumiBarSelectEvent): void {
     this.selectedLevel.set(event);
   }
+
+  // --- SRS stage flow, before/after a review session (sumi-ui#86) ---------
+  // The exact numbers from the review-summary concept's "Stage flow"
+  // example (kanji-trainer#80): 100 items, mostly promotions with a
+  // handful of drops and stays.
+  protected readonly stageFlowCategories: SumiFlowCategory[] = [
+    { key: 'apprentice', label: 'Apprentice', color: 'var(--sumi-seq-2)' },
+    { key: 'guru', label: 'Guru', color: 'var(--sumi-seq-5)' },
+    {
+      key: 'master',
+      label: 'Master',
+      color: 'color-mix(in oklab, var(--sumi-accent) 75%, var(--sumi-text))',
+    },
+    {
+      key: 'enlightened',
+      label: 'Enlightened',
+      color: 'color-mix(in oklab, var(--sumi-accent) 55%, var(--sumi-text))',
+    },
+    {
+      key: 'burned',
+      label: 'Burned',
+      color: 'color-mix(in oklab, var(--sumi-accent) 35%, var(--sumi-text))',
+    },
+  ];
+  protected readonly stageFlows: SumiFlow[] = [
+    { from: 'apprentice', to: 'apprentice', value: 47 },
+    { from: 'apprentice', to: 'guru', value: 14 },
+    { from: 'guru', to: 'apprentice', value: 2 },
+    { from: 'guru', to: 'guru', value: 16 },
+    { from: 'guru', to: 'master', value: 9 },
+    { from: 'master', to: 'guru', value: 1 },
+    { from: 'master', to: 'enlightened', value: 6 },
+    { from: 'enlightened', to: 'guru', value: 1 },
+    { from: 'enlightened', to: 'burned', value: 4 },
+  ];
 
   // --- Dashboard progress rows (sumi-ui#76) ---------------------------------
   protected readonly progressRows = [

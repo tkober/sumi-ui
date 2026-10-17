@@ -119,6 +119,32 @@
   </section>
 
   <section class="demo">
+    <h2>Flow chart (sumi-ui#86)</h2>
+    <p class="demo__note">
+      kanji-trainer's review summary "Stage flow": where a session's items went, from their SRS
+      stage before the session (left) to after (right). The halo behind each band's own value label
+      matches the card surface it sits on.
+    </p>
+    <sumi-card>
+      <sumi-flow-chart
+        ariaLabel="SRS stage, before and after the review session"
+        [categories]="stageFlowCategories"
+        [flows]="stageFlows"
+        [table]="true"
+      />
+    </sumi-card>
+    <p class="demo__note">With every band labelled (<code>valueLabels="all"</code>):</p>
+    <sumi-card>
+      <sumi-flow-chart
+        ariaLabel="SRS stage, before and after the review session, all bands labelled"
+        [categories]="stageFlowCategories"
+        [flows]="stageFlows"
+        valueLabels="all"
+      />
+    </sumi-card>
+  </section>
+
+  <section class="demo">
     <h2>Dashboard progress rows (sumi-ui#76)</h2>
     <div class="demo__progress-rows">
       @for (row of progressRows; track row.label) {

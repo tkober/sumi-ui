@@ -1,0 +1,97 @@
+<svg
+  class="sumi-flow-chart__svg"
+  [attr.viewBox]="'0 0 ' + measuredWidth() + ' ' + height()"
+  [style.height.px]="height()"
+  preserveAspectRatio="xMidYMid meet"
+  role="img"
+  [attr.aria-label]="ariaLabel()"
+>
+  <text class="sumi-flow-chart__header" [attr.x]="leftHeaderX()" [attr.y]="headerY()">
+    {{ fromLabel() }}
+  </text>
+  <text class="sumi-flow-chart__header" [attr.x]="rightHeaderX()" [attr.y]="headerY()">
+    {{ toLabel() }}
+  </text>
+
+  @for (band of geometry().bands; track band.from + '>' + band.to) {
+    <path
+      class="sumi-flow-chart__band"
+      [class.sumi-flow-chart__band--up]="band.tone === 'up'"
+      [class.sumi-flow-chart__band--same]="band.tone === 'same'"
+      [class.sumi-flow-chart__band--down]="band.tone === 'down'"
+      [attr.d]="band.path"
+      [attr.stroke-width]="band.thickness"
+    >
+      <title>{{ categoryLabel(band.from) }} → {{ categoryLabel(band.to) }}: {{ band.value }}</title>
+    </path>
+  }
+
+  @for (segment of geometry().left; track segment.key) {
+    <rect
+      class="sumi-flow-chart__segment"
+      rx="3"
+      [attr.x]="segment.x"
+      [attr.y]="segment.y"
+      [attr.width]="segment.width"
+      [attr.height]="segment.height"
+      [style.fill]="segment.color"
+    >
+      <title>{{ segment.label }}: {{ segment.value }}</title>
+    </rect>
+    <text
+      class="sumi-flow-chart__category-label"
+      text-anchor="end"
+      dominant-baseline="middle"
+      [attr.x]="segment.x - 8"
+      [attr.y]="segment.y + segment.height / 2"
+    >
+      {{ segment.label }} {{ segment.value }}
+    </text>
+  }
+
+  @for (segment of geometry().right; track segment.key) {
+    <rect
+      class="sumi-flow-chart__segment"
+      rx="3"
+      [attr.x]="segment.x"
+      [attr.y]="segment.y"
+      [attr.width]="segment.width"
+      [attr.height]="segment.height"
+      [style.fill]="segment.color"
+    >
+      <title>{{ segment.label }}: {{ segment.value }}</title>
+    </rect>
+    <text
+      class="sumi-flow-chart__category-label"
+      text-anchor="start"
+      dominant-baseline="middle"
+      [attr.x]="segment.x + segment.width + 8"
+      [attr.y]="segment.y + segment.height / 2"
+    >
+      {{ segment.label }} {{ segment.value }}
+    </text>
+  }
+
+  @for (band of geometry().bands; track band.from + '>' + band.to) {
+    @let label = labelFor(band);
+    @if (label) {
+      <text
+        class="sumi-flow-chart__value-label"
+        [class.sumi-flow-chart__value-label--down]="band.tone === 'down'"
+        text-anchor="middle"
+        dominant-baseline="middle"
+        [attr.x]="band.label.x"
+        [attr.y]="band.label.y"
+      >
+        {{ label }}
+      </text>
+    }
+  }
+</svg>
+
+@if (table()) {
+  <details class="sumi-flow-chart__table">
+    <summary>Show as table</summary>
+    <sumi-data-table [columns]="tableColumns" [rows]="tableRows()" />
+  </details>
+}
