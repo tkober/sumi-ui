@@ -51,6 +51,19 @@
   --sumi-accent-ink: light-dark(#2b4c7e, #8fa9d6);
   --sumi-accent-soft: color-mix(in oklab, var(--sumi-accent) 16%, var(--sumi-surface));
 
+  // Info tokens (sumi-ui#84): a purely informational surface (e.g.
+  // `sumi-banner--info`) that must never read as a verdict. Defaults to the
+  // accent, exactly like `--sumi-accent`/`--sumi-accent-ink` above;
+  // `SumiAccent.set` (see provide-sumi.ts) overrides `--sumi-info`/
+  // `--sumi-info-ink` at runtime for a preset with a `focusRing` override
+  // (`beni`, `tokiwa`) with that override's neutral colour instead, for the
+  // same reason the focus ring itself is neutral there — see
+  // docs/concept.md#tokens, "Ausnahme: beni"/"Ausnahme: tokiwa". `-soft` is
+  // always derived here, the same `color-mix` formula as `--sumi-accent-soft`.
+  --sumi-info: var(--sumi-accent);
+  --sumi-info-ink: var(--sumi-accent-ink);
+  --sumi-info-soft: color-mix(in oklab, var(--sumi-info) 16%, var(--sumi-surface));
+
   // Sequential ramp for charts, derived from the accent by mixing it into
   // the surface colour in increasing shares. Because the *light* theme's
   // accent is comparatively dark and the *dark* theme's accent is

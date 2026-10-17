@@ -27,10 +27,17 @@
   color: var(--sumi-retry);
 }
 
+// Info tokens (sumi-ui#84), not the accent ones directly: for `beni`/
+// `tokiwa` (presets with a `focusRing` override) these resolve to that
+// override's neutral colour instead of the accent, so an info banner never
+// reads as `success` (tokiwa's green) or `error` (beni's red) — see
+// docs/concept.md#tokens and `SumiAccent.set` in provide-sumi.ts. Every
+// other preset renders exactly as before, since `--sumi-info*` default to
+// the accent ones in _tokens.scss.
 :host(.sumi-banner--info) {
-  border-color: var(--sumi-accent);
-  background: var(--sumi-accent-soft);
-  color: var(--sumi-accent-ink);
+  border-color: var(--sumi-info);
+  background: var(--sumi-info-soft);
+  color: var(--sumi-info-ink);
 }
 
 .sumi-banner__icon {

@@ -112,6 +112,14 @@ export const SUMI_CONFIG = new InjectionToken<SumiConfig>('SUMI_CONFIG');
  * docs/concept.md#tokens, "Ausnahme: beni" — so the ring never reads red
  * around a correct/wrong field). Every other preset's ring stays exactly
  * the accent-coloured ring it always was.
+ *
+ * Also sets `--sumi-info`/`--sumi-info-ink` (sumi-ui#84), the same way and
+ * for the same reason: the accent/accentInk by default, or a preset's
+ * `focusRing` colours when it has one, so a purely informational surface
+ * (`sumi-banner--info`) never reads as a verdict on `beni`/`tokiwa` either
+ * (green "info" looks like `success`, red "info" looks like `error`) —
+ * see docs/concept.md#tokens. `--sumi-info-soft` is not set here; it stays
+ * the `color-mix` derived from `--sumi-info` in `_tokens.scss`.
  */
 @Injectable({ providedIn: 'root' })
 export class SumiAccent {
@@ -141,6 +149,24 @@ export class SumiAccent {
       focusRing
         ? `light-dark(${focusRing.light}, ${focusRing.dark})`
         : `light-dark(${resolved.light.accent}, ${resolved.dark.accent})`,
+    );
+    // --sumi-info / --sumi-info-ink (sumi-ui#84): reuse the exact same
+    // neutral override as the focus ring for beni/tokiwa — it already
+    // clears 4.5:1 text contrast on --sumi-bg/--sumi-surface in both
+    // themes (see accent.spec.ts), so it doubles as the ink role with no
+    // separate colour to maintain. Every other preset falls back to its
+    // own accent/accentInk, unchanged from today's `sumi-banner--info`.
+    root.style.setProperty(
+      '--sumi-info',
+      focusRing
+        ? `light-dark(${focusRing.light}, ${focusRing.dark})`
+        : `light-dark(${resolved.light.accent}, ${resolved.dark.accent})`,
+    );
+    root.style.setProperty(
+      '--sumi-info-ink',
+      focusRing
+        ? `light-dark(${focusRing.light}, ${focusRing.dark})`
+        : `light-dark(${resolved.light.accentInk}, ${resolved.dark.accentInk})`,
     );
   }
 }
