@@ -6,18 +6,28 @@
   role="img"
   [attr.aria-label]="ariaLabel()"
 >
-  @for (bar of bars(); track bar.label) {
+  @for (bar of bars(); track bar.label; let i = $index) {
     <rect
+      class="sumi-segmented-bar__bar"
+      [class.sumi-segmented-bar__bar--active]="tip.data()?.index === i"
       [attr.x]="bar.x"
       y="0"
       [attr.width]="bar.width"
       [attr.height]="heightPx()"
       [style.fill]="bar.color"
-    >
-      <title>{{ bar.label }}: {{ bar.value }} ({{ bar.percent | number: '1.0-0' }}%)</title>
-    </rect>
+      (pointerenter)="showTip($event, i)"
+      (pointerleave)="hideTip($event)"
+      (pointerup)="showTip($event, i)"
+    />
   }
 </svg>
+
+@if (tip.data(); as t) {
+  <sumi-chart-tooltip [anchor]="tip.anchor()" [hostWidth]="measuredWidth()">
+    @let bar = bars()[t.index];
+    <strong>{{ bar.value }}</strong> · {{ bar.label }} ({{ bar.percent | number: '1.0-0' }}%)
+  </sumi-chart-tooltip>
+}
 
 @if (legend()) {
   <sumi-legend [items]="legendItems()" />

@@ -12,10 +12,16 @@ import {
   flowGeometry,
   type FlowBandGeometry,
   type FlowGeometry,
+  type FlowSegmentGeometry,
   type SumiFlow,
   type SumiFlowCategory,
 } from '../math';
 import { SumiDataTable, type SumiTableColumn, type SumiTableRow } from '../data-table/data-table';
+import { SumiChartTooltip } from '../tooltip/chart-tooltip';
+import {
+  ChartTooltipController,
+  type SumiChartTooltipAnchor,
+} from '../tooltip/chart-tooltip-controller';
 import { observeWidth } from '../util/observe-width';
 
 export type { SumiFlow, SumiFlowCategory };
@@ -78,12 +84,35 @@ const MIN_LABEL_THICKNESS = 4;
  * while `height` stays fixed; `FLOW_CHART_MIN_WIDTH` (`../math.ts`, ~368px
  * with the default label/column sizing) is the narrowest the two outer
  * category-label columns and the two bars still fit without crowding.
+ *
+ * Every band and side segment also carries the instant tooltip
+ * (sumi-ui#107, reusing #106's `sumi-chart-tooltip`/`ChartTooltipController`
+ * unchanged): `<strong>value</strong> · from → to` for a band,
+ * `<strong>value</strong> · label` for a side segment. A band's anchor is
+ * the top of its own curve at its horizontal midpoint (`FlowBandGeometry
+ * .midpoint`, `t = 0.5` in `../math.ts`'s `flowGeometry`) minus half its
+ * `thickness` — the one point on the curve that sits between both columns
+ * regardless of how the band leans toward either end's stack, unlike the
+ * value label's own point (deliberately biased toward the target end). A
+ * segment's anchor is its bounding box's top-centre, same as every other
+ * bar-shaped chart here. The hovered band also gets a `--active` class
+ * that raises its opacity, since hover already has no colour/outline cue
+ * of its own (its tone already carries all three CSS states).
  */
+/** One band's or side segment's instant tooltip data (sumi-ui#107) —
+ *  just the index into the relevant `geometry()` array, same minimal
+ *  shape as `sumi-bar-chart`'s `BarTip`: the template reads
+ *  value/from/to/label straight from the geometry. */
+interface FlowTip {
+  kind: 'band' | 'left' | 'right';
+  index: number;
+}
+
 @Component({
   selector: 'sumi-flow-chart',
   templateUrl: './flow-chart.html',
   styleUrl: './flow-chart.scss',
-  imports: [SumiDataTable],
+  imports: [SumiDataTable, SumiChartTooltip],
   host: { class: 'sumi-flow-chart' },
 })
 export class SumiFlowChart {
@@ -103,6 +132,15 @@ export class SumiFlowChart {
   private readonly hostRef = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly destroyRef = inject(DestroyRef);
   protected readonly measuredWidth = signal(FALLBACK_WIDTH);
+
+  /** The instant tooltip (sumi-ui#107): mouse hover/touch tap on any band
+   *  or side segment — no keyboard wiring, neither is focusable here (same
+   *  as `sumi-calendar-heatmap`'s cells), see `ChartTooltipController`'s
+   *  own doc comment. */
+  protected readonly tip = new ChartTooltipController<FlowTip>(
+    () => this.hostRef.nativeElement,
+    this.destroyRef,
+  );
 
   constructor() {
     afterNextRender(() => {
@@ -146,6 +184,34 @@ export class SumiFlowChart {
 
   protected categoryLabel(key: string): string {
     return this.categories().find((c) => c.key === key)?.label ?? key;
+  }
+
+  /** The top of `band`'s own curve at its horizontal midpoint — see the
+   *  class doc comment for why this point rather than `band.label`'s. */
+  private bandAnchor(band: FlowBandGeometry): SumiChartTooltipAnchor {
+    return { x: band.midpoint.x, y: band.midpoint.y - band.thickness / 2 };
+  }
+
+  private segmentAnchor(segment: FlowSegmentGeometry): SumiChartTooltipAnchor {
+    return { x: segment.x + segment.width / 2, y: segment.y };
+  }
+
+  protected showBandTip(event: PointerEvent | FocusEvent, index: number): void {
+    const band = this.geometry().bands[index];
+    this.tip.show(event, { kind: 'band', index }, this.bandAnchor(band));
+  }
+
+  protected showSegmentTip(
+    event: PointerEvent | FocusEvent,
+    side: 'left' | 'right',
+    index: number,
+  ): void {
+    const segment = this.geometry()[side][index];
+    this.tip.show(event, { kind: side, index }, this.segmentAnchor(segment));
+  }
+
+  protected hideTip(event: PointerEvent | FocusEvent): void {
+    this.tip.hide(event);
   }
 
   protected readonly tableColumns: readonly SumiTableColumn[] = [

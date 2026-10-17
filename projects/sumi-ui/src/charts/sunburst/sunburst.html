@@ -13,9 +13,7 @@
           fill="none"
           [style.stroke]="'var(--sumi-sunken)'"
           [attr.stroke-width]="outerRadius() - innerRadius()"
-        >
-          <title>No data</title>
-        </circle>
+        />
       } @else {
         @for (segment of segments(); track segment.path.join('/'); let i = $index) {
           <path
@@ -41,13 +39,7 @@
             (click)="togglePin(i)"
             (keydown.enter)="togglePin(i)"
             (keydown.space)="$event.preventDefault(); togglePin(i)"
-          >
-            <title>
-              {{ segment.path.join(' / ') }}: {{ segment.value }} ({{
-                segment.percentOfTotal | number: '1.0-0'
-              }}% of total)
-            </title>
-          </path>
+          />
         }
         @for (segment of segments(); track segment.path.join('/') + '-label'; let i = $index) {
           @if (labelFor(segment)) {

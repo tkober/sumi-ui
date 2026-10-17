@@ -13,20 +13,22 @@
     {{ toLabel() }}
   </text>
 
-  @for (band of geometry().bands; track band.from + '>' + band.to) {
+  @for (band of geometry().bands; track band.from + '>' + band.to; let i = $index) {
     <path
       class="sumi-flow-chart__band"
       [class.sumi-flow-chart__band--up]="band.tone === 'up'"
       [class.sumi-flow-chart__band--same]="band.tone === 'same'"
       [class.sumi-flow-chart__band--down]="band.tone === 'down'"
+      [class.sumi-flow-chart__band--active]="tip.data()?.kind === 'band' && tip.data()?.index === i"
       [attr.d]="band.path"
       [attr.stroke-width]="band.thickness"
-    >
-      <title>{{ categoryLabel(band.from) }} → {{ categoryLabel(band.to) }}: {{ band.value }}</title>
-    </path>
+      (pointerenter)="showBandTip($event, i)"
+      (pointerleave)="hideTip($event)"
+      (pointerup)="showBandTip($event, i)"
+    />
   }
 
-  @for (segment of geometry().left; track segment.key) {
+  @for (segment of geometry().left; track segment.key; let i = $index) {
     <rect
       class="sumi-flow-chart__segment"
       rx="3"
@@ -35,9 +37,10 @@
       [attr.width]="segment.width"
       [attr.height]="segment.height"
       [style.fill]="segment.color"
-    >
-      <title>{{ segment.label }}: {{ segment.value }}</title>
-    </rect>
+      (pointerenter)="showSegmentTip($event, 'left', i)"
+      (pointerleave)="hideTip($event)"
+      (pointerup)="showSegmentTip($event, 'left', i)"
+    />
     <text
       class="sumi-flow-chart__category-label"
       text-anchor="end"
@@ -49,7 +52,7 @@
     </text>
   }
 
-  @for (segment of geometry().right; track segment.key) {
+  @for (segment of geometry().right; track segment.key; let i = $index) {
     <rect
       class="sumi-flow-chart__segment"
       rx="3"
@@ -58,9 +61,10 @@
       [attr.width]="segment.width"
       [attr.height]="segment.height"
       [style.fill]="segment.color"
-    >
-      <title>{{ segment.label }}: {{ segment.value }}</title>
-    </rect>
+      (pointerenter)="showSegmentTip($event, 'right', i)"
+      (pointerleave)="hideTip($event)"
+      (pointerup)="showSegmentTip($event, 'right', i)"
+    />
     <text
       class="sumi-flow-chart__category-label"
       text-anchor="start"
@@ -88,6 +92,19 @@
     }
   }
 </svg>
+
+@if (tip.data(); as t) {
+  <sumi-chart-tooltip [anchor]="tip.anchor()" [hostWidth]="measuredWidth()">
+    @if (t.kind === 'band') {
+      @let band = geometry().bands[t.index];
+      <strong>{{ band.value }}</strong> · {{ categoryLabel(band.from) }} →
+      {{ categoryLabel(band.to) }}
+    } @else {
+      @let segment = (t.kind === 'left' ? geometry().left : geometry().right)[t.index];
+      <strong>{{ segment.value }}</strong> · {{ segment.label }}
+    }
+  </sumi-chart-tooltip>
+}
 
 @if (table()) {
   <details class="sumi-flow-chart__table">

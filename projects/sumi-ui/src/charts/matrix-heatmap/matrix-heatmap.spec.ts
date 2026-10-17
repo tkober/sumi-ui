@@ -101,18 +101,27 @@ describe('SumiMatrixHeatmap', () => {
     expect(details.querySelectorAll('tbody tr').length).toBe(2);
   });
 
-  it('includes detail in the cell title, after the formatted value', () => {
+  it("includes detail in a selectable cell's aria-label, after the formatted value", () => {
     const fixture = setup();
     fixture.componentInstance.cells.set([
       { row: 'ア', column: 'a', value: 90, detail: '9/10 correct' },
       { row: 'ア', column: 'i', value: null, detail: 'not practised yet' },
       { row: 'カ', column: 'a', value: 40 },
     ]);
+    fixture.componentInstance.selectable.set(true);
     fixture.detectChanges();
     const cells = [...fixture.nativeElement.querySelectorAll('.sumi-matrix-heatmap__cell')];
-    expect(cells[0].getAttribute('title')).toBe('ア / a: 90 · 9/10 correct');
-    expect(cells[1].getAttribute('title')).toBe('ア / i: no data · not practised yet');
-    expect(cells[2].getAttribute('title')).toBe('カ / a: 40');
+    expect(cells[0].getAttribute('aria-label')).toBe('ア / a: 90 · 9/10 correct');
+    expect(cells[1].getAttribute('aria-label')).toBe('ア / i: no data · not practised yet');
+    expect(cells[2].getAttribute('aria-label')).toBe('カ / a: 40');
+  });
+
+  it('renders no title attribute on any cell — the native tooltip is replaced by the instant one', () => {
+    const fixture = setup();
+    fixture.componentInstance.selectable.set(true);
+    fixture.detectChanges();
+    const cells = [...fixture.nativeElement.querySelectorAll('.sumi-matrix-heatmap__cell')];
+    expect(cells.every((c: Element) => !c.hasAttribute('title'))).toBe(true);
   });
 
   it('shows detail in the table fallback, joined to the label with "·"', () => {
@@ -226,5 +235,101 @@ describe('SumiMatrixHeatmap', () => {
     expect(notPressed.every((el: Element) => el.getAttribute('aria-pressed') === 'false')).toBe(
       true,
     );
+  });
+});
+
+describe('SumiMatrixHeatmap instant tooltip (sumi-ui#107)', () => {
+  function tooltipText(fixture: ReturnType<typeof setup>): string | null {
+    return fixture.nativeElement.querySelector('sumi-chart-tooltip')?.textContent?.trim() ?? null;
+  }
+
+  it('shows the cell title on pointerenter (mouse), and hides on pointerleave (plain mode)', () => {
+    const fixture = setup();
+    const cell = fixture.nativeElement.querySelector('.sumi-matrix-heatmap__cell')!;
+    cell.dispatchEvent(new PointerEvent('pointerenter', { pointerType: 'mouse' }));
+    fixture.detectChanges();
+    expect(tooltipText(fixture)).toBe('90 · ア / a');
+
+    cell.dispatchEvent(new PointerEvent('pointerleave', { pointerType: 'mouse' }));
+    fixture.detectChanges();
+    expect(tooltipText(fixture)).toBeNull();
+  });
+
+  it('bolds the value and keeps the detail plain', () => {
+    const fixture = setup();
+    fixture.componentInstance.cells.set([
+      { row: 'ア', column: 'a', value: 90, detail: '9/10 correct' },
+    ]);
+    fixture.detectChanges();
+    const cell = fixture.nativeElement.querySelector('.sumi-matrix-heatmap__cell')!;
+    cell.dispatchEvent(new PointerEvent('pointerenter', { pointerType: 'mouse' }));
+    fixture.detectChanges();
+    const strong = fixture.nativeElement.querySelector('sumi-chart-tooltip strong');
+    expect(strong?.textContent?.trim()).toBe('90');
+    expect(tooltipText(fixture)?.replace(/\s+/g, ' ')).toBe('90 · ア / a · 9/10 correct');
+  });
+
+  it('never shows a bubble for a blank cell', () => {
+    const fixture = setup();
+    fixture.componentInstance.cells.set([
+      { row: 'ア', column: 'a', value: 90 },
+      { row: 'ア', column: 'i', value: null, blank: true },
+    ]);
+    fixture.detectChanges();
+    const blank = fixture.nativeElement.querySelector('.sumi-matrix-heatmap__cell--blank')!;
+    blank.dispatchEvent(new PointerEvent('pointerenter', { pointerType: 'mouse', bubbles: true }));
+    fixture.detectChanges();
+    expect(tooltipText(fixture)).toBeNull();
+  });
+
+  it('shows on focus and hides on blur in selectable mode, without disturbing cellSelect', () => {
+    const fixture = setup();
+    fixture.componentInstance.selectable.set(true);
+    fixture.detectChanges();
+    const cell = fixture.nativeElement.querySelector('.sumi-matrix-heatmap__cell')!;
+    cell.dispatchEvent(new Event('focus'));
+    fixture.detectChanges();
+    expect(tooltipText(fixture)).toBe('90 · ア / a');
+    expect(fixture.componentInstance.lastSelection()?.row).toBe('ア'); // existing onCellInteract wiring, unchanged
+
+    cell.dispatchEvent(new Event('blur'));
+    fixture.detectChanges();
+    expect(tooltipText(fixture)).toBeNull();
+  });
+
+  it('marks the active cell with the active class', () => {
+    const fixture = setup();
+    const cell = fixture.nativeElement.querySelector('.sumi-matrix-heatmap__cell')!;
+    cell.dispatchEvent(new PointerEvent('pointerenter', { pointerType: 'mouse' }));
+    fixture.detectChanges();
+    expect(cell.classList.contains('sumi-matrix-heatmap__cell--active')).toBe(true);
+  });
+
+  it('a touch tap keeps the tooltip open until an outside tap', () => {
+    const fixture = setup();
+    const cell = fixture.nativeElement.querySelector('.sumi-matrix-heatmap__cell')!;
+    cell.dispatchEvent(new PointerEvent('pointerup', { pointerType: 'touch', bubbles: true }));
+    fixture.detectChanges();
+    expect(tooltipText(fixture)).toBe('90 · ア / a');
+
+    cell.dispatchEvent(new PointerEvent('pointerleave', { pointerType: 'touch' }));
+    fixture.detectChanges();
+    expect(tooltipText(fixture)).toBe('90 · ア / a');
+
+    document.body.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+    fixture.detectChanges();
+    expect(tooltipText(fixture)).toBeNull();
+  });
+
+  it('a touch tap closes on the scroll container scrolling', () => {
+    const fixture = setup();
+    const cell = fixture.nativeElement.querySelector('.sumi-matrix-heatmap__cell')!;
+    cell.dispatchEvent(new PointerEvent('pointerup', { pointerType: 'touch', bubbles: true }));
+    fixture.detectChanges();
+
+    const scroll = fixture.nativeElement.querySelector('.sumi-matrix-heatmap__scroll')!;
+    scroll.dispatchEvent(new Event('scroll'));
+    fixture.detectChanges();
+    expect(tooltipText(fixture)).toBeNull();
   });
 });

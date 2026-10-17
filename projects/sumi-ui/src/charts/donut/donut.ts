@@ -12,6 +12,7 @@ import { DecimalPipe } from '@angular/common';
 import { arcPath, donutSegments, type SumiDonutSegment } from '../math';
 import { SumiLegend, type SumiLegendItem } from '../legend/legend';
 import { SumiDataTable, type SumiTableColumn, type SumiTableRow } from '../data-table/data-table';
+import { ChartTooltipController } from '../tooltip/chart-tooltip-controller';
 import { observeWidth } from '../util/observe-width';
 
 export type { SumiDonutSegment };
@@ -52,6 +53,17 @@ const WIDE_THRESHOLD = 340;
  *   table
  * />
  * ```
+ *
+ * No instant tooltip (sumi-ui#107): the centre readout above already shows
+ * a hovered/focused segment's value and label instantly, so a bubble would
+ * just duplicate it. A touch tap still needs to *pin* that readout open
+ * the way `sumi-sunburst`'s already does, though — reusing
+ * `ChartTooltipController` for its touch show/hide/dismiss rules (ignore a
+ * touch `pointerenter`, no-op a touch `pointerleave`, pin open via
+ * `pointerup` until an outside tap) saves re-deriving that state machine
+ * here, even though this chart never renders the `sumi-chart-tooltip`
+ * bubble the controller was built for — `anchor` simply goes unused, and
+ * `data` holds the active segment's index instead of tooltip content.
  */
 @Component({
   selector: 'sumi-donut',
@@ -100,25 +112,37 @@ export class SumiDonut {
     this.resolved().reduce((sum, segment) => sum + segment.value, 0),
   );
 
-  /** Index of the hovered/focused segment, or `null` when none is. A
-   *  single signal for both input modes — a mouse hover and a keyboard
-   *  focus land on the same segment and should look identical. */
-  protected readonly activeIndex = signal<number | null>(null);
+  /** Index of the hovered/tapped/focused segment, or `null` when none is
+   *  — `ChartTooltipController<number>`'s `data`, repurposed to hold an
+   *  index instead of tooltip content (see the class doc comment). A
+   *  single state machine for every input mode — a mouse hover, a tap and
+   *  a keyboard focus all land on the same segment and should look
+   *  identical. */
+  protected readonly tip = new ChartTooltipController<number>(
+    () => this.hostRef.nativeElement,
+    this.destroyRef,
+  );
+  protected readonly activeIndex = computed(() => this.tip.data());
   protected readonly activeSegment = computed(() => {
     const index = this.activeIndex();
     return index === null ? null : (this.resolved()[index] ?? null);
   });
 
-  protected setActive(index: number): void {
-    this.activeIndex.set(index);
+  /** `anchor` is unused here (see the class doc comment) — a fixed `{x:
+   *  0, y: 0}` satisfies `show`'s required parameter without implying a
+   *  real position. */
+  protected setActive(event: PointerEvent | FocusEvent, index: number): void {
+    this.tip.show(event, index, { x: 0, y: 0 });
   }
 
-  protected clearActive(index: number): void {
+  protected clearActive(event: PointerEvent | FocusEvent, index: number): void {
     // Guards against a stale pointerleave/blur from a previously hovered
-    // segment clearing a *different* segment's focus that followed it.
-    if (this.activeIndex() === index) {
-      this.activeIndex.set(null);
+    // segment clearing a *different* segment's focus/hover that followed
+    // it — `tip.hide` itself has no notion of "which" segment.
+    if (this.tip.data() !== index) {
+      return;
     }
+    this.tip.hide(event);
   }
 
   protected readonly centerValueDisplay = computed<string | number>(() => {

@@ -160,4 +160,78 @@ describe('SumiFlowChart', () => {
     );
     expect(firstRow).toEqual(['Apprentice', 'Apprentice', '47']);
   });
+
+  it('renders no <title> elements — the native tooltip is replaced by the instant one', () => {
+    const fixture = setup();
+    forceMeasuredWidth(fixture, 500);
+    expect(fixture.nativeElement.querySelector('title')).toBeNull();
+  });
+});
+
+describe('SumiFlowChart instant tooltip (sumi-ui#107)', () => {
+  function tooltipText(fixture: ReturnType<typeof setup>): string | null {
+    return (
+      fixture.nativeElement
+        .querySelector('sumi-chart-tooltip')
+        ?.textContent?.replace(/\s+/g, ' ')
+        .trim() ?? null
+    );
+  }
+
+  it('shows "<value> · <from> → <to>" for a band on pointerenter (mouse), and hides on pointerleave', () => {
+    const fixture = setup();
+    forceMeasuredWidth(fixture, 500);
+    const band = fixture.nativeElement.querySelector('.sumi-flow-chart__band--up')!;
+    band.dispatchEvent(new PointerEvent('pointerenter', { pointerType: 'mouse' }));
+    fixture.detectChanges();
+    expect(tooltipText(fixture)).toBe('14 · Apprentice → Guru');
+
+    band.dispatchEvent(new PointerEvent('pointerleave', { pointerType: 'mouse' }));
+    fixture.detectChanges();
+    expect(tooltipText(fixture)).toBeNull();
+  });
+
+  it('highlights the hovered band with the active class', () => {
+    const fixture = setup();
+    forceMeasuredWidth(fixture, 500);
+    const bands = [
+      ...fixture.nativeElement.querySelectorAll('.sumi-flow-chart__band'),
+    ] as SVGPathElement[];
+    bands[0].dispatchEvent(new PointerEvent('pointerenter', { pointerType: 'mouse' }));
+    fixture.detectChanges();
+    const active = bands.filter((b) => b.classList.contains('sumi-flow-chart__band--active'));
+    expect(active).toEqual([bands[0]]);
+  });
+
+  it('shows "<value> · <label>" for a side segment on pointerenter (mouse), and hides on pointerleave', () => {
+    const fixture = setup();
+    forceMeasuredWidth(fixture, 500);
+    const segment = fixture.nativeElement.querySelector('.sumi-flow-chart__segment')!;
+    segment.dispatchEvent(new PointerEvent('pointerenter', { pointerType: 'mouse' }));
+    fixture.detectChanges();
+    // Left/"from" total for Apprentice: 47 (apprentice->apprentice) + 14
+    // (apprentice->guru) = 61, not a single flow's own value.
+    expect(tooltipText(fixture)).toBe('61 · Apprentice');
+
+    segment.dispatchEvent(new PointerEvent('pointerleave', { pointerType: 'mouse' }));
+    fixture.detectChanges();
+    expect(tooltipText(fixture)).toBeNull();
+  });
+
+  it('a touch tap keeps the tooltip open until an outside tap', () => {
+    const fixture = setup();
+    forceMeasuredWidth(fixture, 500);
+    const band = fixture.nativeElement.querySelector('.sumi-flow-chart__band--up')!;
+    band.dispatchEvent(new PointerEvent('pointerup', { pointerType: 'touch', bubbles: true }));
+    fixture.detectChanges();
+    expect(tooltipText(fixture)).toBe('14 · Apprentice → Guru');
+
+    band.dispatchEvent(new PointerEvent('pointerleave', { pointerType: 'touch' }));
+    fixture.detectChanges();
+    expect(tooltipText(fixture)).toBe('14 · Apprentice → Guru');
+
+    document.body.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+    fixture.detectChanges();
+    expect(tooltipText(fixture)).toBeNull();
+  });
 });

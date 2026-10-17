@@ -100,4 +100,48 @@ describe('SumiDonut', () => {
     const rows = fixture.nativeElement.querySelectorAll('tbody tr');
     expect(rows.length).toBe(3);
   });
+
+  it('renders no <title> elements — no bubble duplicates the centre readout (sumi-ui#107)', () => {
+    const fixture = setup();
+    expect(fixture.nativeElement.querySelector('title')).toBeNull();
+  });
+});
+
+describe('SumiDonut touch tap (sumi-ui#107)', () => {
+  function centerValue(fixture: ReturnType<typeof setup>): string {
+    return fixture.nativeElement.querySelector('.sumi-donut__center-value').textContent.trim();
+  }
+
+  it('a tap fills the centre readout and keeps it — a touch pointerenter alone does not', () => {
+    const fixture = setup();
+    const path: HTMLElement = fixture.nativeElement.querySelector('path.sumi-donut__segment');
+
+    // A finger landing fires pointerenter too; it must not flash the
+    // readout open before the matching pointerleave below.
+    path.dispatchEvent(new PointerEvent('pointerenter', { pointerType: 'touch' }));
+    fixture.detectChanges();
+    expect(centerValue(fixture)).toBe('100');
+
+    path.dispatchEvent(new PointerEvent('pointerup', { pointerType: 'touch', bubbles: true }));
+    fixture.detectChanges();
+    expect(centerValue(fixture)).toBe('72'); // Correct
+
+    // The tap's own pointerleave (if it fires at all) must not flash it
+    // shut again.
+    path.dispatchEvent(new PointerEvent('pointerleave', { pointerType: 'touch' }));
+    fixture.detectChanges();
+    expect(centerValue(fixture)).toBe('72');
+  });
+
+  it('an outside tap dismisses the pinned readout', () => {
+    const fixture = setup();
+    const path: HTMLElement = fixture.nativeElement.querySelector('path.sumi-donut__segment');
+    path.dispatchEvent(new PointerEvent('pointerup', { pointerType: 'touch', bubbles: true }));
+    fixture.detectChanges();
+    expect(centerValue(fixture)).toBe('72');
+
+    document.body.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+    fixture.detectChanges();
+    expect(centerValue(fixture)).toBe('100');
+  });
 });
