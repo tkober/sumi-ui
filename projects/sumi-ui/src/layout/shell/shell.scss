@@ -183,7 +183,9 @@
 }
 
 .sumi-app-shell__main {
-  padding: var(--sumi-space-6) var(--sumi-space-4);
+  // Top padding from the published variable, so `sumi-side-panel` (which
+  // reads it, sumi-ui#115) can never drift from the real value.
+  padding: var(--sumi-shell-content-top-padding) var(--sumi-space-4) var(--sumi-space-6);
   max-width: 100%;
   // `clip`, not `hidden` (sumi-ui#90): `hidden` turns the other axis into
   // `auto` too, which makes <main> a scroll container that never scrolls
