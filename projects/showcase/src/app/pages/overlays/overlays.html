@@ -39,23 +39,41 @@
   </section>
 
   <section>
-    <h2>Side panel</h2>
-    <p>
-      <code>sumi-side-panel</code> docks next to the content below on a wide screen — the content
-      area makes room for it, nothing is covered — and becomes a full-height sheet below 720px.
-    </p>
-    <button type="button" sumiButton variant="primary" size="sm" (click)="chatOpen.set(true)">
-      Ask about this text
-    </button>
-
     <div class="overlays-demo__row">
       <div class="overlays-demo__content">
+        <h2>Side panel</h2>
+        <p>
+          <code>sumi-side-panel</code> docks next to the content below on a wide screen — the
+          content area makes room for it, nothing is covered — and becomes a full-height sheet below
+          720px. The heading and buttons live inside this content column, not above the row, so this
+          section's content — like a real reading page's — starts right at the top of the page
+          (sumi-ui#115): see the "Lengthen the page" toggle below for the short-page vs. long-page
+          repro that issue needed.
+        </p>
+        <button type="button" sumiButton variant="primary" size="sm" (click)="chatOpen.set(true)">
+          Ask about this text
+        </button>
+        <button
+          type="button"
+          sumiButton
+          variant="secondary"
+          size="sm"
+          (click)="longPage.set(!longPage())"
+        >
+          {{ longPage() ? 'Shorten the page' : 'Lengthen the page (sumi-ui#115)' }}
+        </button>
+
         <p lang="ja">
           先週、石川県の金沢に旅行に行きました。天気予報では晴れると言っていましたが、着いた日はずっと雨でした。
         </p>
         <p lang="ja">
           まず、兼六園という有名な庭園に行きました。雨のおかげで、人があまり多くなくて、ゆっくり歩くことができました。
         </p>
+        @if (longPage()) {
+          @for (paragraph of fillerParagraphs; track $index) {
+            <p lang="ja">{{ paragraph }}</p>
+          }
+        }
       </div>
 
       <sumi-side-panel [(open)]="chatOpen" title="Ask about this text">

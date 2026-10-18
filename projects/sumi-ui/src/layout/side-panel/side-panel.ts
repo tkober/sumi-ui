@@ -38,15 +38,22 @@ import { focusFirst, trapTabKey } from '../overlay-focus';
  *
  * It handles `sumi-app-shell`'s sticky header itself, without measuring
  * anything: the header already publishes its rendered height as
- * `--sumi-shell-sticky-height` on `documentElement` (sumi-ui#87), so the
- * panel's own `position: sticky; top: var(--sumi-shell-sticky-height)`
- * plus a height of `calc(100vh - var(--sumi-shell-sticky-height))` keeps
- * it flush below the header and filling the rest of the viewport, with no
- * `ResizeObserver` of its own (the prototype's own — see side-panel.scss).
+ * `--sumi-shell-sticky-height` on `documentElement` (sumi-ui#87), and the
+ * shell's own host publishes its content area's top padding as
+ * `--sumi-shell-content-top-padding` (sumi-ui#115). The panel's own
+ * `position: sticky; top` and `height` both fold in *both* variables, not
+ * just the header's — the panel sits inside that padded content area, so
+ * its resting, unscrolled position already includes the padding, and
+ * `height` has to assume the same offset `top` does, or the panel's
+ * bottom edge runs past the viewport bottom on a page that never scrolls
+ * far enough for the sticky offset alone to apply (sumi-ui#115). No
+ * `ResizeObserver` of its own either way (the prototype's own — see
+ * side-panel.scss): the content padding is a fixed token, not something
+ * that changes at runtime like the header's height does.
  * `sumi-app-shell__main` is not a scroll container (see shell.scss's own
  * comment on `overflow-x: clip`), so this sticks to the window exactly as
- * it would with no shell in the tree at all, where the property's `:root`
- * fallback is `0px`.
+ * it would with no shell in the tree at all, where both properties'
+ * `:root` fallback is `0px`.
  *
  * `open` is a `model<boolean>()`, same convention as `sumi-dialog`/
  * `sumi-popover`. Esc and the close button both close it; outside click

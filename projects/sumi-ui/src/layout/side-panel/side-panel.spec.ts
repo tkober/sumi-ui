@@ -127,3 +127,51 @@ describe('SumiSidePanel', () => {
     expect(document.activeElement).toBe(sendButton);
   });
 });
+
+describe('SumiSidePanel docked height agrees with its sticky offset (sumi-ui#115)', () => {
+  // The docked panel's `top` and `height` both have to fold in the
+  // shell's content-area top padding, not just its sticky header height,
+  // or the panel's static (unscrolled) position sits lower than `height`
+  // assumes and its bottom edge runs past the viewport bottom — see
+  // side-panel.scss's own comment. `getComputedStyle` can't resolve
+  // `calc()` against `100vh` in jsdom (no layout engine), so this checks
+  // the compiled rule itself, same pattern as stat-grid.spec.ts's
+  // `:has()`/`@container` check for the same reason. The actual geometry
+  // is verified in the showcase screenshots (short + long page, see
+  // overlays.html's "Lengthen the page" toggle).
+  function panelRuleText(): string {
+    const sheet = Array.from(document.styleSheets).find((s) =>
+      Array.from(s.cssRules ?? []).some((rule) =>
+        rule.cssText?.includes('.sumi-side-panel__panel'),
+      ),
+    );
+    const rule = Array.from(sheet?.cssRules ?? []).find((r) =>
+      r.cssText?.includes('.sumi-side-panel__panel'),
+    );
+    return rule?.cssText ?? '';
+  }
+
+  it('renders the panel once, so its stylesheet rule can be inspected', () => {
+    TestBed.configureTestingModule({ imports: [HostComponent] });
+    TestBed.createComponent(HostComponent).detectChanges();
+    expect(panelRuleText()).toContain('.sumi-side-panel__panel');
+  });
+
+  it('includes both --sumi-shell-sticky-height and --sumi-shell-content-top-padding in `top`', () => {
+    TestBed.configureTestingModule({ imports: [HostComponent] });
+    TestBed.createComponent(HostComponent).detectChanges();
+    const text = panelRuleText();
+    expect(text).toContain(
+      'top: calc(var(--sumi-shell-sticky-height) + var(--sumi-shell-content-top-padding))',
+    );
+  });
+
+  it('includes both variables in `height` too, so top and height agree', () => {
+    TestBed.configureTestingModule({ imports: [HostComponent] });
+    TestBed.createComponent(HostComponent).detectChanges();
+    const text = panelRuleText();
+    expect(text).toContain(
+      'height: calc(100vh - var(--sumi-shell-sticky-height) - var(--sumi-shell-content-top-padding))',
+    );
+  });
+});

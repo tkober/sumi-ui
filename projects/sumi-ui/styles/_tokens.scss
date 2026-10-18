@@ -133,6 +133,12 @@
   // applies outside a shell.
   --sumi-shell-bottom-height: 0px;
 
+  // `sumi-app-shell__main`'s own top padding (sumi-ui#115), published so a
+  // sticky descendant (`sumi-side-panel`) can size itself to the viewport
+  // without needing to know the host app's layout. Set on `sumi-app-shell`'s
+  // host, so this `0px` fallback only applies outside a shell.
+  --sumi-shell-content-top-padding: 0px;
+
   // Multiplier on every ink motif's base opacity (see
   // docs/concept.md#tuschemotive and `sumi-landscape`/`sumi-pattern`'s
   // `ink-opacity.scss`). `1` is the sketch's reviewed intensity; an app can

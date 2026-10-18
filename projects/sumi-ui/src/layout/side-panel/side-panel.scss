@@ -36,11 +36,21 @@
   width: 0;
   overflow: hidden;
   position: sticky;
-  // The shell header's own rendered height (sumi-ui#87) — see the
-  // component's doc comment. `0px` outside a shell, via this property's
-  // `:root` fallback.
-  top: var(--sumi-shell-sticky-height);
-  height: calc(100vh - var(--sumi-shell-sticky-height));
+  // The shell header's own rendered height (sumi-ui#87) plus the content
+  // area's own top padding (sumi-ui#115) — see the component's doc
+  // comment. The panel sits *inside* that padded content area, so its
+  // static, unscrolled position is already offset by both quantities, not
+  // just the header's; `top` has to say so too, or the panel sticks
+  // `--sumi-shell-content-top-padding` higher than its own static
+  // position on a page that never scrolls, and `height` below (which
+  // assumes the sticky offset *is* the panel's resting distance from the
+  // viewport top) then runs that same amount past the viewport bottom.
+  // Folding the padding into both `top` and `height` keeps them in
+  // agreement at every scroll position, including none, so the panel's
+  // bottom edge always lands exactly on the viewport bottom. `0px` outside
+  // a shell, via both properties' `:root` fallbacks.
+  top: calc(var(--sumi-shell-sticky-height) + var(--sumi-shell-content-top-padding));
+  height: calc(100vh - var(--sumi-shell-sticky-height) - var(--sumi-shell-content-top-padding));
   z-index: 10;
   transition: width 200ms ease;
 }

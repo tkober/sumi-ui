@@ -7,6 +7,16 @@
   // on-screen keyboard (both hide the tab bar) and every page element inherits
   // it. 64px is the same allowance `.sumi-app-shell__main` reserves below.
   --sumi-shell-bottom-height: 0px;
+  // `.sumi-app-shell__main`'s own top padding below, published so a sticky
+  // descendant (`sumi-side-panel`, sumi-ui#115) can size itself to the
+  // viewport without the host app telling it this value. Unlike
+  // `--sumi-shell-sticky-height` this needs no `ResizeObserver`: the
+  // padding is always this one token, not something that can change at
+  // runtime, so a plain custom property is enough. On the host, not
+  // `:root`, for the same reason as `--sumi-shell-bottom-height` above —
+  // the `:root` fallback in `_tokens.scss` only shows through outside a
+  // shell.
+  --sumi-shell-content-top-padding: var(--sumi-space-6);
 }
 
 @media (max-width: 719px) {
