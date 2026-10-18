@@ -52,6 +52,8 @@ export {
   type SumiReadingWord,
   type SumiReadingParagraph,
   type SumiReadingWordActivateEvent,
+  type SumiReadingRange,
+  type SumiReadingRangeSelectEvent,
 } from './reading-text/reading-text';
 export { SumiChoiceQuestion, type SumiChoiceOption } from './choice-question/choice-question';
 

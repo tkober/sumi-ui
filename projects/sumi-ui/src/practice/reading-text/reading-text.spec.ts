@@ -6,6 +6,8 @@ import {
   SUMI_READING_PEEK_DWELL_MS,
   SumiReadingText,
   type SumiReadingParagraph,
+  type SumiReadingRange,
+  type SumiReadingRangeSelectEvent,
   type SumiReadingWord,
   type SumiReadingWordActivateEvent,
 } from './reading-text';
@@ -395,5 +397,211 @@ describe('SumiReadingText — plain tokens (sumi-ui#108)', () => {
       .cloneNode(true) as HTMLElement;
     paragraph.querySelectorAll('rt').forEach((rt) => rt.remove());
     expect(paragraph.textContent).toBe('散歩にです。');
+  });
+});
+
+describe('SumiReadingText — partial-sentence selection (jp-reading-practice#32)', () => {
+  // Paragraph 0: 今日(word) は(plain) 雨(word) です(word) 。(plain) — three
+  // real words, one plain token in the middle (between 今日/雨) and one at
+  // the end. Paragraph 1: a second, unrelated sentence, for the
+  // cross-paragraph case.
+  const KYOU: SumiReadingWord = { id: 'rw1', text: '今日', reading: 'きょう' };
+  const WA: SumiReadingWord = { id: 'rp1', text: 'は', plain: true };
+  const AME: SumiReadingWord = { id: 'rw2', text: '雨', reading: 'あめ', unknown: true };
+  const DESU: SumiReadingWord = { id: 'rw3', text: 'です' };
+  const MARU: SumiReadingWord = { id: 'rp2', text: '。', plain: true };
+  const NEKO: SumiReadingWord = { id: 'rw4', text: '猫', reading: 'ねこ' };
+  const RANGE_PARAGRAPHS: readonly SumiReadingParagraph[] = [[KYOU, WA, AME, DESU, MARU], [NEKO]];
+
+  @Component({
+    imports: [SumiReadingText],
+    template: `
+      <sumi-reading-text
+        [paragraphs]="paragraphs()"
+        [rangeSelection]="rangeSelection()"
+        [selectedRange]="selectedRange()"
+        (wordActivated)="activated.push($event)"
+        (rangeSelected)="rangeSelectedEvents.push($event)"
+      />
+    `,
+  })
+  class RangeHostComponent {
+    readonly paragraphs = signal(RANGE_PARAGRAPHS);
+    readonly rangeSelection = signal(true);
+    readonly selectedRange = signal<SumiReadingRange | null>(null);
+    readonly activated: SumiReadingWordActivateEvent[] = [];
+    readonly rangeSelectedEvents: SumiReadingRangeSelectEvent[] = [];
+  }
+
+  function renderRange() {
+    TestBed.configureTestingModule({ imports: [RangeHostComponent] });
+    const fixture = TestBed.createComponent(RangeHostComponent);
+    fixture.detectChanges();
+    return fixture;
+  }
+
+  function wordEl(fixture: ReturnType<typeof renderRange>, id: string): HTMLElement {
+    const el = (fixture.nativeElement as HTMLElement).querySelector<HTMLElement>(
+      `[data-word-id="${id}"]`,
+    );
+    if (!el) {
+      throw new Error(`no span for word id "${id}"`);
+    }
+    return el;
+  }
+
+  /** Simulates the native result of a mouse drag: a non-collapsed
+   *  `Selection` spanning from inside `startSpan`'s text to inside
+   *  `endSpan`'s text — same shape `window.getSelection()` would report
+   *  after a real drag, in document order regardless of which direction
+   *  the drag itself went (a `Range`'s start is always the earlier point
+   *  in document order). */
+  function selectAcross(startSpan: HTMLElement, endSpan: HTMLElement): void {
+    const range = document.createRange();
+    const startNode = startSpan.firstChild ?? startSpan;
+    const endNode = endSpan.firstChild ?? endSpan;
+    range.setStart(startNode, 0);
+    range.setEnd(endNode, endNode.textContent?.length ?? 0);
+    const selection = window.getSelection();
+    selection?.removeAllRanges();
+    selection?.addRange(range);
+  }
+
+  function mouseUpOn(el: HTMLElement): void {
+    firePointer(el, 'pointerup', { pointerType: 'mouse' });
+  }
+
+  it('resolves a mouse drag across two real words to a rangeSelected event', () => {
+    const fixture = renderRange();
+    selectAcross(wordEl(fixture, 'rw2'), wordEl(fixture, 'rw3'));
+
+    mouseUpOn(wordEl(fixture, 'rw3'));
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.rangeSelectedEvents.length).toBe(1);
+    const event = fixture.componentInstance.rangeSelectedEvents[0];
+    expect(event.startId).toBe('rw2');
+    expect(event.endId).toBe('rw3');
+    expect(event.words).toEqual([AME, DESU]);
+    expect(event.element).toBe(wordEl(fixture, 'rw3'));
+  });
+
+  it('clears the native selection once a drag resolves', () => {
+    const fixture = renderRange();
+    selectAcross(wordEl(fixture, 'rw2'), wordEl(fixture, 'rw3'));
+
+    mouseUpOn(wordEl(fixture, 'rw3'));
+
+    expect(window.getSelection()?.isCollapsed).toBe(true);
+  });
+
+  it('includes a plain token caught in the middle of the span, but never as start/end', () => {
+    const fixture = renderRange();
+    // Drag from inside 今日 (a real word) through 雨 (は, plain, sits
+    // between them) to です.
+    selectAcross(wordEl(fixture, 'rw1'), wordEl(fixture, 'rw3'));
+
+    mouseUpOn(wordEl(fixture, 'rw3'));
+
+    const event = fixture.componentInstance.rangeSelectedEvents[0];
+    expect(event.startId).toBe('rw1');
+    expect(event.endId).toBe('rw3');
+    expect(event.words).toEqual([KYOU, WA, AME, DESU]);
+  });
+
+  it('suppresses the click that follows a resolved drag, instead of also activating a word', () => {
+    const fixture = renderRange();
+    selectAcross(wordEl(fixture, 'rw2'), wordEl(fixture, 'rw3'));
+    mouseUpOn(wordEl(fixture, 'rw3'));
+
+    click(wordEl(fixture, 'rw3'));
+
+    expect(fixture.componentInstance.activated).toEqual([]);
+  });
+
+  it('a selection inside a single word does not qualify (fewer than two real words)', () => {
+    const fixture = renderRange();
+    selectAcross(wordEl(fixture, 'rw2'), wordEl(fixture, 'rw2'));
+
+    mouseUpOn(wordEl(fixture, 'rw2'));
+
+    expect(fixture.componentInstance.rangeSelectedEvents).toEqual([]);
+    // Left as a normal selection -- not cleared.
+    expect(window.getSelection()?.isCollapsed).toBe(false);
+  });
+
+  it('a drag that snaps to only one real word does not qualify', () => {
+    const fixture = renderRange();
+    // From です through the trailing 。 (plain) -- snaps to just です.
+    selectAcross(wordEl(fixture, 'rw3'), wordEl(fixture, 'rp2'));
+
+    mouseUpOn(wordEl(fixture, 'rp2'));
+
+    expect(fixture.componentInstance.rangeSelectedEvents).toEqual([]);
+  });
+
+  it('a drag that crosses a paragraph boundary is ignored', () => {
+    const fixture = renderRange();
+    selectAcross(wordEl(fixture, 'rw3'), wordEl(fixture, 'rw4'));
+
+    mouseUpOn(wordEl(fixture, 'rw4'));
+
+    expect(fixture.componentInstance.rangeSelectedEvents).toEqual([]);
+  });
+
+  it('a plain click (collapsed selection) still activates a word normally', () => {
+    const fixture = renderRange();
+    // No prior `selectAcross` -- whatever selection jsdom starts with is
+    // collapsed (nothing dragged).
+    window.getSelection()?.removeAllRanges();
+
+    click(wordEl(fixture, 'rw3'));
+
+    expect(fixture.componentInstance.activated.length).toBe(1);
+    expect(fixture.componentInstance.activated[0].word).toEqual(DESU);
+    expect(fixture.componentInstance.rangeSelectedEvents).toEqual([]);
+  });
+
+  it('a touch pointerup never resolves a drag, even with a qualifying selection', () => {
+    const fixture = renderRange();
+    selectAcross(wordEl(fixture, 'rw2'), wordEl(fixture, 'rw3'));
+
+    firePointer(wordEl(fixture, 'rw3'), 'pointerup', { pointerType: 'touch' });
+
+    expect(fixture.componentInstance.rangeSelectedEvents).toEqual([]);
+  });
+
+  it('ignores a qualifying drag entirely while rangeSelection is off', () => {
+    const fixture = renderRange();
+    fixture.componentInstance.rangeSelection.set(false);
+    fixture.detectChanges();
+    selectAcross(wordEl(fixture, 'rw2'), wordEl(fixture, 'rw3'));
+
+    mouseUpOn(wordEl(fixture, 'rw3'));
+
+    expect(fixture.componentInstance.rangeSelectedEvents).toEqual([]);
+  });
+
+  it('highlights every word in `selectedRange`, including a plain token in between', () => {
+    const fixture = renderRange();
+    fixture.componentInstance.selectedRange.set({ startId: 'rw1', endId: 'rw3' });
+    fixture.detectChanges();
+
+    expect(wordEl(fixture, 'rw1').classList).toContain('sumi-reading-text__word--in-range');
+    expect(wordEl(fixture, 'rp1').classList).toContain('sumi-reading-text__plain--in-range');
+    expect(wordEl(fixture, 'rw2').classList).toContain('sumi-reading-text__word--in-range');
+    expect(wordEl(fixture, 'rw3').classList).toContain('sumi-reading-text__word--in-range');
+    // Outside the range -- no highlight.
+    expect(wordEl(fixture, 'rp2').classList).not.toContain('sumi-reading-text__plain--in-range');
+  });
+
+  it('shows no highlight at all once selectedRange is cleared', () => {
+    const fixture = renderRange();
+    fixture.componentInstance.selectedRange.set({ startId: 'rw1', endId: 'rw3' });
+    fixture.detectChanges();
+    fixture.componentInstance.selectedRange.set(null);
+    fixture.detectChanges();
+
+    expect(wordEl(fixture, 'rw1').classList).not.toContain('sumi-reading-text__word--in-range');
   });
 });

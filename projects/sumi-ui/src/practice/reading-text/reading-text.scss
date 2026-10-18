@@ -78,4 +78,21 @@
     -webkit-user-select: none;
     user-select: none;
   }
+
+  // A partial-sentence selection (jp-reading-practice#32): same background
+  // as `--selected`, but no per-word box-shadow border — adjacent words'
+  // backgrounds then touch pixel-for-pixel on the shared baseline (no
+  // padding on either), reading as one continuous highlight across the
+  // span rather than a border around every word in it.
+  &--in-range {
+    background: var(--sumi-accent-soft);
+  }
+}
+
+// A plain token (punctuation/particle) caught inside a selected range gets
+// the same flat background as `.sumi-reading-text__word--in-range`, so the
+// highlight has no gap where the span crosses one — see that rule's own
+// comment.
+.sumi-reading-text__plain--in-range {
+  background: var(--sumi-accent-soft);
 }
