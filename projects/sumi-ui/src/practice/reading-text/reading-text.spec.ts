@@ -519,6 +519,26 @@ describe('SumiReadingText — partial-sentence selection (jp-reading-practice#32
     expect(fixture.componentInstance.activated).toEqual([]);
   });
 
+  it('activates the next click after a resolved drag whose own click landed on the paragraph', () => {
+    vi.useFakeTimers();
+    try {
+      const fixture = renderRange();
+      selectAcross(wordEl(fixture, 'rw2'), wordEl(fixture, 'rw3'));
+      mouseUpOn(wordEl(fixture, 'rw3'));
+      // Down on 雨, up on です: the browser sends the trailing click to
+      // their common ancestor, so no word ever sees it.
+      vi.runAllTimers();
+      window.getSelection()?.removeAllRanges();
+
+      click(wordEl(fixture, 'rw1'));
+
+      expect(fixture.componentInstance.activated.length).toBe(1);
+      expect(fixture.componentInstance.activated[0].word).toEqual(KYOU);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('a selection inside a single word does not qualify (fewer than two real words)', () => {
     const fixture = renderRange();
     selectAcross(wordEl(fixture, 'rw2'), wordEl(fixture, 'rw2'));

@@ -488,8 +488,12 @@ export class SumiReadingText {
     }
     window.getSelection()?.removeAllRanges();
     // The `click` that still follows this `mouseup` must not also open the
-    // word popover for whatever word happens to be under the pointer.
+    // word popover for whatever word happens to be under the pointer. That
+    // click only reaches a word when the drag ended on the word it started
+    // on; otherwise it lands on the paragraph, so the flag is dropped once
+    // this gesture's events are done instead of eating the next real click.
     this.suppressNextClick = true;
+    setTimeout(() => (this.suppressNextClick = false));
     this.rangeSelected.emit(resolved);
   }
 
