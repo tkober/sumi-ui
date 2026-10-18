@@ -424,6 +424,26 @@ describe('SumiAppShell sticky height (sumi-ui#87)', () => {
   });
 });
 
+describe('SumiAppShell content top padding (sumi-ui#115)', () => {
+  // Unlike `--sumi-shell-sticky-height` above, this is a plain CSS custom
+  // property (no `ResizeObserver`, no JS) — it is set on the host by
+  // shell.scss to the same `--sumi-space-6` token `.sumi-app-shell__main`
+  // itself pads with, so a sticky descendant (`sumi-side-panel`) can fold
+  // it into its own `top`/`height` without the host app repeating it.
+  // jsdom's `getComputedStyle` does not resolve a custom property's own
+  // `var()` reference (it has no layout engine to cascade through), so
+  // this asserts on the raw declaration rather than the resolved `24px` —
+  // the resolved value is verified instead in the showcase screenshots.
+  it("publishes the shell's own --sumi-space-6 top padding on the host", async () => {
+    const fixture = await createShell(makeNav(2));
+    const host: HTMLElement = fixture.nativeElement;
+    expect(getComputedStyle(host).getPropertyValue('--sumi-shell-content-top-padding').trim()).toBe(
+      'var(--sumi-space-6)',
+    );
+    fixture.destroy();
+  });
+});
+
 describe('SumiShell', () => {
   it('focusMode handles overlapping enter/leave via a counter', () => {
     const shell = TestBed.inject(SumiShell);

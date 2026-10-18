@@ -376,6 +376,14 @@ successfully with `ng build` from a throwaway Angular 22 app):
    bar that sticks to the bottom uses
    `position: sticky; bottom: var(--sumi-shell-bottom-height);`.
 
+   `--sumi-shell-content-top-padding` (sumi-ui#115) is `.sumi-app-shell__main`'s
+   own top padding, `0px` outside a shell. It matters to a sticky element
+   that sits *inside* that padded content area (like `sumi-side-panel`
+   below): such an element's `top` and any `height`/`max-height` computed
+   from the viewport both need to include this padding, or the two
+   disagree on the element's resting position and it runs past the
+   viewport edge on a page short enough to never scroll.
+
    ### Hotkeys
 
    `SumiHotkeys` (`sumi-ui/core`) is a single `keydown` listener shared by
@@ -1758,12 +1766,17 @@ again"`) let such an app use its own wording, and `actionDisabled`
      its width by hand).
    - It handles `sumi-app-shell`'s sticky header itself, without
      measuring anything: the header already publishes its rendered height
-     as `--sumi-shell-sticky-height` on `documentElement` (sumi-ui#87), so
-     the panel's own `position: sticky; top: var(--sumi-shell-sticky-height)`
-     plus a height of `calc(100vh - var(--sumi-shell-sticky-height))`
-     keeps it flush below the header and filling the rest of the
-     viewport, with no `ResizeObserver` of its own (the prototype's own —
-     see side-panel.scss's comment for why `sumi-app-shell__main` being a
+     as `--sumi-shell-sticky-height` on `documentElement` (sumi-ui#87),
+     and the shell's own host publishes its content area's top padding as
+     `--sumi-shell-content-top-padding` (sumi-ui#115). The panel's own
+     `top` and `height` both fold in *both* variables — the panel sits
+     inside that padded content area, so its resting position already
+     includes the padding, and `height` has to agree or the panel's
+     bottom edge runs past the viewport bottom on a page short enough
+     that it never scrolls (sumi-ui#115) — keeping it flush below the
+     header and filling the rest of the viewport, with no
+     `ResizeObserver` of its own (the prototype's own — see
+     side-panel.scss's comment for why `sumi-app-shell__main` being a
      plain, non-scrolling container is what makes this work).
    - `open` is a `model<boolean>()`, `title` a required string. Esc and
      the close button both close it; outside click only does on the
