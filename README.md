@@ -378,7 +378,7 @@ successfully with `ng build` from a throwaway Angular 22 app):
 
    `--sumi-shell-content-top-padding` (sumi-ui#115) is `.sumi-app-shell__main`'s
    own top padding, `0px` outside a shell. It matters to a sticky element
-   that sits *inside* that padded content area (like `sumi-side-panel`
+   that sits _inside_ that padded content area (like `sumi-side-panel`
    below): such an element's `top` and any `height`/`max-height` computed
    from the viewport both need to include this padding, or the two
    disagree on the element's resting position and it runs past the
@@ -876,8 +876,8 @@ successfully with `ng build` from a throwaway Angular 22 app):
    The gate's `Enter` registration has no `target` of its own (it is
    meant to fire from anywhere on the page), so it sets `SumiHotkeys`'
    `ignoreActivatableWithin` to its own host element (sumi-ui#102): while
-   the event target is a button, link or `role="button"` element *inside
-   the gate*, the registration steps aside and lets that control's own
+   the event target is a button, link or `role="button"` element _inside
+   the gate_, the registration steps aside and lets that control's own
    native `Enter`/`Space` activation run instead — otherwise it would
    `preventDefault()` that activation away. This matters once
    `sumi-session-summary` has a second button (`secondaryActionLabel`,
@@ -1036,9 +1036,12 @@ again"`) let such an app use its own wording, and `actionDisabled`
    `readonly SumiReadingWord[][]` paragraphs as tappable, keyboard-reachable
    words with the same on-demand furigana peek as `sumi-furigana` (hover/
    focus-dwell on desktop, long-press on touch). A word is
-   `{ id, text, reading?, unknown?, plain? }` — `plain` (sumi-ui#108) marks
-   running text with nothing to look up (punctuation, particles): plain
-   inline text, never focusable/tappable/peeked. `wordActivated` fires on a
+   `{ id, text, reading?, segments?, unknown?, plain? }` — `plain`
+   (sumi-ui#108) marks running text with nothing to look up (punctuation,
+   particles): plain inline text, never focusable/tappable/peeked.
+   `segments` (`SumiFuriganaSegment[]`, e.g. 行き → `行`/`い` + `き`) puts
+   the ruby over the kanji only instead of over the whole word; `reading`
+   still decides whether there is anything to show or peek. `wordActivated` fires on a
    click/tap/`Enter`, carrying the word's own span as `element` — hand it
    straight to `sumi-popover`'s `[anchor]`.
 
@@ -1069,7 +1072,7 @@ again"`) let such an app use its own wording, and `actionDisabled`
    still follows its `mouseup` is suppressed, so it never also fires
    `wordActivated` for whatever word the pointer lands on. A plain click
    (a collapsed selection) is untouched. `selectedRange` (`{ startId,
-   endId } | null`) then highlights every word from `startId` to `endId`
+endId } | null`) then highlights every word from `startId` to `endId`
    inclusive — same look as `--selected`, but with no per-word border, so
    adjacent words' backgrounds touch and read as one continuous span rather
    than a highlight-per-word; a plain token caught in the middle gets the
@@ -1211,7 +1214,7 @@ again"`) let such an app use its own wording, and `actionDisabled`
    ```
 
    Each boundary between two segments is its own native `<input
-   type="range">` thumb (`step`, default 5), so arrow keys, Home/End and
+type="range">` thumb (`step`, default 5), so arrow keys, Home/End and
    screen readers work for free; `aria-valuetext` names both neighbouring
    segments with their percentage (e.g. "N5 50%, N4 35%"). Segment colours
    spread over `--sumi-seq-1`…`-5`, matching `sumi-segmented-bar`. Two or
@@ -1397,7 +1400,7 @@ again"`) let such an app use its own wording, and `actionDisabled`
      short to see.
    - `area` (`'line'` mode only, default `false`) fills down to the
      baseline, in the same family as `sumi-sparkline`'s own area: `var(
-     --sumi-accent-soft)` by default, or a series' own `color` at low
+--sumi-accent-soft)` by default, or a series' own `color` at low
      opacity. Meant for a single series — with several, the fills
      overlap.
 
@@ -1453,7 +1456,7 @@ again"`) let such an app use its own wording, and `actionDisabled`
 
    `categories`' order is both the top-to-bottom stacking order of each
    column and the direction a band's tone is read from: a flow to a
-   *later* category is "up" (`--sumi-accent`), to an *earlier* one is
+   _later_ category is "up" (`--sumi-accent`), to an _earlier_ one is
    "down" (`--sumi-wrong`, deliberately subdued — a drop should not
    visually dominate a mostly-upward session), and a flow that stays in
    its own category is neutral (`--sumi-muted`). A category with nothing
@@ -1763,14 +1766,14 @@ again"`) let such an app use its own wording, and `actionDisabled`
      `[sumiPopoverActions]` is an optional trailing slot for a row of
      buttons that wraps on its own.
    - Esc and a click outside close it (a full-viewport transparent
-     backdrop — the same click that opens the popover on a *different*
+     backdrop — the same click that opens the popover on a _different_
      anchor never reaches it, see the component's own doc comment on
      `requestClose`, so re-anchoring to another word just moves the
      popover instead of closing and reopening it); focus moves to the
      panel's first focusable element on open and back to the anchor on
      close, and `Tab`/`Shift+Tab` stay inside the panel while it is open.
    - `sumi-dialog` already covers a centred modal with a native focus
-     trap; this is for content that belongs *next to* something on screen
+     trap; this is for content that belongs _next to_ something on screen
      and does not block the rest of the page. It does not replace
      `sumi-dialog` for anything that should.
 
@@ -1814,7 +1817,7 @@ again"`) let such an app use its own wording, and `actionDisabled`
      as `--sumi-shell-sticky-height` on `documentElement` (sumi-ui#87),
      and the shell's own host publishes its content area's top padding as
      `--sumi-shell-content-top-padding` (sumi-ui#115). The panel's own
-     `top` and `height` both fold in *both* variables — the panel sits
+     `top` and `height` both fold in _both_ variables — the panel sits
      inside that padded content area, so its resting position already
      includes the padding, and `height` has to agree or the panel's
      bottom edge runs past the viewport bottom on a page short enough

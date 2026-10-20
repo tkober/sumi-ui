@@ -117,7 +117,12 @@ const READING_PARAGRAPHS: readonly SumiReadingParagraph[] = [
   [
     { id: 'r6', text: '散歩', reading: 'さんぽ' },
     { id: 'r7', text: 'に', plain: true },
-    { id: 'r8', text: '行き', reading: 'いき' },
+    {
+      id: 'r8',
+      text: '行き',
+      reading: 'いき',
+      segments: [{ base: '行', reading: 'い' }, { base: 'き' }],
+    },
     { id: 'r9', text: 'ました' },
     { id: 'r10', text: '。', plain: true },
   ],

@@ -340,6 +340,49 @@ describe('SumiReadingText — running text', () => {
   });
 });
 
+describe('SumiReadingText — ruby segments', () => {
+  // 飲み: ruby over 飲 only, never over the okurigana み.
+  const NOMI: SumiReadingWord = {
+    id: 's1',
+    text: '飲み',
+    reading: 'のみ',
+    unknown: true,
+    segments: [{ base: '飲', reading: 'の' }, { base: 'み' }],
+  };
+  const KNOWN_NOMI: SumiReadingWord = { ...NOMI, id: 's2', unknown: false };
+
+  function renderSegments(paragraphs: readonly SumiReadingParagraph[]) {
+    TestBed.configureTestingModule({ imports: [HostComponent] });
+    const fixture = TestBed.createComponent(HostComponent);
+    fixture.componentInstance.paragraphs.set(paragraphs);
+    fixture.detectChanges();
+    return fixture;
+  }
+
+  it('puts each segment reading over its own kanji only', () => {
+    const fixture = renderSegments([[NOMI, KANA_WORD]]);
+    const span = wordSpan(fixture, '飲');
+    const rubies = Array.from(span.querySelectorAll('ruby'));
+    expect(rubies.length).toBe(1);
+    expect(rubies[0].querySelector('rt')?.textContent).toBe('の');
+    expect(rubies[0].firstChild?.textContent).toBe('飲');
+  });
+
+  it('keeps the segments gap-free in running text', () => {
+    const fixture = renderSegments([[NOMI, KANA_WORD]]);
+    const paragraph = (fixture.nativeElement as HTMLElement)
+      .querySelector('.sumi-reading-text__paragraph')!
+      .cloneNode(true) as HTMLElement;
+    paragraph.querySelectorAll('rt').forEach((rt) => rt.remove());
+    expect(paragraph.textContent).toBe('飲みです');
+  });
+
+  it('shows no ruby for a known word with segments until it is peeked', () => {
+    const fixture = renderSegments([[KNOWN_NOMI]]);
+    expect(hasRuby(wordSpan(fixture, '飲'))).toBe(false);
+  });
+});
+
 describe('SumiReadingText — plain tokens (sumi-ui#108)', () => {
   const PLAIN_PARAGRAPHS: readonly SumiReadingParagraph[] = [
     [
