@@ -44,6 +44,7 @@ import {
   ElementRef,
   QueryList,
   ViewChildren,
+  computed,
   inject,
   input,
   output,
@@ -81,6 +82,25 @@ export interface SumiReadingWordActivateEvent {
   element: HTMLElement;
 }
 
+/** A span of words, by id — `selectedRange`'s own shape, and the start/end
+ *  pair `rangeSelected` resolves a mouse drag to (jp-reading-practice#32). */
+export interface SumiReadingRange {
+  startId: string;
+  endId: string;
+}
+
+export interface SumiReadingRangeSelectEvent extends SumiReadingRange {
+  /** Every word between `startId` and `endId`, inclusive, in document
+   *  order — a plain token caught in the middle of the span rides along
+   *  here even though it can never be `startId`/`endId` itself (see
+   *  `rangeSelection`'s own doc comment). */
+  words: SumiReadingWord[];
+  /** The last word's own span — same convention as
+   *  `SumiReadingWordActivateEvent.element`, for `sumi-popover`'s
+   *  `[anchor]`. */
+  element: HTMLElement;
+}
+
 /** How long a hover (desktop) or keyboard focus has to sit on a known word
  *  before its reading peeks into view. */
 export const SUMI_READING_PEEK_DWELL_MS = 500;
@@ -103,28 +123,69 @@ function distance(x1: number, y1: number, x2: number, y2: number): number {
  * <sumi-reading-text
  *   [paragraphs]="paragraphs()"
  *   [selectedWordId]="selectedWordId()"
+ *   [rangeSelection]="true"
+ *   [selectedRange]="selectedRange()"
  *   (wordActivated)="onWordActivated($event)"
  *   (readingPeeked)="onReadingPeeked($event)"
+ *   (rangeSelected)="onRangeSelected($event)"
  * />
  * ```
+ *
+ * `rangeSelection` (jp-reading-practice#32, default `false`, opt-in) turns
+ * on a desktop-only partial-sentence selection: dragging the mouse across
+ * the running text, same native text-selection gesture a reader would use
+ * to copy. Only a *mouse* drag (`PointerEvent.pointerType === 'mouse'`) that
+ * selects across at least two non-plain words in one paragraph resolves to
+ * a `rangeSelected` event — the native selection's start/end container are
+ * each walked up to their own word span, snapping inward past any plain
+ * token at either edge (a plain token cannot be a `startId`/`endId`, only
+ * ride along inside `words`); anything short of two real words (a
+ * selection inside one word, a double-click, or a drag with no second real
+ * word in range) is left exactly as a normal browser selection — nothing
+ * fires, nothing is cleared, and the reader can still copy it. A drag that
+ * crosses a paragraph boundary is ignored the same way. Once a drag *does*
+ * resolve, the native selection is cleared immediately (the host is
+ * expected to show its own highlight via `selectedRange` instead) and the
+ * trailing `click` that a drag's `mouseup` still triggers is suppressed —
+ * it must not also fire `wordActivated` for whichever word happens to be
+ * under the pointer. A plain click (a collapsed selection) is untouched and
+ * keeps activating a word exactly as before. Touch/pen never starts a
+ * range: a phone's long press stays the reading peek (`rangeSelection`'s
+ * own gesture is desktop-only by design, not just by the mouse-only pointer
+ * check — see the issue for why).
  */
 @Component({
   selector: 'sumi-reading-text',
   templateUrl: './reading-text.html',
   styleUrl: './reading-text.scss',
   imports: [SumiRubyWord],
-  host: { class: 'sumi-reading-text', lang: 'ja' },
+  host: {
+    class: 'sumi-reading-text',
+    lang: 'ja',
+    '(pointerup)': 'onContainerPointerUp($event)',
+  },
 })
 export class SumiReadingText {
   protected readonly furigana = inject(SumiFurigana);
 
   readonly paragraphs = input.required<readonly SumiReadingParagraph[]>();
   readonly selectedWordId = input<string | null>(null);
+  /** Opt-in (default `false`) for the desktop drag-to-select-a-span
+   *  gesture — see the class doc comment. */
+  readonly rangeSelection = input(false);
+  /** The words from `startId` to `endId` (inclusive, either order) get a
+   *  highlight class, extended seamlessly across the whole span including
+   *  any plain token in between — see `reading-text.scss`. `null` shows no
+   *  highlight. */
+  readonly selectedRange = input<SumiReadingRange | null>(null);
 
   readonly wordActivated = output<SumiReadingWordActivateEvent>();
   /** A word's reading was peeked at for the first time this session — a
    *  help of weight 1, logged by whoever hosts this. */
   readonly readingPeeked = output<SumiReadingWord>();
+  /** A qualifying mouse drag resolved to a span of at least two non-plain
+   *  words in one paragraph — see `rangeSelection`'s own doc comment. */
+  readonly rangeSelected = output<SumiReadingRangeSelectEvent>();
 
   @ViewChildren('wordRef')
   private readonly wordRefs?: QueryList<ElementRef<HTMLElement>>;
@@ -311,6 +372,129 @@ export class SumiReadingText {
     // A cancelled gesture (e.g. an incoming scroll/system gesture) must not
     // activate the word either.
     this.suppressNextClick = true;
+  }
+
+  // --- partial-sentence selection (jp-reading-practice#32) ----------------
+
+  /** Every word id covered by `selectedRange`, including any plain token
+   *  in between — the template adds the highlight class to any word whose
+   *  id is in this set. `null` while there is no range, or the range's two
+   *  ids are not both in the same paragraph (defensive — a host is only
+   *  ever expected to pass back a range this component itself resolved). */
+  protected readonly selectedRangeIds = computed<ReadonlySet<string> | null>(() => {
+    const range = this.selectedRange();
+    if (!range) {
+      return null;
+    }
+    for (const paragraph of this.paragraphs()) {
+      const startIndex = paragraph.findIndex((word) => word.id === range.startId);
+      const endIndex = paragraph.findIndex((word) => word.id === range.endId);
+      if (startIndex !== -1 && endIndex !== -1) {
+        const low = Math.min(startIndex, endIndex);
+        const high = Math.max(startIndex, endIndex);
+        return new Set(paragraph.slice(low, high + 1).map((word) => word.id));
+      }
+    }
+    return null;
+  });
+
+  protected isInSelectedRange(word: SumiReadingWord): boolean {
+    return this.selectedRangeIds()?.has(word.id) ?? false;
+  }
+
+  /** The nearest ancestor word/plain span of a selection endpoint — walks
+   *  up from a text node (the usual `Range` endpoint) to the element that
+   *  actually carries `data-word-id`. */
+  private closestWordEl(node: Node): HTMLElement | null {
+    const el = node.nodeType === Node.TEXT_NODE ? node.parentElement : (node as HTMLElement | null);
+    return el?.closest<HTMLElement>('[data-word-id]') ?? null;
+  }
+
+  /** Resolves the current native selection to a qualifying span, or `null`
+   *  if it does not qualify (see the class doc comment for every reason
+   *  that can be: not a drag, crosses a paragraph, snaps to fewer than two
+   *  real words). Never mutates the selection itself — the caller clears it
+   *  only once it has decided to actually emit. */
+  private resolveDragSelection(): SumiReadingRangeSelectEvent | null {
+    const selection = window.getSelection();
+    if (!selection || selection.isCollapsed || selection.rangeCount === 0) {
+      return null; // a plain click -- stays a normal word activation
+    }
+
+    const range = selection.getRangeAt(0);
+    const startEl = this.closestWordEl(range.startContainer);
+    const endEl = this.closestWordEl(range.endContainer);
+    if (!startEl || !endEl) {
+      return null;
+    }
+
+    const startParagraph = startEl.dataset['paragraphIndex'];
+    const endParagraph = endEl.dataset['paragraphIndex'];
+    if (startParagraph === undefined || startParagraph !== endParagraph) {
+      return null; // cross-paragraph -- ignored
+    }
+
+    const paragraphIndex = Number(startParagraph);
+    const paragraphWords = this.paragraphs()[paragraphIndex];
+    if (!paragraphWords) {
+      return null;
+    }
+
+    const rawStart = Number(startEl.dataset['wordIndex']);
+    const rawEnd = Number(endEl.dataset['wordIndex']);
+    const lowIndex = Math.min(rawStart, rawEnd);
+    const highIndex = Math.max(rawStart, rawEnd);
+
+    // A plain token at either edge cannot be a start/end -- snap inward to
+    // the nearest real word on each side; plain tokens strictly between
+    // the two real words still ride along in `words`.
+    let snappedStart = lowIndex;
+    while (snappedStart <= highIndex && paragraphWords[snappedStart]?.plain) {
+      snappedStart++;
+    }
+    let snappedEnd = highIndex;
+    while (snappedEnd >= lowIndex && paragraphWords[snappedEnd]?.plain) {
+      snappedEnd--;
+    }
+    if (snappedStart > snappedEnd) {
+      return null; // no real word anywhere in the dragged range
+    }
+
+    const words = paragraphWords.slice(snappedStart, snappedEnd + 1);
+    const nonPlainCount = words.filter((word) => !word.plain).length;
+    if (nonPlainCount < 2) {
+      return null; // fewer than two real words -- stays a normal selection
+    }
+
+    const paragraphEl = startEl.closest<HTMLElement>('.sumi-reading-text__paragraph');
+    const endWordEl =
+      paragraphEl?.querySelector<HTMLElement>(`[data-word-index="${snappedEnd}"]`) ?? endEl;
+
+    return {
+      startId: paragraphWords[snappedStart].id,
+      endId: paragraphWords[snappedEnd].id,
+      words,
+      element: endWordEl,
+    };
+  }
+
+  protected onContainerPointerUp(event: PointerEvent): void {
+    if (!this.rangeSelection() || event.pointerType !== 'mouse') {
+      return; // opt-in, and desktop (mouse) only -- see the class doc comment
+    }
+    const resolved = this.resolveDragSelection();
+    if (!resolved) {
+      return;
+    }
+    window.getSelection()?.removeAllRanges();
+    // The `click` that still follows this `mouseup` must not also open the
+    // word popover for whatever word happens to be under the pointer. That
+    // click only reaches a word when the drag ended on the word it started
+    // on; otherwise it lands on the paragraph, so the flag is dropped once
+    // this gesture's events are done instead of eating the next real click.
+    this.suppressNextClick = true;
+    setTimeout(() => (this.suppressNextClick = false));
+    this.rangeSelected.emit(resolved);
   }
 
   // --- activation -----------------------------------------------

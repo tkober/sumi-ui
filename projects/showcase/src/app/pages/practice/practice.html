@@ -316,15 +316,37 @@
       this page has none nearby, so the log below just shows the element's own text instead, to
       prove it is the right one.
     </p>
+    <p>
+      <strong>Partial-sentence selection (jp-reading-practice#32, desktop only):</strong> with a
+      mouse, drag across at least two real words in one paragraph — e.g. 雨 through です — to select
+      just that span; the native selection clears and the span highlights instead. A plain click
+      still activates a single word as before, and dragging across fewer than two real words (or
+      across the two paragraphs) is left as an ordinary, copyable selection. Touch/pen never starts
+      this — a long press stays the reading peek.
+    </p>
     <sumi-reading-text
       [paragraphs]="readingParagraphs"
       [selectedWordId]="selectedReadingWordId()"
+      [rangeSelection]="true"
+      [selectedRange]="rangeSelection()"
       (wordActivated)="onReadingWordActivated($event)"
       (readingPeeked)="onReadingPeeked($event)"
+      (rangeSelected)="onRangeSelected($event)"
     />
+    @if (rangeSelection()) {
+      <button
+        type="button"
+        sumiButton
+        variant="secondary"
+        size="sm"
+        (click)="clearRangeSelection()"
+      >
+        Clear range selection
+      </button>
+    }
     <div class="demo__log">
-      <h3>Last activated / peeked</h3>
-      <p>{{ readingLog() || '(tap, hover or peek a word above)' }}</p>
+      <h3>Last activated / peeked / range-selected</h3>
+      <p>{{ readingLog() || '(tap, hover, peek, or drag-select a word above)' }}</p>
     </div>
 
     <h3>Reading session bar (sumi-ui#100, #108)</h3>

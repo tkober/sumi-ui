@@ -1032,6 +1032,51 @@ again"`) let such an app use its own wording, and `actionDisabled`
    <sumi-furigana [segments]="[{ base: '食べる', reading: 'たべる' }]" /> <sumi-furigana-toggle />
    ```
 
+   **`sumi-reading-text`** (sumi-ui#94, #108) renders
+   `readonly SumiReadingWord[][]` paragraphs as tappable, keyboard-reachable
+   words with the same on-demand furigana peek as `sumi-furigana` (hover/
+   focus-dwell on desktop, long-press on touch). A word is
+   `{ id, text, reading?, unknown?, plain? }` — `plain` (sumi-ui#108) marks
+   running text with nothing to look up (punctuation, particles): plain
+   inline text, never focusable/tappable/peeked. `wordActivated` fires on a
+   click/tap/`Enter`, carrying the word's own span as `element` — hand it
+   straight to `sumi-popover`'s `[anchor]`.
+
+   ```html
+   <sumi-reading-text
+     [paragraphs]="paragraphs()"
+     [selectedWordId]="selectedWordId()"
+     [rangeSelection]="true"
+     [selectedRange]="selectedRange()"
+     (wordActivated)="onWordActivated($event)"
+     (readingPeeked)="onReadingPeeked($event)"
+     (rangeSelected)="onRangeSelected($event)"
+   />
+   ```
+
+   `rangeSelection` (jp-reading-practice#32, default `false`) opts into a
+   **desktop-only** partial-sentence selection: a mouse drag across the
+   running text, the same gesture a reader would use to copy it. Only a
+   drag (`PointerEvent.pointerType === 'mouse'`) across **at least two
+   non-plain words in one paragraph** resolves — the native selection's
+   start/end are each walked up to their own word span and snapped inward
+   past any plain token at the very edge (a plain token can never be the
+   span's own start/end, only ride along inside `rangeSelected`'s `words`
+   when it falls between two real ones); anything short of that (inside one
+   word, a double-click, a drag that crosses a paragraph) is left as an
+   ordinary, copyable selection — nothing fires, nothing is cleared. Once a
+   drag does qualify, the native selection is cleared and the `click` that
+   still follows its `mouseup` is suppressed, so it never also fires
+   `wordActivated` for whatever word the pointer lands on. A plain click
+   (a collapsed selection) is untouched. `selectedRange` (`{ startId,
+   endId } | null`) then highlights every word from `startId` to `endId`
+   inclusive — same look as `--selected`, but with no per-word border, so
+   adjacent words' backgrounds touch and read as one continuous span rather
+   than a highlight-per-word; a plain token caught in the middle gets the
+   same background, so there is no gap where the span crosses one. Touch/
+   pen never starts a range at all — a phone's long press stays the
+   reading peek, exactly as without `rangeSelection`.
+
    See `projects/showcase/src/app/pages/practice/practice.ts`/`.html` for
    all of these composed into one realistic practice screen (gate →
    focus-mode round with prompt/verdict/countdown/session-bar → summary

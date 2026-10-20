@@ -1,8 +1,13 @@
-@for (paragraph of paragraphs(); track $index) {
-  <p class="sumi-reading-text__paragraph">
-    @for (word of paragraph; track word.id) {
+@for (paragraph of paragraphs(); track $index; let paragraphIndex = $index) {
+  <p class="sumi-reading-text__paragraph" [attr.data-paragraph-index]="paragraphIndex">
+    @for (word of paragraph; track word.id; let wordIndex = $index) {
       @if (word.plain) {
-        <span class="sumi-reading-text__plain"
+        <span
+          class="sumi-reading-text__plain"
+          [class.sumi-reading-text__plain--in-range]="isInSelectedRange(word)"
+          [attr.data-word-id]="word.id"
+          [attr.data-paragraph-index]="paragraphIndex"
+          [attr.data-word-index]="wordIndex"
           ><sumi-ruby-word [base]="word.text" [reading]="readingFor(word)"
         /></span>
       } @else {
@@ -13,7 +18,11 @@
           class="sumi-reading-text__word"
           [class.sumi-reading-text__word--selected]="word.id === selectedWordId()"
           [class.sumi-reading-text__word--pressing]="word.id === pressingWordId()"
+          [class.sumi-reading-text__word--in-range]="isInSelectedRange(word)"
           [attr.aria-pressed]="word.id === selectedWordId()"
+          [attr.data-word-id]="word.id"
+          [attr.data-paragraph-index]="paragraphIndex"
+          [attr.data-word-index]="wordIndex"
           (click)="onActivate(word, $event)"
           (keydown)="onKeydown($event, word)"
           (pointerenter)="onPointerEnter($event, word)"

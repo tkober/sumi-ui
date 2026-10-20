@@ -14,6 +14,8 @@ import {
   type SumiChoiceOption,
   type SumiFuriganaSegment,
   type SumiReadingParagraph,
+  type SumiReadingRange,
+  type SumiReadingRangeSelectEvent,
   type SumiReadingWord,
   type SumiReadingWordActivateEvent,
   type SumiSessionProgressSegment,
@@ -487,6 +489,21 @@ export class PracticePage {
 
   protected onReadingPeeked(word: SumiReadingWord): void {
     this.readingLog.set(`Peeked "${word.text}" (${word.reading})`);
+  }
+
+  // --- Partial-sentence selection (jp-reading-practice#32) --------------
+
+  protected readonly rangeSelection = signal<SumiReadingRange | null>(null);
+
+  protected onRangeSelected(event: SumiReadingRangeSelectEvent): void {
+    this.rangeSelection.set({ startId: event.startId, endId: event.endId });
+    const span = event.words.map((word) => word.text).join('');
+    this.readingLog.set(`Range-selected "${span}" (${event.words.length} tokens)`);
+  }
+
+  protected clearRangeSelection(): void {
+    this.rangeSelection.set(null);
+    this.readingLog.set('Range selection cleared');
   }
 
   protected onReadingChatToggle(): void {
