@@ -8,8 +8,9 @@
           [attr.data-word-id]="word.id"
           [attr.data-paragraph-index]="paragraphIndex"
           [attr.data-word-index]="wordIndex"
-          ><sumi-ruby-word [base]="word.text" [reading]="readingFor(word)"
-        /></span>
+          ><!-- prettier-ignore -->
+          @for (segment of rubySegments(word); track $index) {<sumi-ruby-word [base]="segment.base" [reading]="segment.reading" />}
+        </span>
       } @else {
         <span
           #wordRef
@@ -33,8 +34,9 @@
           (pointercancel)="onPointerCancel(word)"
           (focus)="onFocus(word)"
           (blur)="onBlur(word)"
-          ><sumi-ruby-word [base]="word.text" [reading]="readingFor(word)"
-        /></span>
+          ><!-- prettier-ignore -->
+          @for (segment of rubySegments(word); track $index) {<sumi-ruby-word [base]="segment.base" [reading]="segment.reading" />}
+        </span>
       }
     }
   </p>

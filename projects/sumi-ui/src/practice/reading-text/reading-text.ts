@@ -50,6 +50,7 @@ import {
   output,
   signal,
 } from '@angular/core';
+import type { SumiFuriganaSegment } from '../furigana/furigana-text';
 import { SumiFurigana } from '../furigana/furigana.service';
 import { SumiRubyWord } from '../furigana/ruby-word';
 
@@ -57,6 +58,12 @@ export interface SumiReadingWord {
   id: string;
   text: string;
   reading?: string;
+  /** The word split into kanji runs, each with its own reading, and kana
+   *  runs without one (e.g. 飲み → 飲/の + み), so the ruby sits over the
+   *  kanji only and never over the okurigana. Optional: without it the
+   *  whole `reading` sits over the whole `text`. Shown and peeked exactly
+   *  when `reading` would be — `reading` still decides that. */
+  segments?: readonly SumiFuriganaSegment[];
   unknown?: boolean;
   /** Plain running text, not a word: punctuation, particles and anything
    *  else a host has nothing to look up for (sumi-ui#108). Rendered as
@@ -235,6 +242,15 @@ export class SumiReadingText {
    *  second one. */
   protected readingFor(word: SumiReadingWord): string | undefined {
     return this.showsReading(word) ? word.reading : undefined;
+  }
+
+  /** What the template renders for a word: its `segments` while the reading
+   *  shows (if it has any), otherwise one segment with `readingFor`. */
+  protected rubySegments(word: SumiReadingWord): readonly SumiFuriganaSegment[] {
+    if (word.segments?.length && this.showsReading(word)) {
+      return word.segments;
+    }
+    return [{ base: word.text, reading: this.readingFor(word) }];
   }
 
   /** Only a known word with a reading can be peeked at — an unknown word
